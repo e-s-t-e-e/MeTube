@@ -643,7 +643,7 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 				if (btnIncognito == null) {
 					return;
 				}
-				boolean enabled = extensionManager.isEnabled(com.hhst.youtubelite.extension.Constant.ENABLE_INCOGNITO_BUTTON);
+				boolean enabled = extensionManager.isEnabled(Constant.ENABLE_INCOGNITO_BUTTON);
 				int desired = (!enabled || playerRoot.getVisibility() == View.VISIBLE) ? View.GONE : View.VISIBLE;
 				if (btnIncognito.getVisibility() != desired) {
 					btnIncognito.setVisibility(desired);
@@ -806,7 +806,7 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 		suppressPiP = false;
 		if (btnIncognito != null) {
 			View playerRoot = findViewById(R.id.player_root);
-			boolean enabled = extensionManager.isEnabled(com.hhst.youtubelite.extension.Constant.ENABLE_INCOGNITO_BUTTON);
+			boolean enabled = extensionManager.isEnabled(Constant.ENABLE_INCOGNITO_BUTTON);
 			int desired = (!enabled || (playerRoot != null && playerRoot.getVisibility() == View.VISIBLE)) ? View.GONE : View.VISIBLE;
 			btnIncognito.setVisibility(desired);
 		}
