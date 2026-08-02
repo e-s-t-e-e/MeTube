@@ -59,9 +59,23 @@ jobs:
         echo "y" | $ANDROID_HOME/tools/bin/sdkmanager "platforms;android-36" --sdk_root=$ANDROID_HOME || true
 
     - name: Build Release APK
+      id: build_apk
+      continue-on-error: true
       run: |
-        ./gradlew assembleRelease -PAPP_VERSION_NAME="${{ steps.get_version.outputs.version }}" --stacktrace --info 2>&1 | tee build.log
+        ./gradlew assembleRelease -PAPP_VERSION_NAME="${{ steps.get_version.outputs.version }}" --stacktrace 2>&1 | tee build.log
         exit ${PIPESTATUS[0]}
+
+    - name: Upload build log on failure
+      if: steps.build_apk.outcome == 'failure'
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log
+        path: build.log
+        retention-days: 7
+
+    - name: Fail if build failed
+      if: steps.build_apk.outcome == 'failure'
+      run: exit 1
 
     - name: Upload Release APK Artifact
       uses: actions/upload-artifact@v4
