@@ -884,8 +884,12 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 						PermissionUtils.REQUEST_STORAGE_PERMISSION);
 	}
 
+	public void suppressNextPiP() {
+		this.suppressPiP = true;
+	}
+
 	private boolean shouldSuppressPiPForStartedActivity(@Nullable Intent intent) {
-		return intent != null;
+		return true;
 	}
 
 /**

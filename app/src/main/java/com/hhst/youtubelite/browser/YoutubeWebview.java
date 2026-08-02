@@ -281,9 +281,32 @@ public class YoutubeWebview extends WebView {
 		Log.w("YoutubeWebview", "Blocked attempt to load unauthorized URL: " + loadUrl);
 	}
 
+	private Activity getActivityContext() {
+		Context context = getContext();
+		while (context instanceof ContextWrapper) {
+			if (context instanceof Activity activity) {
+				return activity;
+			}
+			context = ((ContextWrapper) context).getBaseContext();
+		}
+		return null;
+	}
+
+	private void startActivitySuppressPiP(@NonNull Intent intent) {
+		Activity activity = getActivityContext();
+		if (activity instanceof MainActivity mainActivity) {
+			mainActivity.suppressNextPiP();
+			mainActivity.startActivity(intent);
+		} else if (activity != null) {
+			activity.startActivity(intent);
+		} else {
+			getContext().startActivity(intent);
+		}
+	}
+
 	private void openExternal(@NonNull Uri uri) {
 		try {
-			getContext().startActivity(new Intent(Intent.ACTION_VIEW, uri));
+			startActivitySuppressPiP(new Intent(Intent.ACTION_VIEW, uri));
 		} catch (ActivityNotFoundException e) {
 			ToastUtils.show(getContext(), R.string.application_not_found);
 			Log.e(getContext().getString(R.string.application_not_found), e.toString());
@@ -330,7 +353,7 @@ public class YoutubeWebview extends WebView {
 					// open in other app
 					try {
 						Intent intent = Intent.parseUri(uri.toString(), Intent.URI_INTENT_SCHEME);
-						getContext().startActivity(intent);
+						startActivitySuppressPiP(intent);
 					} catch (ActivityNotFoundException | URISyntaxException e) {
 						ToastUtils.show(getContext(), R.string.application_not_found);
 						Log.e(getContext().getString(R.string.application_not_found), e.toString());
