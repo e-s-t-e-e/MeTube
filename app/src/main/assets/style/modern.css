@@ -1,0 +1,28 @@
+/*
+ * Litube modern touch — deliberately conservative so it degrades gracefully if
+ * YouTube changes its markup. These rules are cosmetic only and never affect layout flow.
+ */
+
+/* Smoother, native-feeling scrolling and no visible web scrollbars. */
+html {
+    scroll-behavior: smooth;
+}
+::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+/* Gently round media so thumbnails/avatars feel app-native rather than web-square. */
+ytm-thumbnail-cover img,
+img.ytCoreImageHost,
+ytd-thumbnail img,
+.video-thumbnail img,
+.ytp-videowall-still-image {
+    border-radius: 12px !important;
+}
+
+/* Softer tap feedback on pressable rows. */
+ytm-media-item,
+ytd-rich-item-renderer {
+    transition: background-color 0.12s ease;
+}
