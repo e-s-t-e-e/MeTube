@@ -8,7 +8,7 @@ val appVersionCode = (project.findProperty("APP_VERSION_CODE") as? String)?.toIn
 
 android {
     namespace = "com.hhst.youtubelite"
-    compileSdk = 36
+    compileSdk = 35
 
     installation {
         installOptions.add("-t")
@@ -24,7 +24,7 @@ android {
     defaultConfig {
         applicationId = "com.hhst.litube"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 35
         versionCode = appVersionCode
         versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
