@@ -50,6 +50,9 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Building version: $VERSION"
 
+    - name: Set Android SDK path
+      run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
     - name: Build Release APK
       run: ./gradlew assembleRelease -PAPP_VERSION_NAME="${{ steps.get_version.outputs.version }}" --stacktrace
 
