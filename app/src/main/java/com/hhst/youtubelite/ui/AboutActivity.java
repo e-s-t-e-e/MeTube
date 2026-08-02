@@ -24,6 +24,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hhst.youtubelite.Constant;
 import com.hhst.youtubelite.R;
@@ -121,7 +123,7 @@ public class AboutActivity extends AppCompatActivity {
 		updateText.setText(R.string.checking_for_updates);
 
 		Request request = new Request.Builder()
-						.url("https://api.github.com/repos/HydeYYHH/litube/releases/latest")
+						.url("https://api.github.com/repos/e-s-t-e-e/MeTube/releases/latest")
 						.build();
 
 		client.newCall(request).enqueue(new Callback() {
@@ -143,15 +145,29 @@ public class AboutActivity extends AppCompatActivity {
 					String body = Objects.requireNonNull(response.body()).string();
 					JsonObject json = gson.fromJson(body, JsonObject.class);
 					String latest = json.get("tag_name").getAsString();
-					String url = json.get("html_url").getAsString();
+					String url = json.has("html_url") ? json.get("html_url").getAsString() : "https://github.com/e-s-t-e-e/MeTube/releases";
 
+					if (json.has("assets") && json.get("assets").isJsonArray()) {
+						JsonArray assets = json.getAsJsonArray("assets");
+						for (JsonElement assetEl : assets) {
+							if (assetEl.isJsonObject()) {
+								JsonObject assetObj = assetEl.getAsJsonObject();
+								if (assetObj.has("name") && assetObj.get("name").getAsString().endsWith(".apk") && assetObj.has("browser_download_url")) {
+									url = assetObj.get("browser_download_url").getAsString();
+									break;
+								}
+							}
+						}
+					}
+
+					final String downloadUrl = url;
 					String version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
 					if (isNewerVersion(version, latest)) {
 						runOnUiThread(() -> {
 							updateLayout.setEnabled(true);
 							updateText.setText(getString(R.string.update_available, latest));
 							updateLayout.setOnClickListener(v -> {
-								Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+								Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl));
 								startActivity(intent);
 							});
 						});
