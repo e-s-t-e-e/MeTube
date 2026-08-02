@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <resources>
-    <string name="app_name">Litube</string>
+    <string name="app_name">MeTube</string>
     <string name="thumbnail">Miniature</string>
     <string name="video">Vidéo</string>
     <string name="cancel">Annuler</string>

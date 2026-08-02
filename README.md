@@ -1,7 +1,7 @@
 # MeTube
 
 
-Litube is an advanced webview wrapper for YouTube.
+MeTube is an advanced webview wrapper for YouTube.
 
 ## Releases
 See the following release notes for details.
