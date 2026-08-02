@@ -123,7 +123,7 @@ public class AboutActivity extends AppCompatActivity {
 		updateText.setText(R.string.checking_for_updates);
 
 		Request request = new Request.Builder()
-						.url("https://api.github.com/repos/e-s-t-e-e/MeTube/releases/latest")
+						.url("https://api.github.com/repos/e-s-t-e-e/MeTube/releases")
 						.build();
 
 		client.newCall(request).enqueue(new Callback() {
@@ -143,7 +143,17 @@ public class AboutActivity extends AppCompatActivity {
 						throw new IOException("Unexpected code " + response);
 
 					String body = Objects.requireNonNull(response.body()).string();
-					JsonObject json = gson.fromJson(body, JsonObject.class);
+					JsonArray releases = gson.fromJson(body, JsonArray.class);
+					if (releases == null || releases.isEmpty()) {
+						runOnUiThread(() -> {
+							updateLayout.setEnabled(true);
+							updateText.setText(R.string.check_for_updates);
+							ToastUtils.show(AboutActivity.this, R.string.no_updates_available);
+						});
+						return;
+					}
+
+					JsonObject json = releases.get(0).getAsJsonObject();
 					String latest = json.get("tag_name").getAsString();
 					String url = json.has("html_url") ? json.get("html_url").getAsString() : "https://github.com/e-s-t-e-e/MeTube/releases";
 
@@ -240,6 +250,7 @@ public class AboutActivity extends AppCompatActivity {
 
 	private boolean isNewerVersion(String cur, String latest) {
 		if (cur == null || latest == null) return false;
+		if (cur.equalsIgnoreCase(latest)) return false;
 
 		// Strip the optional v prefix before comparing versions.
 		String c = cur.startsWith("v") ? cur.substring(1) : cur;
@@ -249,13 +260,21 @@ public class AboutActivity extends AppCompatActivity {
 		String[] latestParts = l.split("\\.");
 		int length = Math.max(curParts.length, latestParts.length);
 
+		boolean hasValidDigits = false;
 		for (int i = 0; i < length; i++) {
-			int cPart = i < curParts.length ? Integer.parseInt(curParts[i].replaceAll("\\D", "")) : 0;
-			int lPart = i < latestParts.length ? Integer.parseInt(latestParts[i].replaceAll("\\D", "")) : 0;
+			String cStr = i < curParts.length ? curParts[i].replaceAll("\\D", "") : "";
+			String lStr = i < latestParts.length ? latestParts[i].replaceAll("\\D", "") : "";
+
+			int cPart = !cStr.isEmpty() ? Integer.parseInt(cStr) : 0;
+			int lPart = !lStr.isEmpty() ? Integer.parseInt(lStr) : 0;
+
+			if (!lStr.isEmpty()) hasValidDigits = true;
+
 			if (lPart > cPart) return true;
 			if (lPart < cPart) return false;
 		}
-		return false;
+
+		return !hasValidDigits && !cur.equalsIgnoreCase(latest);
 	}
 
 }
