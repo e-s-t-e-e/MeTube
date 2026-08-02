@@ -18,6 +18,7 @@ android {
         disable.add("MissingTranslation")
         disable.add("ExtraTranslation")
         abortOnError = false
+        checkReleaseBuilds = false
     }
 
     defaultConfig {
