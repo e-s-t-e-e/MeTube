@@ -3,6 +3,9 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+val appVersionName = (project.findProperty("APP_VERSION_NAME") as? String) ?: "1.0.0"
+val appVersionCode = (project.findProperty("APP_VERSION_CODE") as? String)?.toIntOrNull() ?: 100
+
 android {
     namespace = "com.hhst.youtubelite"
     compileSdk = 36
@@ -21,8 +24,8 @@ android {
         applicationId = "com.hhst.litube"
         minSdk = 26
         targetSdk = 36
-        versionCode = 214
-        versionName = "v2.1.4"
+        versionCode = appVersionCode
+        versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
