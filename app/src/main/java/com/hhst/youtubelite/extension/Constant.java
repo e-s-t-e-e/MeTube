@@ -18,6 +18,7 @@ import java.util.Map;
 public final class Constant {
 	public static final String ENABLE_DISPLAY_DISLIKES = "enable_display_dislikes";
 	public static final String ENABLE_HIDE_SHORTS = "enable_hide_shorts";
+	public static final String ENABLE_INCOGNITO_BUTTON = "enable_incognito_button";
 	public static final String REMEMBER_QUALITY = "remember_quality";
 	public static final String REMEMBER_PLAYBACK_SPEED = "remember_playback_speed";
 	// Legacy key kept for migration only.
@@ -55,6 +56,7 @@ public final class Constant {
 	public static final Map<String, Boolean> DEFAULT_PREFERENCES = Map.ofEntries(
 					Map.entry(ENABLE_DISPLAY_DISLIKES, true),
 					Map.entry(ENABLE_HIDE_SHORTS, false),
+					Map.entry(ENABLE_INCOGNITO_BUTTON, true),
 					Map.entry(SKIP_SPONSORS, true),
 					Map.entry(SKIP_SELF_PROMO, true),
 					Map.entry(SKIP_POI_HIGHLIGHT, true),

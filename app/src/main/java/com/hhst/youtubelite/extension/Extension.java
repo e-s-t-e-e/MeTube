@@ -26,7 +26,8 @@ public record Extension(String key, int title, int summary, int icon, List<Exten
 		return page(R.string.extension, 0, 0, List.of(
 						page(R.string.interface_category, R.string.interface_summary, R.drawable.ic_settings, List.of(
 										toggle(Constant.ENABLE_DISPLAY_DISLIKES, R.string.display_dislikes),
-										toggle(Constant.ENABLE_HIDE_SHORTS, R.string.hide_shorts)
+										toggle(Constant.ENABLE_HIDE_SHORTS, R.string.hide_shorts),
+										toggle(Constant.ENABLE_INCOGNITO_BUTTON, R.string.enable_incognito_button)
 						)),
 						page(R.string.player, R.string.playback_summary, R.drawable.ic_play, List.of(
 										toggle(REMEMBER_LAST_POSITION, R.string.remember_last_position),

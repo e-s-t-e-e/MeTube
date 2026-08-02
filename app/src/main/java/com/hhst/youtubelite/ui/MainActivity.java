@@ -643,7 +643,8 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 				if (btnIncognito == null) {
 					return;
 				}
-				int desired = playerRoot.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE;
+				boolean enabled = extensionManager.isEnabled(com.hhst.youtubelite.extension.Constant.ENABLE_INCOGNITO_BUTTON);
+				int desired = (!enabled || playerRoot.getVisibility() == View.VISIBLE) ? View.GONE : View.VISIBLE;
 				if (btnIncognito.getVisibility() != desired) {
 					btnIncognito.setVisibility(desired);
 				}
@@ -803,8 +804,19 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 	protected void onResume() {
 		super.onResume();
 		suppressPiP = false;
-		if (player != null && player.isInMiniPlayer() && !DeviceUtils.isInPictureInPictureMode(this)) {
-			player.restoreInAppMiniPlayerUiIfNeeded();
+		if (btnIncognito != null) {
+			View playerRoot = findViewById(R.id.player_root);
+			boolean enabled = extensionManager.isEnabled(com.hhst.youtubelite.extension.Constant.ENABLE_INCOGNITO_BUTTON);
+			int desired = (!enabled || (playerRoot != null && playerRoot.getVisibility() == View.VISIBLE)) ? View.GONE : View.VISIBLE;
+			btnIncognito.setVisibility(desired);
+		}
+		if (player != null && !DeviceUtils.isInPictureInPictureMode(this)) {
+			if (player.isInPictureInPicture()) {
+				player.onPictureInPictureModeChanged(false);
+			}
+			if (player.isInMiniPlayer()) {
+				player.restoreInAppMiniPlayerUiIfNeeded();
+			}
 		}
 	}
 
@@ -875,9 +887,7 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 	}
 
 	private boolean shouldSuppressPiPForStartedActivity(@Nullable Intent intent) {
-		if (intent == null) return false;
-		if (intent.getComponent() == null) return true;
-		return getPackageName().equals(intent.getComponent().getPackageName());
+		return intent != null;
 	}
 
 /**

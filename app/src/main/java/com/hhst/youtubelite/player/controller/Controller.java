@@ -1076,6 +1076,10 @@ public class Controller {
 		portraitUnlockListener.disable();
 	}
 
+	public boolean isInPictureInPicture() {
+		return state.isInPictureInPicture();
+	}
+
 	public void onPictureInPictureModeChanged(boolean isInPiP) {
 		final ControllerState.Mode previousState = state.mode();
 		state = isInPiP ? state.enterPip() : state.exitPip();

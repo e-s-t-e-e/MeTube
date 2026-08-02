@@ -200,5 +200,10 @@
     <string name="incognito_toggle">Toggle incognito</string>
     <string name="incognito_on">Incognito on \u2014 browsing as guest</string>
     <string name="incognito_off">Incognito off \u2014 signed back in</string>
+    <string name="enable_incognito_button">Incognito button</string>
+    <string name="personalized_by_estee">Personalised by Estee</string>
+    <string name="credits">Credits</string>
+    <string name="credits_summary">Litube by HydeYYHH (original creator)</string>
+    <string name="credits_link">https://github.com/HydeYYHH/litube</string>
 </resources>
 

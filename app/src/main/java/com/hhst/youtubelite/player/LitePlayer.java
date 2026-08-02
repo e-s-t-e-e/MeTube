@@ -501,6 +501,10 @@ public class LitePlayer {
 						});
 	}
 
+	public boolean isInPictureInPicture() {
+		return controller.isInPictureInPicture();
+	}
+
 	public void onPictureInPictureModeChanged(boolean isInPiP) {
 		controller.onPictureInPictureModeChanged(isInPiP);
 		if (!isInPiP) playerView.disableAutoPiP();

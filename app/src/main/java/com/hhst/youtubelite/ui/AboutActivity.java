@@ -104,6 +104,14 @@ public class AboutActivity extends AppCompatActivity {
 			startActivity(intent);
 		});
 
+		View creditsLayout = findViewById(R.id.credits_layout);
+		if (creditsLayout != null) {
+			creditsLayout.setOnClickListener(v -> {
+				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.credits_link)));
+				startActivity(intent);
+			});
+		}
+
 		updateLayout.setOnClickListener(v -> checkForUpdates());
 		clearLayout.setOnClickListener(v -> showClearCacheDialog());
 		exportLayout.setOnClickListener(v -> exportLogs());
