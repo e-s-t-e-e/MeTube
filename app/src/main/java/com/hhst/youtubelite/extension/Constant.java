@@ -2,7 +2,6 @@ package com.hhst.youtubelite.extension;
 
 import static com.hhst.youtubelite.Constant.ENABLE_BACKGROUND_PLAY;
 import static com.hhst.youtubelite.Constant.ENABLE_IN_APP_MINI_PLAYER;
-import static com.hhst.youtubelite.Constant.ENABLE_INCOGNITO_BUTTON;
 import static com.hhst.youtubelite.Constant.ENABLE_PIP;
 import static com.hhst.youtubelite.Constant.REMEMBER_LAST_POSITION;
 import static com.hhst.youtubelite.Constant.REMEMBER_RESIZE_MODE;
@@ -17,6 +16,7 @@ import java.util.Map;
  * Shared constants used across the app.
  */
 public final class Constant {
+	public static final String ENABLE_INCOGNITO_BUTTON = com.hhst.youtubelite.Constant.ENABLE_INCOGNITO_BUTTON;
 	public static final String ENABLE_DISPLAY_DISLIKES = "enable_display_dislikes";
 	public static final String ENABLE_HIDE_SHORTS = "enable_hide_shorts";
 	public static final String REMEMBER_QUALITY = "remember_quality";
