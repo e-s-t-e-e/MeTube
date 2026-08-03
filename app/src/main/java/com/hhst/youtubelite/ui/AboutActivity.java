@@ -31,6 +31,7 @@ import com.hhst.youtubelite.Constant;
 import com.hhst.youtubelite.R;
 import com.hhst.youtubelite.cache.AppCacheCleaner;
 import com.hhst.youtubelite.util.ToastUtils;
+import com.hhst.youtubelite.util.UpdateChecker;
 
 import org.apache.commons.io.FileUtils;
 
