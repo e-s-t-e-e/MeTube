@@ -269,14 +269,9 @@ public class Controller {
 
 	static int fsOrientation(boolean autoFs, boolean portrait, boolean autoRotate) {
 		if (autoFs && autoRotate) return ActivityInfo.SCREEN_ORIENTATION_FULL_USER;
-		if (autoRotate) {
-			return portrait
-							? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-							: ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
-		}
 		return portrait
-						? ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-						: ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+						? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+						: ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
 	}
 
 	private static int classifyPhysicalOrientation(final int degrees) {
