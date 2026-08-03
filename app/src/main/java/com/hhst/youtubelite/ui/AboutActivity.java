@@ -189,11 +189,12 @@ public class AboutActivity extends AppCompatActivity {
 
 					final String downloadUrl = url;
 					String installedVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
-					if (isNewerVersion(installedVersion, latest)) {
+					if (UpdateChecker.isNewerVersion(installedVersion, latest)) {
 						runOnUiThread(() -> {
 							updateLayout.setEnabled(true);
-							if (versionView != null) {
-								versionView.setText(getString(R.string.version, installedVersion) + " (Latest: " + latest + ")");
+							if (versionView != null && latest != null) {
+								String cleanLatest = latest.startsWith("v") ? latest.substring(1) : latest;
+								versionView.setText(getString(R.string.version, cleanLatest));
 							}
 							updateText.setText(getString(R.string.update_available, latest));
 							updateLayout.setOnClickListener(v -> {
@@ -204,9 +205,8 @@ public class AboutActivity extends AppCompatActivity {
 					} else {
 						runOnUiThread(() -> {
 							updateLayout.setEnabled(true);
-							if (versionView != null && latest != null) {
-								String cleanLatest = latest.startsWith("v") ? latest.substring(1) : latest;
-								versionView.setText(getString(R.string.version, cleanLatest));
+							if (versionView != null) {
+								versionView.setText(getString(R.string.version, installedVersion));
 							}
 							updateText.setText(R.string.check_for_updates);
 							if (userInitiated) {
@@ -274,35 +274,6 @@ public class AboutActivity extends AppCompatActivity {
 				ToastUtils.show(this, R.string.failed_to_export_log);
 			}
 		}).start();
-	}
-
-	private boolean isNewerVersion(String cur, String latest) {
-		if (cur == null || latest == null) return false;
-		if (cur.equalsIgnoreCase(latest)) return false;
-
-		// Strip the optional v prefix before comparing versions.
-		String c = cur.startsWith("v") ? cur.substring(1) : cur;
-		String l = latest.startsWith("v") ? latest.substring(1) : latest;
-
-		String[] curParts = c.split("\\.");
-		String[] latestParts = l.split("\\.");
-		int length = Math.max(curParts.length, latestParts.length);
-
-		boolean hasValidDigits = false;
-		for (int i = 0; i < length; i++) {
-			String cStr = i < curParts.length ? curParts[i].replaceAll("\\D", "") : "";
-			String lStr = i < latestParts.length ? latestParts[i].replaceAll("\\D", "") : "";
-
-			int cPart = !cStr.isEmpty() ? Integer.parseInt(cStr) : 0;
-			int lPart = !lStr.isEmpty() ? Integer.parseInt(lStr) : 0;
-
-			if (!lStr.isEmpty()) hasValidDigits = true;
-
-			if (lPart > cPart) return true;
-			if (lPart < cPart) return false;
-		}
-
-		return !hasValidDigits && !cur.equalsIgnoreCase(latest);
 	}
 
 }

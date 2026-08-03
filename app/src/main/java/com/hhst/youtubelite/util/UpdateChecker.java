@@ -142,16 +142,16 @@ public class UpdateChecker {
 
 	public static boolean isNewerVersion(@Nullable String currentVersion, @Nullable String latestVersion) {
 		if (currentVersion == null || latestVersion == null) return false;
-		if (currentVersion.equalsIgnoreCase(latestVersion)) return false;
 
-		String c = currentVersion.startsWith("v") ? currentVersion.substring(1) : currentVersion;
-		String l = latestVersion.startsWith("v") ? latestVersion.substring(1) : latestVersion;
+		String c = currentVersion.trim().replaceAll("^v", "");
+		String l = latestVersion.trim().replaceAll("^v", "");
+
+		if (c.equalsIgnoreCase(l)) return false;
 
 		String[] curParts = c.split("\\.");
 		String[] latestParts = l.split("\\.");
 		int length = Math.max(curParts.length, latestParts.length);
 
-		boolean hasValidDigits = false;
 		for (int i = 0; i < length; i++) {
 			String cStr = i < curParts.length ? curParts[i].replaceAll("\\D", "") : "";
 			String lStr = i < latestParts.length ? latestParts[i].replaceAll("\\D", "") : "";
@@ -159,12 +159,10 @@ public class UpdateChecker {
 			int cPart = !cStr.isEmpty() ? Integer.parseInt(cStr) : 0;
 			int lPart = !lStr.isEmpty() ? Integer.parseInt(lStr) : 0;
 
-			if (!lStr.isEmpty()) hasValidDigits = true;
-
 			if (lPart > cPart) return true;
 			if (lPart < cPart) return false;
 		}
 
-		return !hasValidDigits && !currentVersion.equalsIgnoreCase(latestVersion);
+		return false;
 	}
 }
