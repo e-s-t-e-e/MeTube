@@ -18,6 +18,7 @@ public class UpdateCheckerTest {
 	@Test
 	public void isNewerVersionReturnsFalseForEqualOrLowerVersions() {
 		assertFalse(UpdateChecker.isNewerVersion("1.0.0", "1.0.0"));
+		assertFalse(UpdateChecker.isNewerVersion("1.0.0", "1.3"));
 		assertFalse(UpdateChecker.isNewerVersion("1.3.0", "1.3"));
 		assertFalse(UpdateChecker.isNewerVersion("1.3", "v1.3"));
 		assertFalse(UpdateChecker.isNewerVersion("1.3.0", "v1.3"));

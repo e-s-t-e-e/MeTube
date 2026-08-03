@@ -148,6 +148,11 @@ public class UpdateChecker {
 
 		if (c.equalsIgnoreCase(l)) return false;
 
+		// Initial release 1.3 APKs reported versionName 1.0.0. Treat 1.0.0 and 1.3 as equal for update prompt.
+		if (("1.0.0".equals(c) || "1.0".equals(c)) && ("1.3".equals(l) || "1.3.0".equals(l))) {
+			return false;
+		}
+
 		String[] curParts = c.split("\\.");
 		String[] latestParts = l.split("\\.");
 		int length = Math.max(curParts.length, latestParts.length);

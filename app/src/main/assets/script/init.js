@@ -1796,17 +1796,48 @@
 
         const updateMeTubeBranding = () => {
             try {
-                if (document.title && document.title.includes('YouTube')) {
-                    document.title = document.title.replace(/YouTube/g, 'MeTube');
+                if (document.title && /YouTube/i.test(document.title)) {
+                    document.title = document.title.replace(/YouTube/gi, 'MeTube');
                 }
-                const headerLogo = document.querySelector('ytm-header-bar .header-logo, #header-bar .header-logo, a#logo');
-                if (headerLogo) {
-                    headerLogo.setAttribute('aria-label', 'MeTube Home');
-                    headerLogo.setAttribute('title', 'MeTube Home');
+                const inputs = document.querySelectorAll('input[placeholder*="YouTube"], input[placeholder*="youtube"]');
+                inputs.forEach(input => {
+                    input.placeholder = input.placeholder.replace(/YouTube/gi, 'MeTube');
+                });
+                const attrs = document.querySelectorAll('[aria-label*="YouTube"], [aria-label*="youtube"], [title*="YouTube"], [title*="youtube"]');
+                attrs.forEach(el => {
+                    if (el.hasAttribute('aria-label')) {
+                        el.setAttribute('aria-label', el.getAttribute('aria-label').replace(/YouTube/gi, 'MeTube'));
+                    }
+                    if (el.hasAttribute('title')) {
+                        el.setAttribute('title', el.getAttribute('title').replace(/YouTube/gi, 'MeTube'));
+                    }
+                });
+
+                const root = document.body || document.documentElement;
+                if (!root) return;
+                const walker = document.createTreeWalker(
+                    root,
+                    NodeFilter.SHOW_TEXT,
+                    {
+                        acceptNode: (node) => {
+                            const tag = node.parentNode?.tagName?.toLowerCase();
+                            if (tag === 'script' || tag === 'style' || tag === 'noscript' || tag === 'textarea') {
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            if (node.nodeValue && /YouTube/i.test(node.nodeValue)) {
+                                return NodeFilter.FILTER_ACCEPT;
+                            }
+                            return NodeFilter.FILTER_SKIP;
+                        }
+                    }
+                );
+                let textNode;
+                while ((textNode = walker.nextNode())) {
+                    textNode.nodeValue = textNode.nodeValue.replace(/YouTube/gi, 'MeTube');
                 }
             } catch (e) {}
         };
-        setInterval(updateMeTubeBranding, 1500);
+        setInterval(updateMeTubeBranding, 1200);
 
         App.init();
     } catch (error) {
