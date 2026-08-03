@@ -121,12 +121,17 @@ header {
     position: relative !important;
 }
 
-/* Shift actions container left to make room for absolute settings button */
+/* Shift native actions left to make room for absolute settings button */
 .mobile-topbar-header-actions,
 .header-bar-actions,
 .ytm-header-actions,
-.header-buttons {
-    margin-right: 42px !important;
+.header-buttons,
+.header-search-button,
+.header-profile-button,
+[aria-label*="Search"],
+.search-icon,
+ytm-avatar-button {
+    margin-right: 44px !important;
 }
 
 /* Style injected settings gear button in header actions bar */
