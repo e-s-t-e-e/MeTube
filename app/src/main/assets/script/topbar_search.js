@@ -3,19 +3,26 @@
         const header = document.querySelector('ytm-header-bar, #header-bar, .mobile-topbar-header, ytm-mobile-topbar-renderer');
         if (!header) return;
 
-        const logo = header.querySelector('.header-logo, #logo, a#logo, ytm-home-logo');
-        if (!logo) return;
-
-        // Hide original action buttons and containers
-        const originalActions = header.querySelectorAll('.mobile-topbar-header-actions, .header-bar-actions, .ytm-header-actions, .header-buttons, .header-search-button, .header-profile-button, [aria-label*="Search"], button:has(c3-icon[type="search"]), .search-icon, ytm-avatar-button');
+        // Hide original action buttons and containers using class/styling so they remain clickable via JS
+        const originalActions = header.querySelectorAll('.mobile-topbar-header-actions, .header-bar-actions, .ytm-header-actions, .header-buttons, .header-search-button, .header-profile-button, [aria-label*="Search"], button:has(c3-icon[type="search"]), .search-icon, ytm-avatar-button, .menu-button, .header-menu-button, button[aria-label*="menu"], button[aria-label*="More"], [aria-label*="Account"]');
         originalActions.forEach(el => {
-            el.style.setProperty('display', 'none', 'important');
+            el.classList.add('metube-hidden');
         });
 
         // Locate logo's top-level parent under the header
-        let logoWrapper = logo;
-        while (logoWrapper.parentNode && logoWrapper.parentNode !== header && logoWrapper.parentNode.tagName.toLowerCase() !== 'body') {
-            logoWrapper = logoWrapper.parentNode;
+        const logo = header.querySelector('.header-logo, #logo, a#logo, ytm-home-logo');
+        let leftElement = null;
+        if (logo) {
+            leftElement = logo;
+            while (leftElement.parentNode && leftElement.parentNode !== header && leftElement.parentNode.tagName.toLowerCase() !== 'body') {
+                leftElement = leftElement.parentNode;
+            }
+        } else {
+            // Fallback to back navigation button if logo is not present (e.g. on watch page)
+            const backBtn = header.querySelector('.header-back-button, .back-button, button:first-child');
+            if (backBtn) {
+                leftElement = backBtn;
+            }
         }
 
         // Injected Search Container
@@ -30,8 +37,12 @@
                 </div>
             `;
             
-            // Insert after logo wrapper
-            header.insertBefore(searchContainer, logoWrapper.nextSibling);
+            // Insert after left element if found, otherwise prepend
+            if (leftElement) {
+                header.insertBefore(searchContainer, leftElement.nextSibling);
+            } else {
+                header.insertBefore(searchContainer, header.firstChild);
+            }
 
             // Trigger click on original search button
             const input = searchContainer.querySelector('#metube-header-search-bar');
@@ -65,8 +76,10 @@
             settingsBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                if (window.lite && typeof window.lite.extension === 'function') {
-                    window.lite.extension();
+                try {
+                    lite.extension();
+                } catch (err) {
+                    console.error("Failed to open settings:", err);
                 }
             });
         }
