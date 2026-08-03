@@ -80,7 +80,7 @@
     <string name="application_not_found">Application non trouvée</string>
     <string name="press_back_again_to_exit">Appuyez à nouveau sur retour pour quitter</string>
     <string name="threads">Threads</string>
-    <string name="app_description">Un wrapper webview avancé pour YouTube.</string>
+    <string name="app_description">Une application Android privée et fluide pour MeTube.</string>
     <string name="source_code">Code source</string>
     <string name="clear_cache">Effacer le cache</string>
     <string name="export_error_log">Exporter le journal d\'erreurs</string>

@@ -123,7 +123,7 @@
     <string name="application_not_found">Aplicación no encontrada</string>
     <string name="press_back_again_to_exit">Presiona atrás otra vez para salir</string>
     <string name="threads">Hilos</string>
-    <string name="app_description">Un wrapper avanzado basado en WebView para YouTube.</string>
+    <string name="app_description">Una aplicación avanzada y privada para MeTube.</string>
     <string name="source_code">Código fuente</string>
     <string name="clear_cache">Borrar caché</string>
     <string name="export_error_log">Exportar registro de errores</string>

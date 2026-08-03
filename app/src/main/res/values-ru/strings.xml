@@ -80,7 +80,7 @@
     <string name="application_not_found">Приложение не найдено</string>
     <string name="press_back_again_to_exit">Нажмите еще раз, чтобы выйти</string>
     <string name="threads">Потоки</string>
-    <string name="app_description">Продвинутая оболочка WebView для YouTube.</string>
+    <string name="app_description">Продвинутое приложение для MeTube.</string>
     <string name="source_code">Исходный код</string>
     <string name="clear_cache">Очистить кэш</string>
     <string name="export_error_log">Экспорт журнала ошибок</string>

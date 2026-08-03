@@ -80,7 +80,7 @@
     <string name="application_not_found">애플리케이션을 찾을 수 없습니다</string>
     <string name="press_back_again_to_exit">종료하려면 뒤로 버튼을 한 번 더 누르세요</string>
     <string name="threads">스레드</string>
-    <string name="app_description">YouTube를 위한 고급 웹뷰 래퍼입니다.</string>
+    <string name="app_description">MeTube를 위한 고성능 안드로이드 앱입니다.</string>
     <string name="source_code">소스 코드</string>
     <string name="clear_cache">캐시 삭제</string>
     <string name="export_error_log">오류 로그 내보내기</string>

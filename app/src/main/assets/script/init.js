@@ -1794,6 +1794,20 @@
             }
         };
 
+        const updateMeTubeBranding = () => {
+            try {
+                if (document.title && document.title.includes('YouTube')) {
+                    document.title = document.title.replace(/YouTube/g, 'MeTube');
+                }
+                const headerLogo = document.querySelector('ytm-header-bar .header-logo, #header-bar .header-logo, a#logo');
+                if (headerLogo) {
+                    headerLogo.setAttribute('aria-label', 'MeTube Home');
+                    headerLogo.setAttribute('title', 'MeTube Home');
+                }
+            } catch (e) {}
+        };
+        setInterval(updateMeTubeBranding, 1500);
+
         App.init();
     } catch (error) {
         console.error('Error in injected script:', error);

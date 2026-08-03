@@ -118,7 +118,7 @@
     <string name="application_not_found">未找到应用程序</string>
     <string name="press_back_again_to_exit">再按一次退出</string>
     <string name="threads">线程</string>
-    <string name="app_description">一款高级的 YouTube WebView 封装客户端。</string>
+    <string name="app_description">一款高级且简洁的 MeTube 客户端。</string>
     <string name="source_code">源码地址</string>
     <string name="clear_cache">清除缓存</string>
     <string name="export_error_log">导出错误日志</string>

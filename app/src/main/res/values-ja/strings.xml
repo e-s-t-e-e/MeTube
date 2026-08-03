@@ -80,7 +80,7 @@
     <string name="application_not_found">アプリケーションが見つかりません</string>
     <string name="press_back_again_to_exit">終了するにはもう一度戻るを押してください</string>
     <string name="threads">スレッド</string>
-    <string name="app_description">高度な YouTube WebView ラッパーです。</string>
+    <string name="app_description">MeTube のための高度でプライベートなアプリです。</string>
     <string name="source_code">ソースコード</string>
     <string name="clear_cache">キャッシュを消去</string>
     <string name="export_error_log">エラーログをエクスポート</string>

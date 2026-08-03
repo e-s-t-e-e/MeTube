@@ -104,7 +104,7 @@
     <string name="application_not_found">Uygulama bulunamadı</string>
     <string name="press_back_again_to_exit">Çıkmak için tekrar geri basın</string>
     <string name="threads">İş parçacıkları</string>
-    <string name="app_description">YouTube için gelişmiş bir webview arayüzü.</string>
+    <string name="app_description">MeTube için gelişmiş ve temiz bir Android uygulaması.</string>
     <string name="source_code">Kaynak Kodu</string>
     <string name="clear_cache">Önbelleği Temizle</string>
     <string name="export_error_log">Hata Kaydını Dışa Aktar</string>

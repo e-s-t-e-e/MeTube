@@ -123,7 +123,7 @@
     <string name="application_not_found">Application not found</string>
     <string name="press_back_again_to_exit">Press back again to exit</string>
     <string name="threads">Threads</string>
-    <string name="app_description">An advanced webview wrapper for YouTube.</string>
+    <string name="app_description">A privacy-focused, ad-free Android client for MeTube.</string>
     <string name="source_code">Source Code</string>
     <string name="clear_cache">Clear Cache</string>
     <string name="export_error_log">Export Error Log</string>
