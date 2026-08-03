@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-val appVersionName = (project.findProperty("APP_VERSION_NAME") as? String) ?: "1.3.0"
+val appVersionName = (project.findProperty("APP_VERSION_NAME") as? String) ?: "1.3"
 val appVersionCode = (project.findProperty("APP_VERSION_CODE") as? String)?.toIntOrNull() ?: 130
 
 android {
