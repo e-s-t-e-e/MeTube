@@ -42,4 +42,20 @@ public class ControllerTest {
 						true,
 						Configuration.ORIENTATION_PORTRAIT));
 	}
+
+	@Test
+	public void fsOrientationRespectsAutoRotateSetting() {
+		org.junit.Assert.assertEquals(
+						android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
+						Controller.fsOrientation(false, false, false));
+		org.junit.Assert.assertEquals(
+						android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE,
+						Controller.fsOrientation(false, false, true));
+		org.junit.Assert.assertEquals(
+						android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
+						Controller.fsOrientation(false, true, false));
+		org.junit.Assert.assertEquals(
+						android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT,
+						Controller.fsOrientation(false, true, true));
+	}
 }

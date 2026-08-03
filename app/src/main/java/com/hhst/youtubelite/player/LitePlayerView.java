@@ -41,6 +41,7 @@ import com.hhst.youtubelite.player.common.PlayerPreferences;
 import com.hhst.youtubelite.player.controller.ControllerState;
 import com.hhst.youtubelite.player.sponsor.SponsorBlockManager;
 import com.hhst.youtubelite.player.sponsor.SponsorOverlayView;
+import com.hhst.youtubelite.util.DeviceUtils;
 import com.hhst.youtubelite.util.ViewUtils;
 
 import java.util.ArrayList;
@@ -809,8 +810,9 @@ public class LitePlayerView extends PlayerView {
 	private void applyNormalState(int defaultResizeMode) {
 		isFs = false;
 		setParentInsetsSuppressed(false);
+		boolean autoRotate = DeviceUtils.isRotateOn(activity);
 		int requestedOrientation = portraitNormalStateRequested
-						? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+						? (autoRotate ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 						: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
 		activity.setRequestedOrientation(requestedOrientation);
 		portraitNormalStateRequested = false;

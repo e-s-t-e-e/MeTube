@@ -267,11 +267,16 @@ public class Controller {
 		return fullscreen && orientation == Configuration.ORIENTATION_LANDSCAPE;
 	}
 
-	static int fsOrientation(boolean autoFs, boolean portrait) {
-		if (autoFs) return ActivityInfo.SCREEN_ORIENTATION_FULL_USER;
+	static int fsOrientation(boolean autoFs, boolean portrait, boolean autoRotate) {
+		if (autoFs && autoRotate) return ActivityInfo.SCREEN_ORIENTATION_FULL_USER;
+		if (autoRotate) {
+			return portrait
+							? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+							: ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
+		}
 		return portrait
-						? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-						: ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
+						? ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+						: ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
 	}
 
 	private static int classifyPhysicalOrientation(final int degrees) {
@@ -923,6 +928,9 @@ public class Controller {
 		if (physicalOrientation != currentPhysicalOrientation) {
 			physicalOrientation = currentPhysicalOrientation;
 		}
+		if (!DeviceUtils.isRotateOn(activity)) {
+			return;
+		}
 		if (currentPhysicalOrientation == Configuration.ORIENTATION_LANDSCAPE) {
 			if (manualFullscreenSensorExit && state.isFullscreen() && !autoFs) {
 				manualFullscreenSawLandscape = true;
@@ -1182,7 +1190,7 @@ public class Controller {
 		playerView.applyControllerState(
 						previousState,
 						state.mode(),
-						fsOrientation(autoFs, PlayerUtils.isPortrait(engine)),
+						fsOrientation(autoFs, PlayerUtils.isPortrait(engine), DeviceUtils.isRotateOn(activity)),
 						prefs.getResizeMode());
 		if (state.isInPictureInPicture() || state.isInMiniPlayer()) {
 			hideHint();
