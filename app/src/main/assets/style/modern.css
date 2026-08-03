@@ -217,11 +217,8 @@ ytm-avatar-button {
 /* Custom class to hide elements visually while keeping them interactable in DOM for JS clicks */
 .metube-hidden {
     position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
     opacity: 0 !important;
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
 }
 
