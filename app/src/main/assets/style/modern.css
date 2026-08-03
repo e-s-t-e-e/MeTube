@@ -118,6 +118,26 @@ header {
     opacity: 1 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: 48px !important;
+    flex-wrap: nowrap !important;
+    box-sizing: border-box !important;
+}
+
+/* Hide native header action buttons/containers completely */
+.mobile-topbar-header-actions,
+.header-bar-actions,
+.ytm-header-actions,
+.header-buttons,
+.header-search-button,
+.header-profile-button,
+button[aria-label*="Search"],
+.search-icon,
+ytm-avatar-button {
+    display: none !important;
 }
 
 /* Premium Inline Search Bar Styling */
@@ -126,9 +146,11 @@ header {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    margin: 0 16px !important;
-    max-width: 320px !important;
+    margin: 0 8px !important;
+    max-width: 240px !important;
     height: 32px !important;
+    min-width: 100px !important;
+    flex-shrink: 1 !important;
 }
 
 #metube-header-search-container .search-input-wrapper {
@@ -172,12 +194,13 @@ header {
     background: transparent !important;
     border: none !important;
     padding: 6px !important;
-    margin-right: 12px !important;
+    margin-right: 4px !important;
     cursor: pointer !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     outline: none !important;
+    flex-shrink: 0 !important;
 }
 
 #metube-header-settings-btn svg {
