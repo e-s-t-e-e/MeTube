@@ -62,8 +62,12 @@
                     const triggerSearch = (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        const searchBtn = document.querySelector('.header-search-button, [aria-label*="Search"], .search-icon') || 
-                                          Array.from(header.querySelectorAll('button')).find(btn => btn.querySelector('c3-icon[type="search"]'));
+                        
+                        // Try standard selectors first
+                        const searchBtn = document.querySelector('.header-search-button, .search-icon') || 
+                                          Array.from(document.querySelectorAll('button')).find(btn => btn.querySelector('c3-icon[type="search"]')) ||
+                                          Array.from(document.querySelectorAll('[aria-label*="Search"]')).find(el => el.tagName.toLowerCase() === 'button');
+                        
                         if (searchBtn) {
                             searchBtn.click();
                         }
@@ -89,12 +93,33 @@
                 settingsBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    try {
-                        lite.extension();
-                    } catch (err) {
-                        console.error("Failed to open settings:", err);
+                    
+                    const extService = window.lite || (typeof lite !== 'undefined' ? lite : null);
+                    if (extService && typeof extService.extension === 'function') {
+                        try {
+                            extService.extension();
+                        } catch (err) {
+                            console.error("Failed to open extension settings:", err);
+                        }
+                    } else {
+                        // Fallback: search for the original extension button on the page if visible and click it
+                        const originalExtBtn = document.getElementById('extensionButton');
+                        if (originalExtBtn) {
+                            originalExtBtn.click();
+                        }
                     }
                 });
+            }
+
+            // Hide our custom top bar settings button on library/settings/profile views to avoid duplicates
+            if (settingsBtn) {
+                const path = window.location.pathname || '';
+                const href = window.location.href || '';
+                if (href.includes('/feed/library') || href.includes('/settings') || path.includes('/feed/library') || path.includes('/settings')) {
+                    settingsBtn.style.setProperty('display', 'none', 'important');
+                } else {
+                    settingsBtn.style.setProperty('display', 'inline-flex', 'important');
+                }
             }
         } catch (globalErr) {
             console.error("MeTube Header Injector Error:", globalErr);
