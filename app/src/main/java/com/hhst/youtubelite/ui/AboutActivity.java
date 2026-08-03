@@ -63,6 +63,7 @@ public class AboutActivity extends AppCompatActivity {
 	Gson gson;
 	@Inject
 	AppCacheCleaner appCacheCleaner;
+	private TextView versionView;
 	private TextView updateText;
 	private View updateLayout;
 
@@ -80,7 +81,7 @@ public class AboutActivity extends AppCompatActivity {
 
 		ImageView iconView = findViewById(R.id.app_icon);
 		TextView name = findViewById(R.id.app_name);
-		TextView version = findViewById(R.id.app_version);
+		versionView = findViewById(R.id.app_version);
 		TextView desc = findViewById(R.id.app_description);
 		View sourceLayout = findViewById(R.id.source_code_layout);
 		updateLayout = findViewById(R.id.check_update_layout);
@@ -93,7 +94,7 @@ public class AboutActivity extends AppCompatActivity {
 			PackageInfo info = pm.getPackageInfo(getPackageName(), 0);
 			iconView.setImageDrawable(info.applicationInfo.loadIcon(pm));
 			name.setText(R.string.app_name);
-			version.setText(getString(R.string.version, info.versionName));
+			versionView.setText(getString(R.string.version, info.versionName));
 		} catch (Exception e) {
 			Log.e(TAG, "Failed to load app info", e);
 		}
@@ -112,9 +113,11 @@ public class AboutActivity extends AppCompatActivity {
 			});
 		}
 
-		updateLayout.setOnClickListener(v -> checkForUpdates());
+		updateLayout.setOnClickListener(v -> checkForUpdates(true));
 		clearLayout.setOnClickListener(v -> showClearCacheDialog());
 		exportLayout.setOnClickListener(v -> exportLogs());
+
+		checkForUpdates(false);
 	}
 
 	private void showClearCacheDialog() {
@@ -126,9 +129,11 @@ public class AboutActivity extends AppCompatActivity {
 						.show();
 	}
 
-	private void checkForUpdates() {
-		updateLayout.setEnabled(false);
-		updateText.setText(R.string.checking_for_updates);
+	private void checkForUpdates(boolean userInitiated) {
+		if (userInitiated) {
+			updateLayout.setEnabled(false);
+			updateText.setText(R.string.checking_for_updates);
+		}
 
 		Request request = new Request.Builder()
 						.url("https://api.github.com/repos/e-s-t-e-e/MeTube/releases")
@@ -140,7 +145,9 @@ public class AboutActivity extends AppCompatActivity {
 				runOnUiThread(() -> {
 					updateLayout.setEnabled(true);
 					updateText.setText(R.string.check_for_updates);
-					ToastUtils.show(AboutActivity.this, R.string.failed_to_check_for_updates);
+					if (userInitiated) {
+						ToastUtils.show(AboutActivity.this, R.string.failed_to_check_for_updates);
+					}
 				});
 			}
 
@@ -156,7 +163,9 @@ public class AboutActivity extends AppCompatActivity {
 						runOnUiThread(() -> {
 							updateLayout.setEnabled(true);
 							updateText.setText(R.string.check_for_updates);
-							ToastUtils.show(AboutActivity.this, R.string.no_updates_available);
+							if (userInitiated) {
+								ToastUtils.show(AboutActivity.this, R.string.no_updates_available);
+							}
 						});
 						return;
 					}
@@ -179,10 +188,13 @@ public class AboutActivity extends AppCompatActivity {
 					}
 
 					final String downloadUrl = url;
-					String version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
-					if (isNewerVersion(version, latest)) {
+					String installedVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+					if (isNewerVersion(installedVersion, latest)) {
 						runOnUiThread(() -> {
 							updateLayout.setEnabled(true);
+							if (versionView != null) {
+								versionView.setText(getString(R.string.version, installedVersion) + " (Latest: " + latest + ")");
+							}
 							updateText.setText(getString(R.string.update_available, latest));
 							updateLayout.setOnClickListener(v -> {
 								Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl));
@@ -192,8 +204,14 @@ public class AboutActivity extends AppCompatActivity {
 					} else {
 						runOnUiThread(() -> {
 							updateLayout.setEnabled(true);
+							if (versionView != null && latest != null) {
+								String cleanLatest = latest.startsWith("v") ? latest.substring(1) : latest;
+								versionView.setText(getString(R.string.version, cleanLatest));
+							}
 							updateText.setText(R.string.check_for_updates);
-							ToastUtils.show(AboutActivity.this, R.string.no_updates_available);
+							if (userInitiated) {
+								ToastUtils.show(AboutActivity.this, R.string.no_updates_available);
+							}
 						});
 					}
 				} catch (Exception e) {
@@ -201,7 +219,9 @@ public class AboutActivity extends AppCompatActivity {
 					runOnUiThread(() -> {
 						updateLayout.setEnabled(true);
 						updateText.setText(R.string.check_for_updates);
-						ToastUtils.show(AboutActivity.this, R.string.failed_to_check_for_updates);
+						if (userInitiated) {
+							ToastUtils.show(AboutActivity.this, R.string.failed_to_check_for_updates);
+						}
 					});
 				}
 			}
