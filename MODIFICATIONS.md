@@ -41,6 +41,13 @@ The following features were added on top of upstream. Each entry lists the main 
    scrolling), applied through the app's existing style-injection pipeline.
    - `app/src/main/assets/style/modern.css` (new)
 
+7. **Automatic launch update checker**
+   Performs a background check for new releases on GitHub every time the app starts, prompting the user
+   with a modern Material dialog with direct update/download links when a newer release is detected.
+   - `app/src/main/java/com/hhst/youtubelite/util/UpdateChecker.java` (new)
+   - `app/src/main/java/com/hhst/youtubelite/ui/MainActivity.java`
+   - `app/src/main/res/values/strings.xml`
+
 ## Building
 
 ```

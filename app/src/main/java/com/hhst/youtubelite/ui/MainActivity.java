@@ -98,6 +98,8 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 	QueueRepository queueRepository;
 	@Inject
 	PoTokenHost poTokenHost;
+	@Inject
+	com.hhst.youtubelite.util.UpdateChecker updateChecker;
 	@Nullable
 	private PlaybackService playbackService;
 	@Nullable
@@ -176,6 +178,9 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 							this,
 							PermissionUtils.postNotificationsPermission(),
 							PermissionUtils.REQUEST_POST_NOTIFICATIONS);
+		}
+		if (updateChecker != null) {
+			updateChecker.checkForUpdatesOnAppStart(this);
 		}
 		serviceConnection = new ServiceConnection() {
 			@Override
