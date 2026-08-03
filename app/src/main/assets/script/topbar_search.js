@@ -7,14 +7,34 @@
             // If settings button is already injected, do nothing
             let settingsBtn = document.getElementById('metube-header-settings-btn');
             if (!settingsBtn) {
-                settingsBtn = document.createElement('button');
+                // Find actions container or the rightmost part of the header
+                const actionsContainer = header.querySelector('.mobile-topbar-header-actions, .header-bar-actions, .ytm-header-actions, .header-buttons');
+                
+                // Try to find a native button to clone so we get perfect native class names, paddings, and ripples
+                const nativeBtn = document.querySelector('.header-search-button, .header-profile-button, [aria-label*="Search"], button.c3-icon-button') || 
+                                  (actionsContainer ? actionsContainer.querySelector('button') : null) ||
+                                  header.querySelector('button');
+                
+                if (nativeBtn) {
+                    settingsBtn = nativeBtn.cloneNode(true);
+                } else {
+                    settingsBtn = document.createElement('button');
+                }
+                
                 settingsBtn.id = 'metube-header-settings-btn';
                 settingsBtn.setAttribute('aria-label', 'MeTube Settings');
                 
-                // Gear icon svg styled exactly like other header icons
-                settingsBtn.innerHTML = `
-                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #ffffff; display: block;"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                `;
+                // Replace internal SVG/icon path with gear icon
+                const svg = settingsBtn.querySelector('svg') || settingsBtn;
+                if (svg) {
+                    svg.innerHTML = `<path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>`;
+                    if (svg.setAttribute) {
+                        svg.setAttribute('viewBox', '0 0 24 24');
+                        svg.style.width = '24px';
+                        svg.style.height = '24px';
+                        svg.style.fill = '#ffffff';
+                    }
+                }
 
                 // Bind click listener directly on the settings button
                 settingsBtn.addEventListener('click', function(e) {
@@ -35,8 +55,12 @@
                     }
                 });
 
-                // Append directly to header so it is present on all screens regardless of inner actions wrappers
-                header.appendChild(settingsBtn);
+                // Insert into the right place inside actions container (or header fallback)
+                if (actionsContainer) {
+                    actionsContainer.insertBefore(settingsBtn, actionsContainer.firstChild);
+                } else {
+                    header.appendChild(settingsBtn);
+                }
             }
 
             // Hide settings button on library/settings/profile views to avoid duplicates
