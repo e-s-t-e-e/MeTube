@@ -131,6 +131,8 @@ header {
     align-items: center !important;
     justify-content: center !important;
     outline: none !important;
+    flex-shrink: 0 !important;
+    order: 99 !important;
 }
 
 #metube-header-settings-btn svg {

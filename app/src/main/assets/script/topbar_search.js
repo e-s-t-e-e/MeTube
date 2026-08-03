@@ -4,16 +4,11 @@
             const header = document.querySelector('ytm-header-bar, #header-bar, .mobile-topbar-header, ytm-mobile-topbar-renderer');
             if (!header) return;
 
-            // Locate the actions container on the right side of the header
-            const actionsContainer = header.querySelector('.mobile-topbar-header-actions, .header-bar-actions, .ytm-header-actions, .header-buttons');
-            if (!actionsContainer) return;
-
             // If settings button is already injected, do nothing
             let settingsBtn = document.getElementById('metube-header-settings-btn');
             if (!settingsBtn) {
                 settingsBtn = document.createElement('button');
                 settingsBtn.id = 'metube-header-settings-btn';
-                settingsBtn.className = 'header-button'; // Inherit YouTube's button styles
                 settingsBtn.setAttribute('aria-label', 'MeTube Settings');
                 
                 // Gear icon svg styled exactly like other header icons
@@ -40,8 +35,8 @@
                     }
                 });
 
-                // Prepend settings button inside the actions container (so it sits to the left of search/profile)
-                actionsContainer.insertBefore(settingsBtn, actionsContainer.firstChild);
+                // Append directly to header so it is present on all screens regardless of inner actions wrappers
+                header.appendChild(settingsBtn);
             }
 
             // Hide settings button on library/settings/profile views to avoid duplicates
