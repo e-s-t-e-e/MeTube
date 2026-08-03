@@ -3,38 +3,37 @@
         const header = document.querySelector('ytm-header-bar, #header-bar, .mobile-topbar-header, ytm-mobile-topbar-renderer');
         if (!header) return;
 
-        // Ensure header layout matches our expectations
-        header.style.setProperty('display', 'flex', 'important');
-        header.style.setProperty('align-items', 'center', 'important');
-        header.style.setProperty('justify-content', 'space-between', 'important');
-        header.style.setProperty('width', '100%', 'important');
-        header.style.setProperty('box-sizing', 'border-box', 'important');
+        // Find the logo element in the header
+        const logo = header.querySelector('.header-logo, #logo, a#logo, ytm-home-logo');
+        if (!logo) return;
 
-        // Hide original buttons inside the header's right action container
-        const originalButtons = header.querySelectorAll('.header-search-button, .header-profile-button, [aria-label*="Search"], button:has(c3-icon[type="search"]), ytm-avatar-button, a[href="/feed/library"], a[href*="/signin"]');
-        originalButtons.forEach(btn => {
-            btn.style.setProperty('display', 'none', 'important');
-        });
+        // Hide original search/profile buttons safely without breaking layout.
+        const originalSearch = header.querySelector('.header-search-button, [aria-label*="Search"], button:has(c3-icon[type="search"]), .search-icon');
+        if (originalSearch) originalSearch.style.setProperty('display', 'none', 'important');
 
-        // If search container is not injected yet, inject it
+        const originalProfile = header.querySelector('.header-profile-button, ytm-avatar-button, a[href="/feed/library"], a[href*="/signin"]');
+        if (originalProfile) originalProfile.style.setProperty('display', 'none', 'important');
+
+        // Locate the logo's direct parent that is a child of the header
+        let logoWrapper = logo;
+        while (logoWrapper.parentNode && logoWrapper.parentNode !== header && logoWrapper.parentNode.tagName.toLowerCase() !== 'body') {
+            logoWrapper = logoWrapper.parentNode;
+        }
+
+        // If search container is not injected yet, inject it directly into the header
         let searchContainer = document.getElementById('metube-header-search-container');
         if (!searchContainer) {
             searchContainer = document.createElement('div');
             searchContainer.id = 'metube-header-search-container';
-            searchContainer.className = 'metube-search-container';
             searchContainer.innerHTML = `
                 <div class="search-input-wrapper">
                     <svg class="search-icon-svg" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
                     <input id="metube-header-search-bar" type="text" placeholder="Search MeTube..." readonly />
                 </div>
             `;
-            // Insert it after the logo
-            const logo = header.querySelector('.header-logo, #logo, a#logo, ytm-home-logo');
-            if (logo) {
-                logo.parentNode.insertBefore(searchContainer, logo.nextSibling);
-            } else {
-                header.appendChild(searchContainer);
-            }
+            
+            // Insert search bar directly under header, right after the logo wrapper
+            header.insertBefore(searchContainer, logoWrapper.nextSibling);
 
             // Click behavior
             const input = searchContainer.querySelector('#metube-header-search-bar');
@@ -42,9 +41,10 @@
                 const triggerSearch = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const searchButton = document.querySelector('.header-search-button, [aria-label*="Search"], button:has(c3-icon[type="search"]), .search-icon');
-                    if (searchButton) {
-                        searchButton.click();
+                    const searchBtn = document.querySelector('.header-search-button, [aria-label*="Search"], button:has(c3-icon[type="search"]), .search-icon') 
+                                      || originalSearch;
+                    if (searchBtn) {
+                        searchBtn.click();
                     }
                 };
                 input.addEventListener('click', triggerSearch);
@@ -52,7 +52,7 @@
             }
         }
 
-        // If settings button is not injected yet, inject it
+        // If settings button is not injected yet, inject it directly into the header at the end
         let settingsBtn = document.getElementById('metube-header-settings-btn');
         if (!settingsBtn) {
             settingsBtn = document.createElement('button');
@@ -74,5 +74,5 @@
     }
 
     // Run periodically to handle dynamic page changes
-    setInterval(injectSearchBar, 1000);
+    setInterval(injectSearchBar, 800);
 })();

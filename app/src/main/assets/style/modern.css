@@ -59,6 +59,14 @@ ytm-home-logo,
     text-decoration: none !important;
     font-size: 0 !important;
     margin-left: 16px !important;
+    flex-shrink: 0 !important;
+}
+
+ytm-header-bar .header-back-button,
+#header-bar .header-back-button,
+.back-button,
+.header-back-button {
+    flex-shrink: 0 !important;
 }
 
 /* Disable Emblem Icon */
