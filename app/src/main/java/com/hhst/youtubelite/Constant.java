@@ -8,6 +8,7 @@ public final class Constant {
 	public static final String HOME_URL = "https://m.youtube.com";
 	public static final String YOUTUBE_DOMAIN = "youtube.com";
 	public static final String YOUTUBE_MOBILE_HOST = "m.youtube.com";
+	public static final String GOOGLE_API_KEY = "AIzaSyDyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw";
 	public static final String PAGE_HOME = "home";
 	public static final String PAGE_SHORTS = "shorts";
 	public static final String PAGE_WATCH = "watch";

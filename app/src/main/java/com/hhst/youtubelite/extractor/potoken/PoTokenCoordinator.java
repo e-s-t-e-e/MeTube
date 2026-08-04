@@ -67,11 +67,11 @@ public final class PoTokenCoordinator {
 
 	@Inject
 	public PoTokenCoordinator(@NonNull Gson gson,
-	                          @NonNull PoTokenBridge poTokenBridge,
-	                          @NonNull PoTokenHost poTokenHost,
-	                          @NonNull ExtractionSessionScope scope,
-	                          @NonNull OkHttpClient okHttpClient,
-	                          @NonNull MMKV kv) {
+			@NonNull PoTokenBridge poTokenBridge,
+			@NonNull PoTokenHost poTokenHost,
+			@NonNull ExtractionSessionScope scope,
+			@NonNull OkHttpClient okHttpClient,
+			@NonNull MMKV kv) {
 		this.gson = gson;
 		this.poTokenBridge = poTokenBridge;
 		this.poTokenHost = poTokenHost;
@@ -126,19 +126,19 @@ public final class PoTokenCoordinator {
 		}
 		String visitor = read("ios", videoId, "visitor");
 		return new PoTokenResult(
-						visitor != null ? visitor : fetchIosVisitorData(),
-						player,
-						gvs);
+				visitor != null ? visitor : fetchIosVisitorData(),
+				player,
+				gvs);
 	}
 
 	@Nullable
 	private PoTokenResult mintClientPoToken(long hostGeneration,
-	                                        @NonNull String videoId,
-	                                        @NonNull String visitorData) {
+			@NonNull String videoId,
+			@NonNull String visitorData) {
 		String playerPoToken = mintPoToken(hostGeneration, videoId);
 		String streamingPoToken = playerPoToken != null
-						? mintPoToken(hostGeneration, visitorData)
-						: null;
+				? mintPoToken(hostGeneration, visitorData)
+				: null;
 		if (playerPoToken == null || streamingPoToken == null) {
 			PoTokenSession active = initializeSession(hostGeneration);
 			session = active;
@@ -147,8 +147,8 @@ public final class PoTokenCoordinator {
 			}
 			playerPoToken = mintPoToken(hostGeneration, videoId);
 			streamingPoToken = playerPoToken != null
-							? mintPoToken(hostGeneration, visitorData)
-							: null;
+					? mintPoToken(hostGeneration, visitorData)
+					: null;
 		}
 		if (playerPoToken == null) {
 			return null;
@@ -157,14 +157,14 @@ public final class PoTokenCoordinator {
 			streamingPoToken = playerPoToken;
 		}
 		return new PoTokenResult(
-						visitorData,
-						playerPoToken,
-						streamingPoToken);
+				visitorData,
+				playerPoToken,
+				streamingPoToken);
 	}
 
 	@Nullable
 	private PoTokenResult load(@NonNull String client,
-	                           @NonNull String videoId) {
+			@NonNull String videoId) {
 		String player = read(client, videoId, "player");
 		if (player == null) {
 			return null;
@@ -172,15 +172,15 @@ public final class PoTokenCoordinator {
 		String visitor = read(client, videoId, "visitor");
 		String gvs = read(client, videoId, "gvs");
 		return new PoTokenResult(
-						visitor != null ? visitor : fetchVisitorData(),
-						player,
-						gvs != null ? gvs : player);
+				visitor != null ? visitor : fetchVisitorData(),
+				player,
+				gvs != null ? gvs : player);
 	}
 
 	@Nullable
 	private String read(@NonNull String client,
-	                    @NonNull String videoId,
-	                    @NonNull String kind) {
+			@NonNull String videoId,
+			@NonNull String kind) {
 		String value = kv.decodeString(KEY_PREFIX + client + "." + videoId + "." + kind, null);
 		if (value == null) {
 			value = kv.decodeString(KEY_PREFIX + client + "." + kind, null);
@@ -201,8 +201,8 @@ public final class PoTokenCoordinator {
 
 		JsonArray createBody = new JsonArray();
 		createBody.add(REQUEST_KEY);
-		String createResponse =
-						makeBotguardServiceRequest("https://www.youtube.com/api/jnn/v1/Create", gson.toJson(createBody));
+		String createResponse = makeBotguardServiceRequest("https://www.youtube.com/api/jnn/v1/Create",
+				gson.toJson(createBody));
 		if (createResponse == null || !isSameGeneration(hostGeneration)) {
 			return null;
 		}
@@ -216,7 +216,7 @@ public final class PoTokenCoordinator {
 		generateItBody.add(REQUEST_KEY);
 		generateItBody.add(botguardResponse);
 		String generateItResponse = makeBotguardServiceRequest(
-						"https://www.youtube.com/api/jnn/v1/GenerateIT", gson.toJson(generateItBody));
+				"https://www.youtube.com/api/jnn/v1/GenerateIT", gson.toJson(generateItBody));
 		if (generateItResponse == null || !isSameGeneration(hostGeneration)) {
 			return null;
 		}
@@ -233,16 +233,17 @@ public final class PoTokenCoordinator {
 		}
 
 		long expiresAtMs = System.currentTimeMillis()
-						+ Math.max(0L, TimeUnit.SECONDS.toMillis(generateItResult.expirationSeconds) - TimeUnit.MINUTES.toMillis(10L));
+				+ Math.max(0L,
+						TimeUnit.SECONDS.toMillis(generateItResult.expirationSeconds) - TimeUnit.MINUTES.toMillis(10L));
 		return new PoTokenSession(hostGeneration, expiresAtMs);
 	}
 
 	private boolean ensureScriptLoaded(long hostGeneration) {
 		String result = evaluateForResult(
-						hostGeneration,
-						"(function(){try{return window.__litePoToken ? 'ok' : 'missing';}"
-										+ "catch(error){return 'error:' + (error && error.stack ? error.stack : error);}})();",
-						INIT_TIMEOUT_MS);
+				hostGeneration,
+				"(function(){try{return window.__litePoToken ? 'ok' : 'missing';}"
+						+ "catch(error){return 'error:' + (error && error.stack ? error.stack : error);}})();",
+				INIT_TIMEOUT_MS);
 		return Objects.equals(result, "ok") && isSameGeneration(hostGeneration);
 	}
 
@@ -268,13 +269,13 @@ public final class PoTokenCoordinator {
 			InnertubeClientRequestInfo requestInfo = InnertubeClientRequestInfo.ofWebClient();
 			requestInfo.clientInfo.clientVersion = clientVersion;
 			return YoutubeParsingHelper.getVisitorDataFromInnertube(
-							requestInfo,
-							Localization.DEFAULT,
-							ContentCountry.DEFAULT,
-							YoutubeParsingHelper.getYouTubeHeaders(),
-							YoutubeParsingHelper.YOUTUBEI_V1_URL,
-							null,
-							false);
+					requestInfo,
+					Localization.DEFAULT,
+					ContentCountry.DEFAULT,
+					YoutubeParsingHelper.getYouTubeHeaders(),
+					YoutubeParsingHelper.YOUTUBEI_V1_URL,
+					null,
+					false);
 		} catch (Exception ignored) {
 			return null;
 		}
@@ -284,13 +285,13 @@ public final class PoTokenCoordinator {
 	private String fetchIosVisitorData() {
 		try {
 			return YoutubeParsingHelper.getVisitorDataFromInnertube(
-							InnertubeClientRequestInfo.ofIosClient(),
-							Localization.DEFAULT,
-							ContentCountry.DEFAULT,
-							getMobileClientHeaders(YoutubeParsingHelper.getIosUserAgent(Localization.DEFAULT)),
-							YoutubeParsingHelper.YOUTUBEI_V1_URL,
-							null,
-							false);
+					InnertubeClientRequestInfo.ofIosClient(),
+					Localization.DEFAULT,
+					ContentCountry.DEFAULT,
+					getMobileClientHeaders(YoutubeParsingHelper.getIosUserAgent(Localization.DEFAULT)),
+					YoutubeParsingHelper.YOUTUBEI_V1_URL,
+					null,
+					false);
 		} catch (Exception ignored) {
 			return null;
 		}
@@ -299,8 +300,8 @@ public final class PoTokenCoordinator {
 	@NonNull
 	private static Map<String, List<String>> getMobileClientHeaders(@NonNull String userAgent) {
 		return Map.of(
-						"User-Agent", List.of(userAgent),
-						"X-Goog-Api-Format-Version", List.of("2"));
+				"User-Agent", List.of(userAgent),
+				"X-Goog-Api-Format-Version", List.of("2"));
 	}
 
 	@Nullable
@@ -311,51 +312,53 @@ public final class PoTokenCoordinator {
 
 	@Nullable
 	private String runBotGuard(long hostGeneration,
-	                           @NonNull String createResponse) {
+			@NonNull String createResponse) {
 		String requestId = nextRequestId("init");
 		CompletableFuture<String> future = poTokenBridge.prepare(requestId);
 		String evaluateResult = evaluateForResult(
-						hostGeneration,
-						"(function(){try{window.__litePoToken.runInit("
-										+ gson.toJson(createResponse) + ","
-										+ gson.toJson(requestId)
-										+ ");return 'queued';}catch(error){return 'error:' + (error && error.stack ? error.stack : error);}})();",
-						INIT_TIMEOUT_MS);
-		if (!Objects.equals(evaluateResult, "queued")) return null;
+				hostGeneration,
+				"(function(){try{window.__litePoToken.runInit("
+						+ gson.toJson(createResponse) + ","
+						+ gson.toJson(requestId)
+						+ ");return 'queued';}catch(error){return 'error:' + (error && error.stack ? error.stack : error);}})();",
+				INIT_TIMEOUT_MS);
+		if (!Objects.equals(evaluateResult, "queued"))
+			return null;
 		return awaitBridgeResult(future, hostGeneration, INIT_TIMEOUT_MS);
 	}
 
 	private boolean setIntegrityToken(long hostGeneration,
-	                                  @NonNull String integrityTokenBase64) {
+			@NonNull String integrityTokenBase64) {
 		String result = evaluateForResult(
-						hostGeneration,
-						"(function(){try{return window.__litePoToken.setIntegrityToken("
-										+ gson.toJson(integrityTokenBase64)
-										+ ") ? 'ok' : 'error';}catch(error){return 'error:' + (error && error.stack ? error.stack : error);}})();",
-						INIT_TIMEOUT_MS);
+				hostGeneration,
+				"(function(){try{return window.__litePoToken.setIntegrityToken("
+						+ gson.toJson(integrityTokenBase64)
+						+ ") ? 'ok' : 'error';}catch(error){return 'error:' + (error && error.stack ? error.stack : error);}})();",
+				INIT_TIMEOUT_MS);
 		return Objects.equals(result, "ok") && isSameGeneration(hostGeneration);
 	}
 
 	@Nullable
 	private String mintPoToken(long hostGeneration,
-	                           @NonNull String identifier) {
+			@NonNull String identifier) {
 		String requestId = nextRequestId("mint");
 		CompletableFuture<String> future = poTokenBridge.prepare(requestId);
 		String evaluateResult = evaluateForResult(
-						hostGeneration,
-						"(function(){try{window.__litePoToken.mint("
-										+ gson.toJson(identifier) + ","
-										+ gson.toJson(requestId)
-										+ ");return 'queued';}catch(error){return 'error:' + (error && error.stack ? error.stack : error);}})();",
-						MINT_TIMEOUT_MS);
-		if (!Objects.equals(evaluateResult, "queued")) return null;
+				hostGeneration,
+				"(function(){try{window.__litePoToken.mint("
+						+ gson.toJson(identifier) + ","
+						+ gson.toJson(requestId)
+						+ ");return 'queued';}catch(error){return 'error:' + (error && error.stack ? error.stack : error);}})();",
+				MINT_TIMEOUT_MS);
+		if (!Objects.equals(evaluateResult, "queued"))
+			return null;
 		return awaitBridgeResult(future, hostGeneration, MINT_TIMEOUT_MS);
 	}
 
 	@Nullable
 	private String awaitBridgeResult(@NonNull CompletableFuture<String> future,
-	                                 final long hostGeneration,
-	                                 final long timeoutMs) {
+			final long hostGeneration,
+			final long timeoutMs) {
 		try {
 			String result = future.get(timeoutMs, TimeUnit.MILLISECONDS);
 			return isSameGeneration(hostGeneration) ? result : null;
@@ -370,25 +373,25 @@ public final class PoTokenCoordinator {
 
 	@Nullable
 	private String evaluateForResult(long hostGeneration,
-	                                 @NonNull String script,
-	                                 final long timeoutMs) {
+			@NonNull String script,
+			final long timeoutMs) {
 		String rawValue = poTokenHost.evaluateJavascript(hostGeneration, script, timeoutMs);
 		return PoTokenJsonUtils.normalizeEvaluateJavascriptResult(rawValue);
 	}
 
 	@Nullable
 	private String makeBotguardServiceRequest(@NonNull String url,
-	                                          @NonNull String body) {
+			@NonNull String body) {
 		Request request = new Request.Builder()
-						.url(url)
-						.post(RequestBody.create(body, MediaType.get("application/json+protobuf")))
-						.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-										+ "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3")
-						.header("Accept", "application/json")
-						.header("Content-Type", "application/json+protobuf")
-						.header("x-goog-api-key", "AIza" + "Sy" + "DyT5W0" + "Jh49F30" + "Pqqtyfdf7" + "pDLFKLJoAnw")
-						.header("x-user-agent", "grpc-web-javascript/0.1")
-						.build();
+				.url(url)
+				.post(RequestBody.create(body, MediaType.get("application/json+protobuf")))
+				.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+						+ "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3")
+				.header("Accept", "application/json")
+				.header("Content-Type", "application/json+protobuf")
+				.header("x-goog-api-key", Constants.GOOGLE_API_KEY)
+				.header("x-user-agent", "grpc-web-javascript/0.1")
+				.build();
 		try (Response response = okHttpClient.newCall(request).execute()) {
 			if (!response.isSuccessful()) {
 				return null;
@@ -409,9 +412,9 @@ public final class PoTokenCoordinator {
 		return prefix + "-" + requestCounter;
 	}
 
-/**
- * Value object for app logic.
- */
+	/**
+	 * Value object for app logic.
+	 */
 	private record GenerateItResult(@NonNull String integrityTokenBase64, long expirationSeconds) {
 	}
 }
