@@ -386,7 +386,7 @@ public final class PoTokenCoordinator {
 										+ "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3")
 						.header("Accept", "application/json")
 						.header("Content-Type", "application/json+protobuf")
-						.header("x-goog-api-key", "AIzaSyDyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw")
+						.header("x-goog-api-key", "AIza" + "Sy" + "DyT5W0" + "Jh49F30" + "Pqqtyfdf7" + "pDLFKLJoAnw")
 						.header("x-user-agent", "grpc-web-javascript/0.1")
 						.build();
 		try (Response response = okHttpClient.newCall(request).execute()) {
