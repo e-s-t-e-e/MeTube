@@ -335,10 +335,14 @@ public final class YoutubeHttpDataSource extends BaseDataSource implements HttpD
 
 		boolean isAndroidStreamingUrl = isAndroidStreamingUrl(requestUrl);
 		boolean isIosStreamingUrl = isIosStreamingUrl(requestUrl);
+		boolean isWebStreamingUrl = isWebStreamingUrl(requestUrl);
+		boolean isWebEmbeddedPlayerStreamingUrl = isWebEmbeddedPlayerStreamingUrl(requestUrl);
 		if (isAndroidStreamingUrl)
 			conn.setRequestProperty(HttpHeaders.USER_AGENT, getAndroidUserAgent(null));
 		else if (isIosStreamingUrl)
 			conn.setRequestProperty(HttpHeaders.USER_AGENT, getIosUserAgent(null));
+		else if (isWebStreamingUrl || isWebEmbeddedPlayerStreamingUrl)
+			conn.setRequestProperty(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
 		else
 			conn.setRequestProperty(HttpHeaders.USER_AGENT, userAgent);
 
