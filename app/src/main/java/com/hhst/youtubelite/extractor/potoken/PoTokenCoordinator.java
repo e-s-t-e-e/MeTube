@@ -11,6 +11,7 @@ import com.google.gson.JsonParser;
 import com.hhst.youtubelite.extractor.AuthContext;
 import com.hhst.youtubelite.extractor.ExtractionSession;
 import com.hhst.youtubelite.extractor.ExtractionSessionScope;
+import com.hhst.youtubelite.Constant;
 import com.tencent.mmkv.MMKV;
 
 import org.schabi.newpipe.extractor.localization.ContentCountry;
@@ -389,7 +390,7 @@ public final class PoTokenCoordinator {
 						+ "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3")
 				.header("Accept", "application/json")
 				.header("Content-Type", "application/json+protobuf")
-				.header("x-goog-api-key", Constants.GOOGLE_API_KEY)
+				.header("x-goog-api-key", Constant.GOOGLE_API_KEY)
 				.header("x-user-agent", "grpc-web-javascript/0.1")
 				.build();
 		try (Response response = okHttpClient.newCall(request).execute()) {
