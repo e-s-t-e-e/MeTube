@@ -274,6 +274,7 @@ public class LitePlayer {
 
 							try {
 								engine.play(er);
+								controller.resetBtVolumeWarning();
 							} catch (IllegalArgumentException e) {
 								ErrorDialog.show(activity, e.getMessage(), e);
 								return;

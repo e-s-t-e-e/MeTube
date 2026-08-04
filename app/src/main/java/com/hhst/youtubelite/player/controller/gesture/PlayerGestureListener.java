@@ -2,7 +2,9 @@ package com.hhst.youtubelite.player.controller.gesture;
 
 import android.app.Activity;
 import android.content.Context;
+import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -13,6 +15,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.media3.common.util.UnstableApi;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.hhst.youtubelite.R;
 import com.hhst.youtubelite.extension.Constant;
 import com.hhst.youtubelite.player.LitePlayerView;
@@ -27,6 +30,8 @@ import java.util.Locale;
  */
 @UnstableApi
 public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListener {
+	/** Reset each time a new video starts, or when volume drops back to ≤50%. */
+	private boolean btVolumeAboveThreshold = false;
 	private static final int AUTO_HIDE_DELAY_MS = 200;
 	private static final int SEEK_WINDOW_MS = 600;
 
@@ -254,10 +259,89 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 	private void adjustVolume(float dy) {
 		AudioManager am = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
 		if (am == null) return;
+		int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 		if (volume == -1) volume = (float) am.getStreamVolume(AudioManager.STREAM_MUSIC);
+		float prevVolume = volume;
 		volume = DeviceUtils.adjustVolume(activity, dy, playerView, volume, 0.4f);
-		int pct = Math.round((volume / am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)) * 100);
+		int pct = Math.round((volume / maxVolume) * 100);
 		controller.showHint(pct + "%", -1);
+
+		// Auto-reset threshold flag when volume comes back down to ≤50%.
+		if (pct <= 50) {
+			btVolumeAboveThreshold = false;
+			return;
+		}
+
+		// Warn every time volume crosses upward past 50% while BT headphones are connected.
+		int prevPct = Math.round((prevVolume / maxVolume) * 100);
+		if (prevPct <= 50 && !btVolumeAboveThreshold && isBluetoothHeadphoneConnected(am)) {
+			btVolumeAboveThreshold = true;
+			showBluetoothVolumeWarning(am, maxVolume);
+		}
+	}
+
+	/**
+	 * Call this when a new video starts so the 50% warning fires again if volume is high.
+	 */
+	public void resetBtVolumeWarning() {
+		btVolumeAboveThreshold = false;
+		// Check immediately if current volume already exceeds 50%; warn if so.
+		AudioManager am = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
+		if (am == null) return;
+		if (!isBluetoothHeadphoneConnected(am)) return;
+		int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		int currentPct = Math.round(((float) am.getStreamVolume(AudioManager.STREAM_MUSIC) / maxVolume) * 100);
+		if (currentPct > 50) {
+			btVolumeAboveThreshold = true;
+			showBluetoothVolumeWarning(am, maxVolume);
+		}
+	}
+
+	/**
+	 * Returns true if any connected audio output device is a Bluetooth type
+	 * (A2DP sink, BLE headset, or SCO headset).
+	 */
+	private boolean isBluetoothHeadphoneConnected(@NonNull AudioManager am) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			AudioDeviceInfo[] devices = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
+			for (AudioDeviceInfo device : devices) {
+				int type = device.getType();
+				if (type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
+						|| type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+						|| (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+								&& type == AudioDeviceInfo.TYPE_BLE_HEADSET)
+						|| (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+								&& type == AudioDeviceInfo.TYPE_BLE_SPEAKER)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		// Fallback for older APIs
+		return am.isBluetoothA2dpOn() || am.isBluetoothScoOn();
+	}
+
+	/**
+	 * Shows a warning dialog; does NOT set btVolumeAboveThreshold — caller must do that.
+	 */
+	private void showBluetoothVolumeWarning(@NonNull AudioManager am, int maxVolume) {
+		activity.runOnUiThread(() -> {
+			if (activity.isFinishing() || activity.isDestroyed()) return;
+			new MaterialAlertDialogBuilder(activity)
+					.setTitle(R.string.bt_volume_warning_title)
+					.setMessage(R.string.bt_volume_warning_message)
+					.setPositiveButton(R.string.bt_volume_continue, null)
+					.setNegativeButton(R.string.bt_volume_lower, (d, w) -> {
+						// Set volume to exactly 50%
+						int halfVolume = Math.round(maxVolume * 0.5f);
+						am.setStreamVolume(AudioManager.STREAM_MUSIC, halfVolume, 0);
+						volume = halfVolume;
+						int halfPct = Math.round((halfVolume / (float) maxVolume) * 100);
+						controller.showHint(halfPct + "%", 1500);
+					})
+					.setCancelable(false)
+					.show();
+		});
 	}
 
 	private void handleCenterVerticalGesture(@NonNull MotionEvent e1, @NonNull MotionEvent e2) {

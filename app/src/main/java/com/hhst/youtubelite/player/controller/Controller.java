@@ -177,6 +177,8 @@ public class Controller {
 	private long lastVideoRenderedCount = 0;
 	private long lastFpsUpdateTime = 0;
 	private float fps = 0;
+	@Nullable
+	private PlayerGestureListener gestureListener;
 
 	@Inject
 	public Controller(@NonNull Activity activity, @NonNull LitePlayerView playerView, @NonNull Engine engine, @NonNull PlayerPreferences prefs, @NonNull ZoomTouchListener zoomListener, @NonNull TabManager tabManager, @NonNull ExtensionManager extensionManager) {
@@ -348,7 +350,7 @@ public class Controller {
 	@SuppressLint("ClickableViewAccessibility")
 	private void setupListeners() {
 		// Wire gestures and player callbacks.
-		PlayerGestureListener gestureListener = new PlayerGestureListener(activity, playerView, engine, this);
+		gestureListener = new PlayerGestureListener(activity, playerView, engine, this);
 		GestureDetector detector = new GestureDetector(activity, gestureListener);
 		playerView.setOnTouchListener((v, ev) -> {
 			if (state.isInMiniPlayer()) {
@@ -1397,8 +1399,10 @@ public class Controller {
 		}
 	}
 
-
-
-
+	public void resetBtVolumeWarning() {
+		if (gestureListener != null) {
+			gestureListener.resetBtVolumeWarning();
+		}
+	}
 }
 

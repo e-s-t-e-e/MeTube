@@ -95,14 +95,14 @@ ytm-home-logo::after,
     font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
     font-size: 19px !important;
     font-weight: 700 !important;
-    color: #ffffff !important;
+    color: var(--yt-spec-text-primary, #0f0f0f) !important;
     letter-spacing: -0.4px !important;
     vertical-align: middle !important;
     line-height: 1 !important;
     visibility: visible !important;
 }
 
-/* Make top header navigation bar pitch AMOLED black and opaque */
+/* Make top header navigation bar contrast with theme selection */
 ytm-header-bar,
 #header-bar,
 .header-bar,
@@ -113,11 +113,49 @@ ytd-masthead,
 .masthead,
 #header,
 header {
-    background-color: #000000 !important;
-    background: #000000 !important;
+    background-color: var(--yt-spec-brand-background-solid, #ffffff) !important;
+    background: var(--yt-spec-brand-background-solid, #ffffff) !important;
     opacity: 1 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+}
+
+/* Explicitly enforce black headers in dark mode */
+html[dark] ytm-header-bar,
+html[dark] #header-bar,
+html[dark] .header-bar,
+html[dark] .mobile-topbar-header,
+html[dark] ytm-mobile-topbar-renderer,
+html[dark] ytd-masthead,
+html[dark] #masthead,
+html[dark] .masthead,
+html[dark] #header,
+html[dark] header,
+@media (prefers-color-scheme: dark) {
+    ytm-header-bar,
+    #header-bar,
+    .header-bar,
+    .mobile-topbar-header,
+    ytm-mobile-topbar-renderer,
+    ytd-masthead,
+    #masthead,
+    .masthead,
+    #header,
+    header {
+        background-color: #000000 !important;
+        background: #000000 !important;
+    }
+    
+    ytm-header-bar .header-logo::after,
+    #header-bar .header-logo::after,
+    ytd-topbar-logo-renderer #logo::after,
+    a#logo::after,
+    a.header-logo::after,
+    ytm-home-logo::after,
+    .ytm-header-bar-logo::after,
+    .mobile-topbar-header .header-logo::after {
+        color: #ffffff !important;
+    }
 }
 
 /* Style injected settings gear button in header actions bar */
@@ -138,8 +176,15 @@ header {
 #metube-header-settings-btn svg {
     width: 24px !important;
     height: 24px !important;
-    fill: #ffffff !important;
+    fill: var(--yt-spec-text-primary, #0f0f0f) !important;
     transition: fill 0.2s ease !important;
+}
+
+html[dark] #metube-header-settings-btn svg,
+@media (prefers-color-scheme: dark) {
+    #metube-header-settings-btn svg {
+        fill: #ffffff !important;
+    }
 }
 
 #metube-header-settings-btn:hover svg {

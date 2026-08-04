@@ -324,6 +324,7 @@ public final class JavascriptInterface {
 
 	@android.webkit.JavascriptInterface
 	public void showMediaItemMenu(@Nullable String payloadJson) {
+		if (!extensionManager.isEnabled(com.hhst.youtubelite.Constant.ENABLE_VIDEO_HOLD_POPUP)) return;
 		MediaItemMenuPayload payload = parseMediaItemMenuPayload(payloadJson);
 		if (payload == null) return;
 		handler.post(() -> launchMediaItemMenu(payload));
