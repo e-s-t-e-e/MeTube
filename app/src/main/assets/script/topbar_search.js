@@ -1,4 +1,4 @@
-(function() {
+(function () {
     function injectSettingsButton() {
         try {
             const header = document.querySelector('ytm-header-bar, #header-bar, .mobile-topbar-header, ytm-mobile-topbar-renderer');
@@ -13,7 +13,7 @@
                 settingsBtn.setAttribute('aria-label', 'MeTube Settings');
 
                 // Bind click listener directly on the settings button
-                settingsBtn.addEventListener('click', function(e) {
+                settingsBtn.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     try {
@@ -38,7 +38,7 @@
             // Append directly to header if not already there (flex nowrap handles single row spacing)
             if (settingsBtn.parentNode !== header) {
                 header.appendChild(settingsBtn);
-            }
+*            }
 
             // Hide settings button on library/settings/profile views to avoid duplicates
             const path = window.location.pathname || '';
