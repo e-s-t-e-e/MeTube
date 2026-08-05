@@ -23,6 +23,10 @@ import androidx.core.content.ContextCompat;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import android.net.Uri;
+import android.speech.RecognizerIntent;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -124,6 +128,74 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 	private Runnable pendingPermissionAction;
 	@Nullable
 	private String restoredUrl;
+	@Nullable
+	private Runnable pendingAudioPermissionGranted;
+	@Nullable
+	private Runnable pendingAudioPermissionDenied;
+	@Nullable
+	private YoutubeWebview activeVoiceSearchWebView;
+
+	private final ActivityResultLauncher<String> requestAudioPermissionLauncher =
+					registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+						if (isGranted) {
+							if (pendingAudioPermissionGranted != null) {
+								pendingAudioPermissionGranted.run();
+							}
+						} else {
+							if (pendingAudioPermissionDenied != null) {
+								pendingAudioPermissionDenied.run();
+							}
+						}
+						pendingAudioPermissionGranted = null;
+						pendingAudioPermissionDenied = null;
+					});
+
+	private final ActivityResultLauncher<Intent> speechRecognizerLauncher =
+					registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+						if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+							List<String> matches = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+							if (matches != null && !matches.isEmpty()) {
+								String query = matches.get(0);
+								if (query != null && !query.isBlank()) {
+									String encoded = Uri.encode(query);
+									String searchUrl = Constant.HOME_URL + "/results?search_query=" + encoded;
+									if (activeVoiceSearchWebView != null) {
+										activeVoiceSearchWebView.loadUrl(searchUrl);
+									} else {
+										YoutubeWebview webView = tabManager.getWebView();
+										if (webView != null) webView.loadUrl(searchUrl);
+									}
+								}
+							}
+						}
+						activeVoiceSearchWebView = null;
+					});
+
+	public void requestAudioPermission(@NonNull Runnable onGranted, @NonNull Runnable onDenied) {
+		this.pendingAudioPermissionGranted = onGranted;
+		this.pendingAudioPermissionDenied = onDenied;
+		requestAudioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO);
+	}
+
+	public void startVoiceSearch(@Nullable YoutubeWebview webView) {
+		this.activeVoiceSearchWebView = webView;
+		if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+			requestAudioPermission(this::launchSpeechIntent, () -> ToastUtils.show(this, "Microphone permission required for voice search"));
+		} else {
+			launchSpeechIntent();
+		}
+	}
+
+	private void launchSpeechIntent() {
+		try {
+			Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+			intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+			intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to search MeTube");
+			speechRecognizerLauncher.launch(intent);
+		} catch (Exception e) {
+			ToastUtils.show(this, "Voice search is not supported on this device");
+		}
+	}
 
 	static boolean shouldEnterPictureInPicture(@Nullable LitePlayer player,
 	                                           @Nullable ExtensionManager extensionManager,

@@ -14,6 +14,7 @@ public final class Constant {
 	public static final String PAGE_WATCH = "watch";
 	public static final String PAGE_SUBSCRIPTIONS = "subscriptions";
 	public static final String PAGE_LIBRARY = "library";
+	public static final String PAGE_NOTIFICATIONS = "notifications";
 	public static final String SKIP_SPONSORS = "skip_sponsors";
 	public static final String SKIP_SELF_PROMO = "skip_self_promo";
 	public static final String SKIP_POI_HIGHLIGHT = "skip_poi_highlight";

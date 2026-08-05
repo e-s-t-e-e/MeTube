@@ -222,6 +222,15 @@ public final class JavascriptInterface {
 	}
 
 	@android.webkit.JavascriptInterface
+	public void voiceSearch() {
+		handler.post(() -> {
+			if (webView != null) {
+				webView.startVoiceSearch();
+			}
+		});
+	}
+
+	@android.webkit.JavascriptInterface
 	public void about() {
 		handler.post(() -> context.startActivity(new Intent(context, AboutActivity.class)));
 	}

@@ -153,3 +153,37 @@ ytd-app,
     -webkit-backdrop-filter: none !important;
 }
 
+/* Style injected header buttons (Notifications & Settings) */
+.metube-header-btn,
+#metube-header-notifications-btn,
+#metube-header-settings-btn {
+    background: transparent !important;
+    border: none !important;
+    padding: 6px !important;
+    margin-left: 2px !important;
+    margin-right: 4px !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    outline: none !important;
+    flex-shrink: 0 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.metube-header-btn svg,
+#metube-header-notifications-btn svg,
+#metube-header-settings-btn svg {
+    width: 22px !important;
+    height: 22px !important;
+    fill: #ffffff !important;
+    transition: fill 0.2s ease !important;
+}
+
+.metube-header-btn:hover svg,
+#metube-header-notifications-btn:hover svg,
+#metube-header-settings-btn:hover svg {
+    fill: #ff0000 !important;
+}
+

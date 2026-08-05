@@ -185,6 +185,7 @@ public final class UrlUtils {
 			case "feed" -> (segments.size() > 1) ? switch (segments.get(1).toLowerCase(NORMAL_LOCALE)) {
 				case "subscriptions" -> Constant.PAGE_SUBSCRIPTIONS;
 				case "library" -> Constant.PAGE_LIBRARY;
+				case "notifications" -> Constant.PAGE_NOTIFICATIONS;
 				case "history" -> "history";
 				case "channels" -> "channels";
 				case "playlists" -> "playlists";
