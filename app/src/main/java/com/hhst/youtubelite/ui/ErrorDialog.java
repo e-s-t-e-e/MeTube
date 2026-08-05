@@ -21,6 +21,8 @@ import java.util.IdentityHashMap;
 import java.util.Locale;
 import java.util.Set;
 
+import androidx.appcompat.app.AlertDialog;
+
 /**
  * Dialog that shows structured error details.
  */
@@ -67,7 +69,7 @@ public final class ErrorDialog {
 		show(context, title, throwable, null, onDismissListener);
 	}
 
-	public static void show(Context context, String title, Throwable throwable, Runnable onRetry, DialogInterface.OnDismissListener onDismissListener) {
+	public static AlertDialog show(Context context, String title, Throwable throwable, Runnable onRetry, DialogInterface.OnDismissListener onDismissListener) {
 		boolean network = isNetworkError(throwable);
 		String displayTitle = (network || title == null || title.contains("PlaybackException") || title.contains("Source error"))
 						? context.getString(R.string.network_error_title)
@@ -78,7 +80,7 @@ public final class ErrorDialog {
 										? throwable.getMessage()
 										: context.getString(R.string.network_error_message));
 		String stack = buildExpandedStackTrace(throwable);
-		showInternal(context, displayTitle, userMessage, stack, onRetry, onDismissListener);
+		return showInternal(context, displayTitle, userMessage, stack, onRetry, onDismissListener);
 	}
 
 	public static void show(Context context, String title, String stack, DialogInterface.OnDismissListener onDismissListener) {
@@ -89,9 +91,9 @@ public final class ErrorDialog {
 		showInternal(context, title, context.getString(R.string.network_error_message), stack, onRetry, onDismissListener);
 	}
 
-	private static void showInternal(Context context, String title, String userMessage, String stack, Runnable onRetry, DialogInterface.OnDismissListener onDismissListener) {
+	private static AlertDialog showInternal(Context context, String title, String userMessage, String stack, Runnable onRetry, DialogInterface.OnDismissListener onDismissListener) {
 		if (context instanceof Activity && DeviceUtils.isInPictureInPictureMode((Activity) context))
-			return;
+			return null;
 
 		View view = LayoutInflater.from(context).inflate(R.layout.dialog_error, null);
 		TextView titleView = view.findViewById(R.id.error_title);
@@ -148,7 +150,7 @@ public final class ErrorDialog {
 			builder.setNegativeButton(R.string.close, (dialog, which) -> dialog.dismiss());
 		}
 
-		builder.show();
+		return builder.show();
 	}
 
 	private static String buildExpandedStackTrace(Throwable throwable) {

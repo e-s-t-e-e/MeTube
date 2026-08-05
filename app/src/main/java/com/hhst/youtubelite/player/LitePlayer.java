@@ -10,6 +10,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.Tracks;
@@ -112,6 +113,9 @@ public class LitePlayer {
 	private boolean inMiniPlayer;
 	private boolean wasInPip;
 	private int retryCount = 0;
+	private static final int MAX_AUTO_RETRIES = 3;
+	@Nullable
+	private AlertDialog activeErrorDialog;
 	@Nullable
 	private ConnectivityManager.NetworkCallback networkCallback;
 
@@ -178,6 +182,7 @@ public class LitePlayer {
 			@Override
 			public void onPlaybackStateChanged(int state) {
 				if (state == Player.STATE_READY) {
+					dismissErrorDialog();
 					updateServiceProgress(engine.isPlaying());
 				}
 			}
@@ -185,14 +190,10 @@ public class LitePlayer {
 			@Override
 			public void onPlayerError(@NonNull PlaybackException error) {
 				if (engine.recoverFromPlaybackError(error)) {
+					dismissErrorDialog();
 					return;
 				}
-				if (isHttp403Error(error) && retryCount < 3) {
-					retryCount++;
-					retryWithFreshUrl();
-					return;
-				}
-				ErrorDialog.show(activity, error.getMessage(), error, LitePlayer.this::retryPlayback, null);
+				autoRefreshOrShowError(error);
 			}
 		});
 	}
@@ -284,6 +285,7 @@ public class LitePlayer {
 											details.segments(),
 											details.subtitles());
 						}).thenAccept(er -> activity.runOnUiThread(() -> {
+							dismissErrorDialog();
 							if (this.extractSession == session) this.extractSession = null;
 							if (!Objects.equals(this.queuedId, videoId)) return;
 							playerView.setTitle(er.video().getTitle());
@@ -293,7 +295,7 @@ public class LitePlayer {
 								engine.play(er);
 								controller.resetBtVolumeWarning();
 							} catch (IllegalArgumentException e) {
-								ErrorDialog.show(activity, e.getMessage(), e, this::retryPlayback, null);
+								autoRefreshOrShowError(e);
 								return;
 							}
 							this.activeId = videoId;
@@ -317,7 +319,7 @@ public class LitePlayer {
 								Throwable error = cause;
 								activity.runOnUiThread(() -> {
 									if (!Objects.equals(this.queuedId, videoId)) return;
-									ErrorDialog.show(activity, error.getMessage(), error, this::retryPlayback, null);
+									autoRefreshOrShowError(error);
 								});
 							}
 							return null;
@@ -325,6 +327,7 @@ public class LitePlayer {
 	}
 
 	public void retryPlayback() {
+		dismissErrorDialog();
 		String videoId = this.activeId != null ? this.activeId : this.queuedId;
 		if (videoId == null) return;
 		this.queuedId = null;
@@ -337,17 +340,30 @@ public class LitePlayer {
 		}
 	}
 
-	private boolean isHttp403Error(@NonNull PlaybackException error) {
-		Throwable cause = error.getCause();
-		while (cause != null) {
-			if (cause instanceof androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException httpEx) {
-				if (httpEx.responseCode == 403) {
-					return true;
-				}
+	private void dismissErrorDialog() {
+		AlertDialog dialog = activeErrorDialog;
+		activeErrorDialog = null;
+		if (dialog != null && dialog.isShowing()) {
+			try {
+				dialog.dismiss();
+			} catch (Exception ignored) {
 			}
-			cause = cause.getCause();
 		}
-		return false;
+	}
+
+	private void showErrorDialog(@NonNull Throwable error) {
+		dismissErrorDialog();
+		activeErrorDialog = ErrorDialog.show(activity, error.getMessage(), error, this::retryPlayback, null);
+	}
+
+	private void autoRefreshOrShowError(@NonNull Throwable error) {
+		if (retryCount < MAX_AUTO_RETRIES && (activeId != null || queuedId != null)) {
+			retryCount++;
+			ToastUtils.show(activity, R.string.refreshing_video);
+			retryWithFreshUrl();
+		} else {
+			showErrorDialog(error);
+		}
 	}
 
 	private void retryWithFreshUrl() {
@@ -384,6 +400,7 @@ public class LitePlayer {
 							details.segments(),
 							details.subtitles());
 		}).thenAccept(er -> activity.runOnUiThread(() -> {
+			dismissErrorDialog();
 			if (this.extractSession == session) this.extractSession = null;
 			if (!Objects.equals(this.activeId, videoId) && !Objects.equals(this.queuedId, videoId)) return;
 			try {
@@ -403,7 +420,7 @@ public class LitePlayer {
 					refreshQueueNav();
 				}
 			} catch (IllegalArgumentException e) {
-				ErrorDialog.show(activity, e.getMessage(), e, this::retryPlayback, null);
+				autoRefreshOrShowError(e);
 			}
 		})).exceptionally(e -> {
 			if (this.extractSession == session) this.extractSession = null;
@@ -418,7 +435,7 @@ public class LitePlayer {
 				Throwable error = cause;
 				activity.runOnUiThread(() -> {
 					if (!Objects.equals(this.activeId, videoId) && !Objects.equals(this.queuedId, videoId)) return;
-					ErrorDialog.show(activity, error.getMessage(), error, this::retryPlayback, null);
+					autoRefreshOrShowError(error);
 				});
 			}
 			return null;

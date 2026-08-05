@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
+import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -472,6 +473,27 @@ public class YoutubeWebview extends WebView {
 			public boolean onConsoleMessage(@NonNull ConsoleMessage consoleMessage) {
 				Log.d("js-log", consoleMessage.message() + " -- From line " + consoleMessage.lineNumber() + " of " + consoleMessage.sourceId());
 				return super.onConsoleMessage(consoleMessage);
+			}
+
+			@Override
+			public void onPermissionRequest(@NonNull PermissionRequest request) {
+				boolean wantsAudio = false;
+				for (String resource : request.getResources()) {
+					if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource)) {
+						wantsAudio = true;
+						break;
+					}
+				}
+				if (!wantsAudio) {
+					super.onPermissionRequest(request);
+					return;
+				}
+				Activity activity = getActivityContext();
+				if (activity instanceof MainActivity mainActivity) {
+					mainActivity.requestRecordAudioPermission(() -> post(() -> request.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE})));
+				} else {
+					super.onPermissionRequest(request);
+				}
 			}
 
 			@Override
