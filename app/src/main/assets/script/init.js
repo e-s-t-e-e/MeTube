@@ -419,7 +419,7 @@
                     isWatch,
                     isShorts: pageClass === 'shorts',
                     isSettings: pageClass === 'select_site',
-                    isHomeLike: ['home', 'subscriptions', 'library', '@'].includes(pageClass),
+                    isHomeLike: ['home', 'subscriptions', 'notifications', 'library', '@'].includes(pageClass),
                     moviePlayer,
                     videoId: Page.videoId(location.href),
                     isLive: !!moviePlayer?.getPlayerResponse?.()?.playabilityStatus?.liveStreamability
@@ -451,7 +451,8 @@
                     Gesture.run(ctx),
                     Chat.run(ctx),
                     Watch.run(ctx),
-                    Settings.run(ctx)
+                    Settings.run(ctx),
+                    NotificationsPivot.run(ctx)
                 ];
                 return !results.some(result => result === false);
             }
@@ -1794,6 +1795,54 @@
             }
         };
 
+        // Ensures Notifications tab exists in bottom navigation pivot bar.
+        const NotificationsPivot = {
+            run(ctx) {
+                try {
+                    const pivotBar = document.querySelector('ytm-pivot-bar-renderer, .pivot-bar');
+                    if (!pivotBar) return true;
+
+                    let notifItem = document.getElementById('metube-notifications-pivot-item');
+                    const isOnNotifications = location.pathname.includes('/feed/notifications') || location.href.includes('/feed/notifications');
+
+                    if (!notifItem) {
+                        const template = pivotBar.querySelector('ytm-pivot-bar-item-renderer, .pivot-bar-item');
+                        notifItem = document.createElement('ytm-pivot-bar-item-renderer');
+                        notifItem.id = 'metube-notifications-pivot-item';
+                        notifItem.className = template ? template.className : 'pivot-bar-item';
+                        notifItem.style.cssText = 'display: inline-flex; align-items: center; justify-content: center; flex: 1; text-align: center; text-decoration: none; cursor: pointer; color: inherit;';
+
+                        notifItem.innerHTML = `
+                            <a href="/feed/notifications" class="pivot-bar-item-tab" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; text-decoration: none; color: inherit; font-size: 10px;">
+                                <div class="pivot-bar-item-icon" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+                                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor; display: block;"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+                                </div>
+                                <span class="pivot-bar-item-title" style="margin-top: 2px; line-height: 1.2;">Notifications</span>
+                            </a>
+                        `;
+
+                        const items = pivotBar.children;
+                        if (items.length >= 3) {
+                            pivotBar.insertBefore(notifItem, items[items.length - 1]);
+                        } else {
+                            pivotBar.appendChild(notifItem);
+                        }
+                    }
+
+                    if (isOnNotifications) {
+                        notifItem.style.color = '#ffffff';
+                        notifItem.classList.add('pivot-bar-item-selected');
+                    } else {
+                        notifItem.style.color = '#aaaaaa';
+                        notifItem.classList.remove('pivot-bar-item-selected');
+                    }
+                } catch (err) {
+                    console.error('NotificationsPivot error:', err);
+                }
+                return true;
+            }
+        };
+
         const updateMeTubeBranding = () => {
             try {
                 if (document.title && /YouTube/i.test(document.title)) {
@@ -1838,67 +1887,6 @@
             } catch (e) {}
         };
         setInterval(updateMeTubeBranding, 1200);
-
-        const injectHeaderButtons = () => {
-            try {
-                const header = document.querySelector('ytm-header-bar, #header-bar, .mobile-topbar-header, ytm-mobile-topbar-renderer');
-                if (!header) return;
-
-                let actionGroup = header.querySelector('.header-action-buttons, .header-buttons, ytm-header-bar-action-buttons');
-                if (!actionGroup) {
-                    actionGroup = header;
-                }
-
-                // 1. Inject Notification Bell Button if missing
-                if (!document.getElementById('metube-header-notifications-btn')) {
-                    const notifBtn = document.createElement('a');
-                    notifBtn.id = 'metube-header-notifications-btn';
-                    notifBtn.className = 'header-button metube-header-btn';
-                    notifBtn.href = '/feed/notifications';
-                    notifBtn.setAttribute('aria-label', 'Notifications');
-                    notifBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>`;
-                    notifBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        window.location.href = '/feed/notifications';
-                    });
-                    actionGroup.appendChild(notifBtn);
-                }
-
-                // 2. Inject Settings Gear Button if missing
-                if (!document.getElementById('metube-header-settings-btn')) {
-                    const settingsBtn = document.createElement('button');
-                    settingsBtn.id = 'metube-header-settings-btn';
-                    settingsBtn.className = 'header-button metube-header-btn';
-                    settingsBtn.setAttribute('aria-label', 'MeTube Settings');
-                    settingsBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>`;
-                    settingsBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        try {
-                            if (typeof window.lite !== 'undefined' && typeof window.lite.extension === 'function') {
-                                window.lite.extension();
-                            }
-                        } catch (err) {}
-                    });
-                    actionGroup.appendChild(settingsBtn);
-                }
-
-                // 3. Bind mic search button hook
-                const micBtn = document.querySelector('.searchbox-input-wrapper + button, button[aria-label*="Search with your voice"], button[aria-label*="voice"], c3-icon[type="microphone"]');
-                if (micBtn && micBtn.dataset.liteVoiceBound !== 'true') {
-                    micBtn.dataset.liteVoiceBound = 'true';
-                    micBtn.addEventListener('click', (e) => {
-                        try {
-                            if (typeof window.lite !== 'undefined' && typeof window.lite.voiceSearch === 'function') {
-                                window.lite.voiceSearch();
-                            }
-                        } catch (err) {}
-                    }, true);
-                }
-            } catch (e) {}
-        };
-        setInterval(injectHeaderButtons, 800);
 
         App.init();
     } catch (error) {

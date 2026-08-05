@@ -12,11 +12,9 @@ import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
-import android.Manifest;
 import android.view.ViewGroup;
 import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
-import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -317,13 +315,6 @@ public class YoutubeWebview extends WebView {
 		}
 	}
 
-	public void startVoiceSearch() {
-		Activity activity = getActivityContext();
-		if (activity instanceof MainActivity mainActivity) {
-			mainActivity.startVoiceSearch(this);
-		}
-	}
-
 	@NonNull
 	String sanitizeLoadUrl(@NonNull String url) {
 		return sanitizeLoadUrl(url, queueRepository != null && queueRepository.isEnabled());
@@ -476,30 +467,6 @@ public class YoutubeWebview extends WebView {
 		});
 
 		setWebChromeClient(new WebChromeClient() {
-
-			@Override
-			public void onPermissionRequest(@NonNull PermissionRequest request) {
-				for (String res : request.getResources()) {
-					if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(res)) {
-						Activity activity = getActivityContext();
-						if (activity != null) {
-							if (androidx.core.content.ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-								request.grant(request.getResources());
-							} else {
-								if (activity instanceof MainActivity mainActivity) {
-									mainActivity.requestAudioPermission(() -> request.grant(request.getResources()), request::deny);
-								} else {
-									request.deny();
-								}
-							}
-						} else {
-							request.grant(request.getResources());
-						}
-						return;
-					}
-				}
-				request.deny();
-			}
 
 			@Override
 			public boolean onConsoleMessage(@NonNull ConsoleMessage consoleMessage) {
