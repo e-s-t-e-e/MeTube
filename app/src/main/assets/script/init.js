@@ -1796,7 +1796,7 @@
             }
         };
 
-        // Ensures Notifications tab exists in bottom navigation pivot bar cleanly without flickering.
+        // Ensures Notifications tab exists in bottom navigation pivot bar and triggers native YouTube notifications menu.
         const NotificationsPivot = {
             init() {
                 try {
@@ -1814,13 +1814,55 @@
                 } catch (ignored) {}
             },
 
+            getNativeNotificationButton() {
+                return document.querySelector(
+                    'ytm-notification-topbar-button-renderer button, ' +
+                    'ytm-notification-topbar-button-renderer a, ' +
+                    'ytm-notification-topbar-button-renderer, ' +
+                    'c3-icon[type="notifications"], ' +
+                    'button[aria-label*="Notification"], ' +
+                    'button[aria-label*="notification"], ' +
+                    'a[aria-label*="Notification"], ' +
+                    'a[href*="notification"]'
+                );
+            },
+
+            getUnreadCount() {
+                try {
+                    const nativeBtn = NotificationsPivot.getNativeNotificationButton();
+                    if (!nativeBtn) return null;
+                    const badgeEl = nativeBtn.querySelector('[class*="badge"], [class*="count"], .badge-shape-wiz__text');
+                    if (badgeEl && badgeEl.textContent) {
+                        const txt = badgeEl.textContent.trim();
+                        if (txt.length > 0) return txt;
+                    }
+                } catch (e) {}
+                return null;
+            },
+
+            openNotificationsMenu() {
+                const nativeBtn = NotificationsPivot.getNativeNotificationButton();
+                if (nativeBtn) {
+                    try {
+                        nativeBtn.click();
+                        return true;
+                    } catch (e) {
+                        console.error('Failed to click native notification button:', e);
+                    }
+                }
+                // Fallback navigation if native header button is absent
+                window.location.href = '/feed/notifications';
+                return false;
+            },
+
             run(ctx) {
                 try {
                     const pivotBar = document.querySelector('ytm-pivot-bar-renderer, .pivot-bar');
                     if (!pivotBar) return true;
 
                     let notifItem = document.getElementById('metube-notifications-pivot-item');
-                    const isOnNotifications = location.pathname.includes('/feed/notifications') || location.href.includes('/feed/notifications');
+                    const unreadCount = NotificationsPivot.getUnreadCount();
+                    const isOpen = !!document.querySelector('ytm-notification-topbar-renderer, ytm-notification-section-renderer');
 
                     if (!notifItem || notifItem.parentNode !== pivotBar) {
                         if (notifItem && notifItem.parentNode) {
@@ -1837,25 +1879,23 @@
                         notifItem.id = 'metube-notifications-pivot-item';
                         notifItem.className = template ? template.className : 'pivot-bar-item';
                         notifItem.setAttribute('role', 'tab');
-                        notifItem.style.cssText = 'display: inline-flex; align-items: center; justify-content: center; flex: 1; text-align: center; text-decoration: none; cursor: pointer; color: inherit;';
+                        notifItem.style.cssText = 'display: inline-flex; align-items: center; justify-content: center; flex: 1; text-align: center; text-decoration: none; cursor: pointer; color: inherit; position: relative;';
 
                         notifItem.innerHTML = `
-                            <a href="/feed/notifications" class="pivot-bar-item-tab" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; text-decoration: none; color: inherit; font-size: 10px;">
-                                <div class="pivot-bar-item-icon" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+                            <div class="pivot-bar-item-tab" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; text-decoration: none; color: inherit; font-size: 10px; position: relative;">
+                                <div class="pivot-bar-item-icon" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; position: relative;">
                                     <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor; display: block;"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+                                    <span id="metube-notif-badge" style="display: none; position: absolute; top: -3px; right: -5px; background-color: #ff0000; color: #ffffff; font-size: 9px; font-weight: bold; border-radius: 9px; min-width: 14px; height: 14px; line-height: 14px; text-align: center; padding: 0 3px; z-index: 10;"></span>
                                 </div>
                                 <span class="pivot-bar-item-title" style="margin-top: 2px; line-height: 1.2;">Notifications</span>
-                            </a>
+                            </div>
                         `;
 
-                        const link = notifItem.querySelector('a');
-                        if (link) {
-                            link.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                window.location.href = '/feed/notifications';
-                            });
-                        }
+                        notifItem.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            NotificationsPivot.openNotificationsMenu();
+                        });
 
                         const items = [...pivotBar.children].filter(el => el.id !== 'metube-notifications-pivot-item');
                         if (items.length >= 3) {
@@ -1865,7 +1905,18 @@
                         }
                     }
 
-                    if (isOnNotifications) {
+                    // Update Badge UI
+                    const badge = notifItem.querySelector('#metube-notif-badge');
+                    if (badge) {
+                        if (unreadCount) {
+                            badge.textContent = unreadCount;
+                            badge.style.display = 'inline-block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+
+                    if (isOpen || location.pathname.includes('/feed/notifications')) {
                         notifItem.style.color = '#ffffff';
                         notifItem.classList.add('pivot-bar-item-selected');
                     } else {
