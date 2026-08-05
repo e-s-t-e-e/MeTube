@@ -21,6 +21,11 @@
         <item name="colorSurfaceContainerHighest">@color/surface</item>
         <item name="colorSurfaceContainerLowest">@color/surface</item>
 
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
         <item name="materialAlertDialogTheme">@style/Theme.YoutubeLite.AlertDialog</item>
         <item name="bottomSheetDialogTheme">@style/Theme.YoutubeLite.BottomSheetDialog</item>
 

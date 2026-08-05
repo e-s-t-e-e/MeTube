@@ -82,7 +82,28 @@ ytm-home-logo::before,
     content: none !important;
 }
 
-/* MeTube Text Only */
+/* ==========================================================================
+   FORCE PURE AMOLED BLACK THEME EVERYWHERE
+   ========================================================================== */
+
+:root,
+html,
+body {
+    background-color: #000000 !important;
+    background: #000000 !important;
+    color: #ffffff !important;
+    --yt-spec-base-background: #000000 !important;
+    --yt-spec-brand-background-solid: #000000 !important;
+    --yt-spec-general-background-a: #000000 !important;
+    --yt-spec-general-background-b: #000000 !important;
+    --yt-spec-general-background-c: #0A0A0A !important;
+    --yt-spec-text-primary: #ffffff !important;
+    --yt-spec-text-secondary: #aaaaaa !important;
+    --yt-spec-icon-inactive: #ffffff !important;
+    --yt-spec-icon-active: #ffffff !important;
+}
+
+/* MeTube Text Logo - Pure White */
 ytm-header-bar .header-logo::after,
 #header-bar .header-logo::after,
 ytd-topbar-logo-renderer #logo::after,
@@ -95,14 +116,14 @@ ytm-home-logo::after,
     font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
     font-size: 19px !important;
     font-weight: 700 !important;
-    color: var(--yt-spec-text-primary, #0f0f0f) !important;
+    color: #ffffff !important;
     letter-spacing: -0.4px !important;
     vertical-align: middle !important;
     line-height: 1 !important;
     visibility: visible !important;
 }
 
-/* Make top header navigation bar contrast with theme selection */
+/* Always force AMOLED Black on all header navigation bars, top bars, and app containers */
 ytm-header-bar,
 #header-bar,
 .header-bar,
@@ -112,82 +133,23 @@ ytd-masthead,
 #masthead,
 .masthead,
 #header,
-header {
-    background-color: var(--yt-spec-brand-background-solid, #ffffff) !important;
-    background: var(--yt-spec-brand-background-solid, #ffffff) !important;
+header,
+.c4-tabbed-header,
+ytm-c4-tabbed-header-renderer,
+ytm-pivot-bar-renderer,
+ytm-app,
+ytm-single-column-browse-results-renderer,
+ytm-browse,
+ytm-search,
+ytm-watch,
+ytd-app,
+#content,
+#page-manager {
+    background-color: #000000 !important;
+    background: #000000 !important;
+    color: #ffffff !important;
     opacity: 1 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-}
-
-/* Explicitly enforce black headers in dark mode */
-html[dark] ytm-header-bar,
-html[dark] #header-bar,
-html[dark] .header-bar,
-html[dark] .mobile-topbar-header,
-html[dark] ytm-mobile-topbar-renderer,
-html[dark] ytd-masthead,
-html[dark] #masthead,
-html[dark] .masthead,
-html[dark] #header,
-html[dark] header,
-@media (prefers-color-scheme: dark) {
-    ytm-header-bar,
-    #header-bar,
-    .header-bar,
-    .mobile-topbar-header,
-    ytm-mobile-topbar-renderer,
-    ytd-masthead,
-    #masthead,
-    .masthead,
-    #header,
-    header {
-        background-color: #000000 !important;
-        background: #000000 !important;
-    }
-    
-    ytm-header-bar .header-logo::after,
-    #header-bar .header-logo::after,
-    ytd-topbar-logo-renderer #logo::after,
-    a#logo::after,
-    a.header-logo::after,
-    ytm-home-logo::after,
-    .ytm-header-bar-logo::after,
-    .mobile-topbar-header .header-logo::after {
-        color: #ffffff !important;
-    }
-}
-
-/* Style injected settings gear button in header actions bar */
-#metube-header-settings-btn {
-    background: transparent !important;
-    border: none !important;
-    padding: 8px !important;
-    margin-left: 4px !important;
-    margin-right: 8px !important;
-    cursor: pointer !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    outline: none !important;
-    flex-shrink: 0 !important;
-}
-
-#metube-header-settings-btn svg {
-    width: 24px !important;
-    height: 24px !important;
-    fill: var(--yt-spec-text-primary, #0f0f0f) !important;
-    transition: fill 0.2s ease !important;
-}
-
-html[dark] #metube-header-settings-btn svg,
-@media (prefers-color-scheme: dark) {
-    #metube-header-settings-btn svg {
-        fill: #ffffff !important;
-    }
-}
-
-#metube-header-settings-btn:hover svg {
-    fill: #ff0000 !important;
 }
 

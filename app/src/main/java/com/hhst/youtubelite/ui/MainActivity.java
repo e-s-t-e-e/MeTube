@@ -31,6 +31,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleEventObserver;
@@ -143,6 +144,8 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 		splashScreen.setKeepOnScreenCondition(
 				() -> android.os.SystemClock.uptimeMillis() < splashDeadline);
 		EdgeToEdge.enable(this);
+		WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView()).setAppearanceLightStatusBars(false);
+		WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView()).setAppearanceLightNavigationBars(false);
 		setContentView(R.layout.activity_main);
 		super.onCreate(savedInstanceState);
 		restoredUrl = savedInstanceState != null ? savedInstanceState.getString(STATE_LAST_URL) : null;
