@@ -963,6 +963,16 @@
             },
 
             onClick(event) {
+                const incognito = event.target.closest('#metube-incognito-pivot-item');
+                if (incognito) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    if (typeof lite !== 'undefined' && lite.toggleIncognito) {
+                        lite.toggleIncognito();
+                    }
+                    return;
+                }
+
                 const anchor = event.target.closest('a');
                 const logo = event.target.closest('ytm-home-logo');
                 const nav = event.target.closest('ytm-pivot-bar-item-renderer');
@@ -1809,13 +1819,13 @@
                         </div>
                     `;
 
-                    item.addEventListener('click', (e) => {
+                    DOM.bind(item, 'click', (e) => {
                         e.preventDefault();
-                        e.stopPropagation();
+                        e.stopImmediatePropagation();
                         if (typeof lite !== 'undefined' && lite.toggleIncognito) {
                             lite.toggleIncognito();
                         }
-                    });
+                    }, true);
                 }
 
                 const svg = item.querySelector('svg');

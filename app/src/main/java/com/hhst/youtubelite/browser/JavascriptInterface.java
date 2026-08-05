@@ -389,7 +389,8 @@ public final class JavascriptInterface {
 	@android.webkit.JavascriptInterface
 	public void toggleIncognito() {
 		handler.post(() -> {
-			if (context instanceof MainActivity mainActivity) {
+			MainActivity mainActivity = getMainActivity();
+			if (mainActivity != null) {
 				mainActivity.toggleIncognito();
 			}
 		});
@@ -397,7 +398,8 @@ public final class JavascriptInterface {
 
 	@android.webkit.JavascriptInterface
 	public boolean isIncognitoEnabled() {
-		if (context instanceof MainActivity mainActivity) {
+		MainActivity mainActivity = getMainActivity();
+		if (mainActivity != null) {
 			return mainActivity.isIncognitoEnabled();
 		}
 		return false;
