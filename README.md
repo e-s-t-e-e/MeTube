@@ -2,7 +2,7 @@
 
 # 📺 MeTube
 
-**A privacy-focused, feature-packed Android app & player for YouTube**  
+**A feature-packed custom Android app & player for YouTube**  
 *Made with ❤️ for a cleaner experience of YouTube by **estee***
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
