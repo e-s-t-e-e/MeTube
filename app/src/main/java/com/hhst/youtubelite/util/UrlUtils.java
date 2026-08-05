@@ -178,14 +178,12 @@ public final class UrlUtils {
 		return switch (s0) {
 			case "shorts" -> Constant.PAGE_SHORTS;
 			case "watch" -> Constant.PAGE_WATCH;
-			case "notification", "notifications" -> Constant.PAGE_NOTIFICATIONS;
 			case "channel" -> "channel";
 			case "gaming" -> "gaming";
 			case "select_site" -> "select_site";
 			case "results" -> "searching";
 			case "feed" -> (segments.size() > 1) ? switch (segments.get(1).toLowerCase(NORMAL_LOCALE)) {
 				case "subscriptions" -> Constant.PAGE_SUBSCRIPTIONS;
-				case "notifications" -> Constant.PAGE_NOTIFICATIONS;
 				case "library" -> Constant.PAGE_LIBRARY;
 				case "history" -> "history";
 				case "channels" -> "channels";

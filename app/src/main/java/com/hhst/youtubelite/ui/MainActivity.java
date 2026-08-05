@@ -571,113 +571,33 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 		}
 	}
 
-	@SuppressLint("ClickableViewAccessibility")
+	public boolean isIncognitoEnabled() {
+		return incognitoManager != null && incognitoManager.isEnabled();
+	}
+
+	public void toggleIncognito() {
+		if (incognitoManager == null) {
+			incognitoManager = new com.hhst.youtubelite.browser.IncognitoManager(this);
+		}
+		YoutubeWebview wv = getWebView();
+		String currentUrl = wv != null ? wv.getUrl() : null;
+		incognitoManager.toggle(currentUrl, () -> {
+			boolean on = incognitoManager.isEnabled();
+			YoutubeWebview w = getWebView();
+			if (w != null) {
+				w.reload();
+			}
+			Toast.makeText(this, on ? R.string.incognito_on : R.string.incognito_off,
+							Toast.LENGTH_SHORT).show();
+		});
+	}
+
 	private void setupIncognitoButton(@Nullable View playerRoot) {
 		btnIncognito = findViewById(R.id.btn_incognito);
-		if (btnIncognito == null) {
-			return;
+		if (btnIncognito != null) {
+			btnIncognito.setVisibility(View.GONE);
 		}
 		incognitoManager = new com.hhst.youtubelite.browser.IncognitoManager(this);
-		updateIncognitoAppearance(incognitoManager.isEnabled());
-
-		btnIncognito.setOnClickListener(v -> {
-			YoutubeWebview wv = getWebView();
-			String currentUrl = wv != null ? wv.getUrl() : null;
-			incognitoManager.toggle(currentUrl, () -> {
-				boolean on = incognitoManager.isEnabled();
-				updateIncognitoAppearance(on);
-				YoutubeWebview w = getWebView();
-				if (w != null) {
-					w.reload();
-				}
-				Toast.makeText(this, on ? R.string.incognito_on : R.string.incognito_off,
-								Toast.LENGTH_SHORT).show();
-			});
-		});
-
-		// Long-press to drag the button out of the way; a plain tap still toggles incognito.
-		btnIncognito.setOnTouchListener(new View.OnTouchListener() {
-			float dX, dY, downRawX, downRawY;
-			boolean dragging;
-			final int slop = ViewConfiguration.get(MainActivity.this).getScaledTouchSlop();
-			final Runnable longPress = () -> {
-				dragging = true;
-				btnIncognito.setAlpha(1f);
-				btnIncognito.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
-			};
-
-			@Override
-			public boolean onTouch(View v, MotionEvent e) {
-				switch (e.getActionMasked()) {
-					case MotionEvent.ACTION_DOWN:
-						downRawX = e.getRawX();
-						downRawY = e.getRawY();
-						dX = v.getX() - e.getRawX();
-						dY = v.getY() - e.getRawY();
-						dragging = false;
-						v.postDelayed(longPress, 300);
-						return false; // let the click listener handle a tap
-					case MotionEvent.ACTION_MOVE:
-						if (!dragging
-										&& Math.hypot(e.getRawX() - downRawX, e.getRawY() - downRawY) > slop) {
-							v.removeCallbacks(longPress);
-						}
-						if (dragging && v.getParent() instanceof View parent) {
-							float nx = Math.max(0, Math.min(e.getRawX() + dX, parent.getWidth() - v.getWidth()));
-							float ny = Math.max(0, Math.min(e.getRawY() + dY, parent.getHeight() - v.getHeight()));
-							v.setX(nx);
-							v.setY(ny);
-							return true;
-						}
-						return false;
-					case MotionEvent.ACTION_UP:
-					case MotionEvent.ACTION_CANCEL:
-						v.removeCallbacks(longPress);
-						if (dragging) {
-							dragging = false;
-							snapIncognitoToEdge(v);
-							updateIncognitoAppearance(incognitoManager.isEnabled());
-							return true; // consumed as a drag, suppress click
-						}
-						return false;
-				}
-				return false;
-			}
-		});
-
-		// Keep the button to the browse view: hide it whenever the video player is on screen.
-		if (playerRoot != null) {
-			btnIncognito.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-				if (btnIncognito == null) {
-					return;
-				}
-				boolean enabled = extensionManager.isEnabled(Constant.ENABLE_INCOGNITO_BUTTON);
-				int desired = (!enabled || playerRoot.getVisibility() == View.VISIBLE) ? View.GONE : View.VISIBLE;
-				if (btnIncognito.getVisibility() != desired) {
-					btnIncognito.setVisibility(desired);
-				}
-			});
-		}
-	}
-
-	private void snapIncognitoToEdge(@NonNull View v) {
-		if (!(v.getParent() instanceof View parent)) {
-			return;
-		}
-		int margin = ViewUtils.dpToPx(this, 12);
-		float target = (v.getX() + v.getWidth() / 2f) < parent.getWidth() / 2f
-						? margin
-						: parent.getWidth() - v.getWidth() - margin;
-		v.animate().x(target).setDuration(150L).start();
-	}
-
-	private void updateIncognitoAppearance(boolean on) {
-		if (btnIncognito == null) {
-			return;
-		}
-		btnIncognito.setAlpha(on ? 1f : 0.7f);
-		int color = ContextCompat.getColor(this, on ? R.color.yt_red : R.color.on_surface_variant);
-		btnIncognito.setImageTintList(ColorStateList.valueOf(color));
 	}
 
 	private void setupMiniPlayerDismiss(@Nullable View playerRoot) {
@@ -813,8 +733,7 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 		super.onResume();
 		suppressPiP = false;
 		if (btnIncognito != null) {
-			boolean enabled = extensionManager.isEnabled(Constant.ENABLE_INCOGNITO_BUTTON);
-			btnIncognito.setVisibility(enabled ? View.VISIBLE : View.GONE);
+			btnIncognito.setVisibility(View.GONE);
 		}
 		if (player != null && !DeviceUtils.isInPictureInPictureMode(this)) {
 			if (player.isInPictureInPicture()) {

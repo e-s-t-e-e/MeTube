@@ -386,4 +386,21 @@ public final class JavascriptInterface {
 		return player.getResumePosition(vid);
 	}
 
+	@android.webkit.JavascriptInterface
+	public void toggleIncognito() {
+		handler.post(() -> {
+			if (context instanceof MainActivity mainActivity) {
+				mainActivity.toggleIncognito();
+			}
+		});
+	}
+
+	@android.webkit.JavascriptInterface
+	public boolean isIncognitoEnabled() {
+		if (context instanceof MainActivity mainActivity) {
+			return mainActivity.isIncognitoEnabled();
+		}
+		return false;
+	}
+
 }

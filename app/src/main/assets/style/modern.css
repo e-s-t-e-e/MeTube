@@ -144,19 +144,7 @@ ytm-search,
 ytm-watch,
 ytd-app,
 #content,
-#page-manager,
-ytm-notification-topbar-renderer,
-ytm-notification-section-renderer,
-ytm-notification-multi-item-renderer,
-ytm-notification-options-renderer,
-ytm-section-list-renderer,
-ytm-item-section-renderer,
-ytm-compact-listItem-renderer,
-.ytm-notification-multi-item-renderer,
-.notification-item,
-ytm-message-renderer,
-.ytm-message-renderer,
-ytm-alert-renderer {
+#page-manager {
     background-color: #000000 !important;
     background: #000000 !important;
     color: #ffffff !important;
@@ -165,11 +153,31 @@ ytm-alert-renderer {
     -webkit-backdrop-filter: none !important;
 }
 
-ytm-notification-multi-item-renderer *,
-ytm-compact-listItem-renderer *,
-ytm-message-renderer *,
-ytm-alert-renderer *,
-ytm-section-list-renderer * {
-    color: #ffffff !important;
+/* Styling for injected Incognito item in bottom pivot bar */
+#metube-incognito-pivot-item {
+    display: inline-flex !important;
+    flex: 1 !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    padding: 6px 0 !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+#metube-incognito-pivot-item .pivot-bar-item-tab-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#metube-incognito-pivot-item .pivot-bar-item-title {
+    font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 10px !important;
+    margin-top: 2px !important;
+    line-height: 1 !important;
 }
 
