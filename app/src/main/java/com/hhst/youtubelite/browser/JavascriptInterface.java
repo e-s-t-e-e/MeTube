@@ -39,7 +39,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Component that handles app logic.
@@ -62,8 +61,6 @@ public final class JavascriptInterface {
 	@NonNull
 	private final QueueRepository queueRepository;
 	@NonNull
-	private final VoiceRecognition voiceRecognition;
-	@NonNull
 	private final Gson gson = new Gson();
 	@NonNull
 	private final Handler handler = new Handler(Looper.getMainLooper());
@@ -76,14 +73,6 @@ public final class JavascriptInterface {
 		this.extensionManager = extensionManager;
 		this.tabManager = tabManager;
 		this.queueRepository = queueRepository;
-		this.voiceRecognition = new VoiceRecognition(context, onGranted -> {
-			MainActivity activity = getMainActivity();
-			if (activity != null) {
-				activity.requestRecordAudioPermission(onGranted);
-			} else {
-				onGranted.run();
-			}
-		}, this::dispatchSpeech);
 	}
 
 	@Nullable
@@ -414,75 +403,6 @@ public final class JavascriptInterface {
 			return mainActivity.isIncognitoEnabled();
 		}
 		return false;
-	}
-
-	@android.webkit.JavascriptInterface
-	public void startVoiceRecognition(@Nullable String language) {
-		handler.post(() -> voiceRecognition.start(language));
-	}
-
-	@android.webkit.JavascriptInterface
-	public void stopVoiceRecognition() {
-		handler.post(voiceRecognition::stop);
-	}
-
-	@android.webkit.JavascriptInterface
-	public void cancelVoiceRecognition() {
-		handler.post(voiceRecognition::cancel);
-	}
-
-	@android.webkit.JavascriptInterface
-	public void voiceLog(@Nullable String message) {
-		if (message == null) return;
-		Log.i("VoiceRecognition", "js: " + message);
-		handler.post(() -> ToastUtils.show(context, "[voice] " + message));
-	}
-
-	private void dispatchSpeech(@NonNull String type, @Nullable String text, @Nullable String error) {
-		Log.d("VoiceRecognition", "dispatch type=" + type + " text=" + text + " error=" + error);
-		handler.post(() -> {
-			StringBuilder script = new StringBuilder();
-			script.append("window.__liteSpeechDispatch(").append(jsQuote(type)).append(", {");
-			boolean needsComma = false;
-			if (text != null) {
-				script.append("text: ").append(jsQuote(text)).append(", confidence: 0.9");
-				needsComma = true;
-			}
-			if (error != null) {
-				if (needsComma) script.append(", ");
-				script.append("error: ").append(jsQuote(error));
-			}
-			script.append("});");
-			try {
-				webView.evaluateJavascript(script.toString(), null);
-			} catch (Exception ignored) {
-			}
-		});
-	}
-
-	@NonNull
-	private static String jsQuote(@NonNull String value) {
-		StringBuilder sb = new StringBuilder(value.length() + 16);
-		sb.append('"');
-		for (int i = 0; i < value.length(); i++) {
-			char c = value.charAt(i);
-			switch (c) {
-				case '\\' -> sb.append("\\\\");
-				case '"' -> sb.append("\\\"");
-				case '\n' -> sb.append("\\n");
-				case '\r' -> sb.append("\\r");
-				case '\t' -> sb.append("\\t");
-				default -> {
-					if (c < 0x20) {
-						sb.append(String.format(Locale.US, "\\u%04x", (int) c));
-					} else {
-						sb.append(c);
-					}
-				}
-			}
-		}
-		sb.append('"');
-		return sb.toString();
 	}
 
 }
