@@ -33,18 +33,26 @@ public final class ErrorDialog {
 	}
 
 	public static void show(Context context, String title, String stack) {
-		show(context, title, stack, null);
+		show(context, title, stack, null, null);
 	}
 
 	public static void show(Context context, String title, Throwable throwable) {
-		show(context, title, throwable, null);
+		show(context, title, throwable, null, null);
 	}
 
 	public static void show(Context context, String title, Throwable throwable, DialogInterface.OnDismissListener onDismissListener) {
-		show(context, title, buildExpandedStackTrace(throwable), onDismissListener);
+		show(context, title, buildExpandedStackTrace(throwable), null, onDismissListener);
+	}
+
+	public static void show(Context context, String title, Throwable throwable, Runnable onRetry, DialogInterface.OnDismissListener onDismissListener) {
+		show(context, title, buildExpandedStackTrace(throwable), onRetry, onDismissListener);
 	}
 
 	public static void show(Context context, String title, String stack, DialogInterface.OnDismissListener onDismissListener) {
+		show(context, title, stack, null, onDismissListener);
+	}
+
+	public static void show(Context context, String title, String stack, Runnable onRetry, DialogInterface.OnDismissListener onDismissListener) {
 		String displayTitle = (title == null) ? context.getString(R.string.error_title) : title;
 
 		// Avoid showing dialog in PIP mode
@@ -58,7 +66,42 @@ public final class ErrorDialog {
 		titleView.setText(displayTitle);
 		stackView.setText(stack);
 
-		new MaterialAlertDialogBuilder(context).setView(view).setCancelable(true).setOnDismissListener(onDismissListener).setPositiveButton(R.string.copy, (dialog, which) -> copyDebugInfo(context, displayTitle, stack)).setNegativeButton(R.string.close, (dialog, which) -> dialog.dismiss()).show();
+		boolean[] hasRetried = new boolean[]{false};
+		Runnable safeRetry = onRetry == null ? null : () -> {
+			if (!hasRetried[0]) {
+				hasRetried[0] = true;
+				onRetry.run();
+			}
+		};
+
+		MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context)
+						.setView(view)
+						.setCancelable(true)
+						.setOnDismissListener(dialog -> {
+							if (onDismissListener != null) {
+								onDismissListener.onDismiss(dialog);
+							}
+							if (safeRetry != null) {
+								safeRetry.run();
+							}
+						});
+
+		if (safeRetry != null) {
+			builder.setPositiveButton(R.string.retry, (dialog, which) -> {
+				dialog.dismiss();
+				safeRetry.run();
+			});
+			builder.setNegativeButton(R.string.close, (dialog, which) -> {
+				dialog.dismiss();
+				safeRetry.run();
+			});
+			builder.setNeutralButton(R.string.copy, (dialog, which) -> copyDebugInfo(context, displayTitle, stack));
+		} else {
+			builder.setPositiveButton(R.string.copy, (dialog, which) -> copyDebugInfo(context, displayTitle, stack));
+			builder.setNegativeButton(R.string.close, (dialog, which) -> dialog.dismiss());
+		}
+
+		builder.show();
 	}
 
 	private static String buildExpandedStackTrace(Throwable throwable) {

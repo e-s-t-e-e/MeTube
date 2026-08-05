@@ -78,6 +78,9 @@
     <string name="unlock_screen">解锁屏幕</string>
     <string name="error_title">错误</string>
     <string name="copy">复制</string>
+    <string name="retry">重试</string>
+    <string name="refresh_video">刷新视频</string>
+    <string name="refreshing_video">正在刷新视频…</string>
     <string name="debug_info_copied">调试信息已复制到剪贴板</string>
     <string name="playback_end_next">播完后播放下一首</string>
     <string name="playback_end_loop">播完后单曲循环</string>

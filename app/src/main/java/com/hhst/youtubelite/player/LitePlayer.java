@@ -32,6 +32,7 @@ import com.hhst.youtubelite.player.sponsor.SponsorBlockManager;
 import com.hhst.youtubelite.player.sponsor.SponsorOverlayView;
 import com.hhst.youtubelite.ui.ErrorDialog;
 import com.hhst.youtubelite.util.DeviceUtils;
+import com.hhst.youtubelite.util.ToastUtils;
 import com.tencent.mmkv.MMKV;
 
 import org.schabi.newpipe.extractor.exceptions.SignInConfirmNotBotException;
@@ -105,6 +106,7 @@ public class LitePlayer {
 	@Getter
 	private boolean inMiniPlayer;
 	private boolean wasInPip;
+	private int retryCount = 0;
 
 	@Inject
 	public LitePlayer(@NonNull Activity activity,
@@ -129,6 +131,7 @@ public class LitePlayer {
 		this.executor = executor;
 		playerView.setup();
 		queueRepo.addListener(queueListener);
+		controller.setOnRetryPlayback(this::retryPlayback);
 		setupEngineListeners();
 	}
 
@@ -176,7 +179,12 @@ public class LitePlayer {
 				if (engine.recoverFromPlaybackError(error)) {
 					return;
 				}
-				ErrorDialog.show(activity, error.getMessage(), error);
+				if (isHttp403Error(error) && retryCount < 3) {
+					retryCount++;
+					retryWithFreshUrl();
+					return;
+				}
+				ErrorDialog.show(activity, error.getMessage(), error, LitePlayer.this::retryPlayback, null);
 			}
 		});
 	}
@@ -224,6 +232,7 @@ public class LitePlayer {
 		String videoId = YoutubeExtractor.getVideoId(url);
 		if (videoId == null || Objects.equals(this.queuedId, videoId)) return;
 		this.queuedId = videoId;
+		this.retryCount = 0;
 
 		activity.runOnUiThread(() -> {
 			engine.clear();
@@ -276,7 +285,7 @@ public class LitePlayer {
 								engine.play(er);
 								controller.resetBtVolumeWarning();
 							} catch (IllegalArgumentException e) {
-								ErrorDialog.show(activity, e.getMessage(), e);
+								ErrorDialog.show(activity, e.getMessage(), e, this::retryPlayback, null);
 								return;
 							}
 							this.activeId = videoId;
@@ -300,11 +309,112 @@ public class LitePlayer {
 								Throwable error = cause;
 								activity.runOnUiThread(() -> {
 									if (!Objects.equals(this.queuedId, videoId)) return;
-									ErrorDialog.show(activity, error.getMessage(), error);
+									ErrorDialog.show(activity, error.getMessage(), error, this::retryPlayback, null);
 								});
 							}
 							return null;
 						});
+	}
+
+	public void retryPlayback() {
+		String videoId = this.activeId != null ? this.activeId : this.queuedId;
+		if (videoId == null) return;
+		this.queuedId = null;
+		this.retryCount = 0;
+		activity.runOnUiThread(() -> ToastUtils.show(activity, R.string.refreshing_video));
+		if (this.activeId != null) {
+			retryWithFreshUrl();
+		} else {
+			play("https://www.youtube.com/watch?v=" + videoId);
+		}
+	}
+
+	private boolean isHttp403Error(@NonNull PlaybackException error) {
+		Throwable cause = error.getCause();
+		while (cause != null) {
+			if (cause instanceof androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException httpEx) {
+				if (httpEx.responseCode == 403) {
+					return true;
+				}
+			}
+			cause = cause.getCause();
+		}
+		return false;
+	}
+
+	private void retryWithFreshUrl() {
+		String videoId = this.activeId != null ? this.activeId : this.queuedId;
+		if (videoId == null) return;
+		String url = "https://www.youtube.com/watch?v=" + videoId;
+		long currentPos = engine.position();
+
+		cancelExtraction();
+		if (task != null) task.cancel(true);
+		ExtractionSession session = new ExtractionSession();
+		extractSession = session;
+
+		task = CompletableFuture.runAsync(() -> {
+			if (session.isCancelled()) {
+				throw new CompletionException(new InterruptedException("Extraction canceled"));
+			}
+		}, executor).thenCompose(ignored -> extractor.getInfo(url, session))
+		.thenApply(details -> {
+			String lang = kv.decodeString(KEY_LAST_AUDIO_LANG, "und");
+			String preferredQuality = prefs.getPreferredQuality();
+			PlaybackPlan plan = PlaybackPlanner.plan(details.deliveries(), preferredQuality, lang);
+			if (prefs.shouldUseAdaptiveMuxedFallback(videoId) && plan.getMode() == PlaybackMode.ADAPTIVE) {
+				PlaybackPlan fallback = PlaybackPlanner.muxedFallbackPlan(details.deliveries(), preferredQuality);
+				if (fallback != null) {
+					plan = fallback;
+				}
+			}
+			return new PlaybackDetails(
+							details.video(),
+							details.catalog(),
+							details.deliveries(),
+							plan,
+							details.segments(),
+							details.subtitles());
+		}).thenAccept(er -> activity.runOnUiThread(() -> {
+			if (this.extractSession == session) this.extractSession = null;
+			if (!Objects.equals(this.activeId, videoId) && !Objects.equals(this.queuedId, videoId)) return;
+			try {
+				if (this.activeId != null) {
+					engine.updateMediaSource(er, currentPos);
+				} else {
+					playerView.setTitle(er.video().getTitle());
+					playerView.updateSkipMarkers(er.video().getDuration(), TimeUnit.SECONDS);
+					engine.play(er);
+					controller.resetBtVolumeWarning();
+					this.activeId = videoId;
+					stateStore.setVideoId(videoId);
+					if (playbackSvc != null) {
+						PlaybackService.start(activity);
+						playbackSvc.showNotification(er.video().getTitle(), er.video().getAuthor(), er.video().getThumbnailUrl(), er.video().getDuration() * 1000);
+					}
+					refreshQueueNav();
+				}
+			} catch (IllegalArgumentException e) {
+				ErrorDialog.show(activity, e.getMessage(), e, this::retryPlayback, null);
+			}
+		})).exceptionally(e -> {
+			if (this.extractSession == session) this.extractSession = null;
+			Throwable cause = e instanceof CompletionException ? e.getCause() : e;
+			if (cause instanceof CompletionException && cause.getCause() != null) {
+				cause = cause.getCause();
+			}
+			if (cause instanceof Exception && !(cause instanceof ExtractionException)) {
+				cause = classifyException((Exception) cause);
+			}
+			if (cause instanceof ExtractionException) {
+				Throwable error = cause;
+				activity.runOnUiThread(() -> {
+					if (!Objects.equals(this.activeId, videoId) && !Objects.equals(this.queuedId, videoId)) return;
+					ErrorDialog.show(activity, error.getMessage(), error, this::retryPlayback, null);
+				});
+			}
+			return null;
+		});
 	}
 
 	@NonNull

@@ -177,6 +177,9 @@ public class Controller {
 	private long lastVideoRenderedCount = 0;
 	private long lastFpsUpdateTime = 0;
 	private float fps = 0;
+	@Setter
+	@Nullable
+	private Runnable onRetryPlayback;
 	@Nullable
 	private PlayerGestureListener gestureListener;
 
@@ -433,14 +436,30 @@ public class Controller {
 
 	private void setupPlaybackButtons() {
 		setClick(R.id.btn_play, v -> {
-			if (getCenterPrimaryAction().restartsCurrentItem()) {
-				engine.seekTo(0);
+			if (engine.isIdleOrError()) {
+				if (onRetryPlayback != null) {
+					onRetryPlayback.run();
+				} else {
+					engine.prepareAndPlay();
+				}
+			} else {
+				if (getCenterPrimaryAction().restartsCurrentItem()) {
+					engine.seekTo(0);
+				}
+				engine.play();
 			}
-			engine.play();
 			setControlsVisible(true);
 		});
 		setClick(R.id.btn_mini_play, v -> {
-			engine.play();
+			if (engine.isIdleOrError()) {
+				if (onRetryPlayback != null) {
+					onRetryPlayback.run();
+				} else {
+					engine.prepareAndPlay();
+				}
+			} else {
+				engine.play();
+			}
 			setControlsVisible(true);
 		});
 		setClicks(new int[]{R.id.btn_pause, R.id.btn_mini_pause}, v -> {
@@ -483,6 +502,16 @@ public class Controller {
 				PlayerLoopMode newMode = getLoopMode().next();
 				setLoopMode(newMode);
 				showHint(activity.getString(getLoopModeLabelRes(newMode)), com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
+				setControlsVisible(true);
+			});
+		}
+
+		ImageButton refreshBtn = playerView.findViewById(R.id.btn_refresh);
+		if (refreshBtn != null) {
+			refreshBtn.setOnClickListener(v -> {
+				if (onRetryPlayback != null) {
+					onRetryPlayback.run();
+				}
 				setControlsVisible(true);
 			});
 		}
@@ -709,6 +738,12 @@ public class Controller {
 			});
 			setupBottomSheetOption(bottomSheetView, R.id.option_pip, b -> {
 				playerView.enterPiP();
+				bottomSheetDialog.dismiss();
+			});
+			setupBottomSheetOption(bottomSheetView, R.id.option_refresh_video, b -> {
+				if (onRetryPlayback != null) {
+					onRetryPlayback.run();
+				}
 				bottomSheetDialog.dismiss();
 			});
 			setupBottomSheetOption(bottomSheetView, R.id.option_stream_details, b -> {

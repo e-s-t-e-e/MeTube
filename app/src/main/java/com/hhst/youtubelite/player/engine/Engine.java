@@ -368,8 +368,53 @@ public class Engine {
 		this.player.setPlayWhenReady(true);
 	}
 
+	public void updateMediaSource(@NonNull PlaybackDetails details, long seekPosition) {
+		VideoDetails video = details.video();
+		PlaybackPlan plan = details.plan();
+		List<SubtitlesStream> subtitles = details.subtitles();
+		if (!Objects.equals(this.videoId, video.getId())) {
+			failedAdaptiveCandidates.clear();
+		}
+		this.videoId = video.getId();
+		this.videoDetails = video;
+		this.streamCatalog = details.catalog();
+		this.deliveries = details.deliveries();
+		this.playbackPlan = plan;
+		this.segments = details.segments();
+		this.subtitles = subtitles;
+		applyPlaybackTrackMode();
+
+		this.videoStream = selectedVideo(plan);
+		boolean enabled = this.prefs.isSubtitleEnabled();
+		setSubtitlesEnabled(enabled);
+		String saved = this.prefs.getSubtitleLanguage();
+		if (enabled && saved != null && !saved.isEmpty() && !subtitles.isEmpty()) {
+			setSubtitleLanguage(saved);
+		}
+
+		this.player.setMediaSource(PlaybackSourceFactory.create(sources, details, plan));
+		if (seekPosition > 0) {
+			this.player.seekTo(seekPosition);
+		}
+		this.player.prepare();
+		this.player.setPlayWhenReady(true);
+	}
+
 	public void play() {
 		this.player.play();
+	}
+
+	public boolean isIdleOrError() {
+		return this.player.getPlaybackState() == Player.STATE_IDLE || this.player.getPlayerError() != null;
+	}
+
+	public boolean prepareAndPlay() {
+		if (isIdleOrError()) {
+			this.player.prepare();
+			this.player.play();
+			return true;
+		}
+		return false;
 	}
 
 	public boolean recoverFromPlaybackError(@NonNull PlaybackException error) {
