@@ -484,6 +484,12 @@ public class Controller {
 			});
 		}
 
+		ImageButton resizeBtn = playerView.findViewById(R.id.btn_resize_mode);
+		updateResizeButton(resizeBtn);
+		if (resizeBtn != null) {
+			resizeBtn.setOnClickListener(v -> cycleResizeMode(resizeBtn));
+		}
+
 		ImageButton fsBtn = playerView.findViewById(R.id.btn_fullscreen);
 		if (fsBtn != null) {
 			fsBtn.setOnClickListener(v -> {
@@ -724,10 +730,6 @@ public class Controller {
 				bottomSheetDialog.setOnDismissListener(dialog -> hideControlsAutomatically());
 			}
 
-			setupBottomSheetOption(bottomSheetView, R.id.option_resize_mode, b -> {
-				showResizeModeOptions();
-				bottomSheetDialog.dismiss();
-			});
 			View pipOption = bottomSheetView.findViewById(R.id.option_pip);
 			if (pipOption != null) {
 				pipOption.setVisibility(extensionManager.isEnabled(Constant.ENABLE_PIP) ? View.VISIBLE : View.GONE);
@@ -1143,7 +1145,9 @@ public class Controller {
 		View other = playerView.findViewById(R.id.other_controls);
 		View bar = playerView.findViewById(R.id.exo_progress);
 		ImageButton lockBtn = playerView.findViewById(R.id.btn_lock);
+		ImageButton resizeBtn = playerView.findViewById(R.id.btn_resize_mode);
 		updateLockButton(lockBtn);
+		updateResizeButton(resizeBtn);
 		if (center != null) {
 			ViewUtils.animateViewAlpha(center, renderState.centerVisible() ? 1.0f : 0.0f, View.GONE);
 		}
@@ -1157,7 +1161,54 @@ public class Controller {
 		if (lockBtn != null) {
 			ViewUtils.animateViewAlpha(lockBtn, renderState.lockVisible() ? 1.0f : 0.0f, View.GONE);
 		}
+		if (resizeBtn != null) {
+			ViewUtils.animateViewAlpha(resizeBtn, renderState.lockVisible() && !state.isLocked() ? 1.0f : 0.0f, View.GONE);
+		}
 		updateMiniControls(renderState.miniVisible(), renderState.scrimVisible());
+	}
+
+	private void updateResizeButton(@Nullable ImageButton resizeBtn) {
+		if (resizeBtn == null) return;
+		int mode = playerView.getResizeMode();
+		int iconRes = switch (mode) {
+			case AspectRatioFrameLayout.RESIZE_MODE_FILL -> R.drawable.ic_resize_fill;
+			case AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> R.drawable.ic_resize_zoom;
+			case AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH -> R.drawable.ic_resize_width;
+			case AspectRatioFrameLayout.RESIZE_MODE_FIXED_HEIGHT -> R.drawable.ic_resize_height;
+			default -> R.drawable.ic_resize_fit;
+		};
+		resizeBtn.setImageResource(iconRes);
+	}
+
+	private void cycleResizeMode(@Nullable ImageButton resizeBtn) {
+		int[] modes = {
+						AspectRatioFrameLayout.RESIZE_MODE_FIT,
+						AspectRatioFrameLayout.RESIZE_MODE_FILL,
+						AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
+						AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH,
+						AspectRatioFrameLayout.RESIZE_MODE_FIXED_HEIGHT
+		};
+		String[] names = {
+						activity.getString(R.string.resize_fit),
+						activity.getString(R.string.resize_fill),
+						activity.getString(R.string.resize_zoom),
+						activity.getString(R.string.resize_fixed_width),
+						activity.getString(R.string.resize_fixed_height)
+		};
+		int current = playerView.getResizeMode();
+		int nextIndex = 0;
+		for (int i = 0; i < modes.length; i++) {
+			if (modes[i] == current) {
+				nextIndex = (i + 1) % modes.length;
+				break;
+			}
+		}
+		int newMode = modes[nextIndex];
+		playerView.setResizeMode(newMode);
+		prefs.setResizeMode(newMode);
+		updateResizeButton(resizeBtn);
+		showHint(names[nextIndex], com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
+		setControlsVisible(true);
 	}
 
 	private void showReset(boolean show) {

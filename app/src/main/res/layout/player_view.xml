@@ -378,6 +378,19 @@
         android:src="@drawable/ic_unlock"
         android:visibility="gone" />
 
+    <ImageButton
+        android:id="@+id/btn_resize_mode"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|end"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="52dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/resize_mode"
+        android:padding="12dp"
+        android:src="@drawable/ic_resize_fit"
+        android:visibility="gone" />
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/mini_controller_scrim"
         android:layout_width="match_parent"
