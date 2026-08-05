@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat;
 public final class PermissionUtils {
 	public static final int REQUEST_POST_NOTIFICATIONS = 100;
 	public static final int REQUEST_STORAGE_PERMISSION = 2001;
+	public static final int REQUEST_RECORD_AUDIO = 2002;
 
 	private PermissionUtils() {
 	}
@@ -51,5 +52,15 @@ public final class PermissionUtils {
 						Manifest.permission.READ_EXTERNAL_STORAGE,
 						Manifest.permission.WRITE_EXTERNAL_STORAGE
 		};
+	}
+
+	public static boolean hasRecordAudioPermission(@NonNull Context context) {
+		return ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+						== PackageManager.PERMISSION_GRANTED;
+	}
+
+	@NonNull
+	public static String[] recordAudioPermission() {
+		return new String[]{Manifest.permission.RECORD_AUDIO};
 	}
 }

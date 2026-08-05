@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
+import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -58,6 +59,8 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -144,6 +147,8 @@ public class YoutubeWebview extends WebView {
 	@Nullable
 	private volatile String poTokenDoneKey;
 	private volatile long prefVersion = -1L;
+	@Nullable
+	private volatile String voiceSearchScript;
 
 	public YoutubeWebview(@NonNull Context context) {
 		this(context, null);
@@ -347,6 +352,11 @@ public class YoutubeWebview extends WebView {
 		addJavascriptInterface(jsInterface, "lite");
 		setTag(jsInterface);
 
+		try (InputStream voiceStream = getResources().openRawResource(R.raw.voice_search)) {
+			injectJavaScript(voiceStream);
+		} catch (Exception ignored) {
+		}
+
 		setWebViewClient(new WebViewClient() {
 
 			@Override
@@ -459,7 +469,9 @@ public class YoutubeWebview extends WebView {
 				}
 				if (okHttpWebViewInterceptor != null) {
 					WebResourceResponse response = okHttpWebViewInterceptor.intercept(request);
-					if (response != null) return response;
+					if (response != null) {
+						return maybeInjectVoiceSearchScript(request, response);
+					}
 				}
 				return super.shouldInterceptRequest(view, request);
 			}
@@ -472,6 +484,27 @@ public class YoutubeWebview extends WebView {
 			public boolean onConsoleMessage(@NonNull ConsoleMessage consoleMessage) {
 				Log.d("js-log", consoleMessage.message() + " -- From line " + consoleMessage.lineNumber() + " of " + consoleMessage.sourceId());
 				return super.onConsoleMessage(consoleMessage);
+			}
+
+			@Override
+			public void onPermissionRequest(@NonNull PermissionRequest request) {
+				boolean wantsAudio = false;
+				for (String resource : request.getResources()) {
+					if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource)) {
+						wantsAudio = true;
+						break;
+					}
+				}
+				if (!wantsAudio) {
+					super.onPermissionRequest(request);
+					return;
+				}
+				Activity activity = getActivityContext();
+				if (activity instanceof MainActivity mainActivity) {
+					mainActivity.requestRecordAudioPermission(() -> post(() -> request.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE})));
+				} else {
+					super.onPermissionRequest(request);
+				}
 			}
 
 			@Override
@@ -527,6 +560,57 @@ public class YoutubeWebview extends WebView {
 				}
 			}
 		});
+	}
+
+	@NonNull
+	private WebResourceResponse maybeInjectVoiceSearchScript(@NonNull WebResourceRequest request, @NonNull WebResourceResponse response) {
+		if (!request.isForMainFrame()) return response;
+		String mimeType = response.getMimeType();
+		if (mimeType == null || !mimeType.toLowerCase(Locale.US).contains("html")) return response;
+		String script = getVoiceSearchScript();
+		if (script == null) return response;
+		InputStream body = response.getData();
+		if (body == null) return response;
+		String charset = response.getEncoding();
+		if (charset == null || charset.isBlank()) charset = "UTF-8";
+		String html;
+		try {
+			html = new String(StreamIOUtils.readInputStreamToBytes(body), charset);
+		} catch (Exception ignored) {
+			return response;
+		}
+		int insertAt = findHeadInsertion(html);
+		String injected = html.substring(0, insertAt) + "<script>" + script + "</script>" + html.substring(insertAt);
+		Map<String, String> headers = response.getResponseHeaders();
+		return new WebResourceResponse(response.getMimeType(), response.getEncoding(), response.getStatusCode(), response.getReasonPhrase(), headers, new ByteArrayInputStream(injected.getBytes(StandardCharsets.UTF_8)));
+	}
+
+	private static int findHeadInsertion(@NonNull String html) {
+		String lower = html.toLowerCase(Locale.US);
+		int head = lower.indexOf("<head");
+		if (head >= 0) {
+			int gt = html.indexOf('>', head);
+			if (gt >= 0) return gt + 1;
+		}
+		int htmlTag = lower.indexOf("<html");
+		if (htmlTag >= 0) {
+			int gt = html.indexOf('>', htmlTag);
+			if (gt >= 0) return gt + 1;
+		}
+		return 0;
+	}
+
+	@Nullable
+	private String getVoiceSearchScript() {
+		String cached = voiceSearchScript;
+		if (cached != null) return cached;
+		try (InputStream stream = getResources().openRawResource(R.raw.voice_search)) {
+			String js = StreamIOUtils.readInputStream(stream);
+			if (js != null) voiceSearchScript = js;
+			return js;
+		} catch (Exception ignored) {
+			return null;
+		}
 	}
 
 	public void refreshPoTokenContext() {

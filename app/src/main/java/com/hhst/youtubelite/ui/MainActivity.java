@@ -778,7 +778,10 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 	                                       @NonNull String[] permissions,
 	                                       @NonNull int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		if (requestCode != PermissionUtils.REQUEST_STORAGE_PERMISSION) return;
+		if (requestCode != PermissionUtils.REQUEST_STORAGE_PERMISSION
+						&& requestCode != PermissionUtils.REQUEST_RECORD_AUDIO) {
+			return;
+		}
 		Runnable action = pendingPermissionAction;
 		pendingPermissionAction = null;
 		if (grantResults.length == 0) return;
@@ -809,6 +812,18 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 						this,
 						PermissionUtils.downloadStoragePermissions(),
 						PermissionUtils.REQUEST_STORAGE_PERMISSION);
+	}
+
+	public void requestRecordAudioPermission(@NonNull Runnable onGranted) {
+		if (PermissionUtils.hasRecordAudioPermission(this)) {
+			onGranted.run();
+			return;
+		}
+		pendingPermissionAction = onGranted;
+		ActivityCompat.requestPermissions(
+						this,
+						PermissionUtils.recordAudioPermission(),
+						PermissionUtils.REQUEST_RECORD_AUDIO);
 	}
 
 	public void suppressNextPiP() {
