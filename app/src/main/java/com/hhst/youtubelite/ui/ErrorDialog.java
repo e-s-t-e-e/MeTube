@@ -32,39 +32,92 @@ public final class ErrorDialog {
 	private ErrorDialog() {
 	}
 
+	public static boolean isNetworkError(Throwable throwable) {
+		if (throwable == null) return false;
+		Throwable current = throwable;
+		while (current != null) {
+			if (current instanceof java.net.SocketTimeoutException
+							|| current instanceof java.net.ConnectException
+							|| current instanceof java.net.UnknownHostException
+							|| current instanceof java.net.NoRouteToHostException) {
+				return true;
+			}
+			String msg = current.getMessage();
+			if (msg != null && (msg.contains("Source error") || msg.contains("network") || msg.contains("Network") || msg.contains("Unable to resolve host"))) {
+				return true;
+			}
+			current = current.getCause();
+		}
+		return false;
+	}
+
 	public static void show(Context context, String title, String stack) {
-		show(context, title, stack, null, null);
+		showInternal(context, title, context.getString(R.string.network_error_message), stack, null, null);
 	}
 
 	public static void show(Context context, String title, Throwable throwable) {
 		show(context, title, throwable, null, null);
 	}
 
+	public static void show(Context context, String title, Throwable throwable, Runnable onRetry) {
+		show(context, title, throwable, onRetry, null);
+	}
+
 	public static void show(Context context, String title, Throwable throwable, DialogInterface.OnDismissListener onDismissListener) {
-		show(context, title, buildExpandedStackTrace(throwable), null, onDismissListener);
+		show(context, title, throwable, null, onDismissListener);
 	}
 
 	public static void show(Context context, String title, Throwable throwable, Runnable onRetry, DialogInterface.OnDismissListener onDismissListener) {
-		show(context, title, buildExpandedStackTrace(throwable), onRetry, onDismissListener);
+		boolean network = isNetworkError(throwable);
+		String displayTitle = (network || title == null || title.contains("PlaybackException") || title.contains("Source error"))
+						? context.getString(R.string.network_error_title)
+						: title;
+		String userMessage = network
+						? context.getString(R.string.network_error_message)
+						: (throwable != null && throwable.getMessage() != null && !throwable.getMessage().isBlank()
+										? throwable.getMessage()
+										: context.getString(R.string.network_error_message));
+		String stack = buildExpandedStackTrace(throwable);
+		showInternal(context, displayTitle, userMessage, stack, onRetry, onDismissListener);
 	}
 
 	public static void show(Context context, String title, String stack, DialogInterface.OnDismissListener onDismissListener) {
-		show(context, title, stack, null, onDismissListener);
+		showInternal(context, title, context.getString(R.string.network_error_message), stack, null, onDismissListener);
 	}
 
 	public static void show(Context context, String title, String stack, Runnable onRetry, DialogInterface.OnDismissListener onDismissListener) {
-		String displayTitle = (title == null) ? context.getString(R.string.error_title) : title;
+		showInternal(context, title, context.getString(R.string.network_error_message), stack, onRetry, onDismissListener);
+	}
 
-		// Avoid showing dialog in PIP mode
+	private static void showInternal(Context context, String title, String userMessage, String stack, Runnable onRetry, DialogInterface.OnDismissListener onDismissListener) {
 		if (context instanceof Activity && DeviceUtils.isInPictureInPictureMode((Activity) context))
 			return;
 
 		View view = LayoutInflater.from(context).inflate(R.layout.dialog_error, null);
 		TextView titleView = view.findViewById(R.id.error_title);
+		TextView messageView = view.findViewById(R.id.error_message);
 		TextView stackView = view.findViewById(R.id.error_stack);
+		TextView btnDetails = view.findViewById(R.id.btn_details);
+		View stackScroll = view.findViewById(R.id.stack_scroll);
 
-		titleView.setText(displayTitle);
-		stackView.setText(stack);
+		titleView.setText(title != null ? title : context.getString(R.string.error_title));
+		messageView.setText(userMessage != null ? userMessage : context.getString(R.string.network_error_message));
+
+		if (stackView != null) {
+			stackView.setText(stack);
+		}
+
+		if (btnDetails != null && stackScroll != null) {
+			btnDetails.setOnClickListener(v -> {
+				if (stackScroll.getVisibility() == View.GONE) {
+					stackScroll.setVisibility(View.VISIBLE);
+					btnDetails.setText(R.string.hide_details);
+				} else {
+					stackScroll.setVisibility(View.GONE);
+					btnDetails.setText(R.string.show_details);
+				}
+			});
+		}
 
 		boolean[] hasRetried = new boolean[]{false};
 		Runnable safeRetry = onRetry == null ? null : () -> {
@@ -81,9 +134,6 @@ public final class ErrorDialog {
 							if (onDismissListener != null) {
 								onDismissListener.onDismiss(dialog);
 							}
-							if (safeRetry != null) {
-								safeRetry.run();
-							}
 						});
 
 		if (safeRetry != null) {
@@ -91,13 +141,10 @@ public final class ErrorDialog {
 				dialog.dismiss();
 				safeRetry.run();
 			});
-			builder.setNegativeButton(R.string.close, (dialog, which) -> {
-				dialog.dismiss();
-				safeRetry.run();
-			});
-			builder.setNeutralButton(R.string.copy, (dialog, which) -> copyDebugInfo(context, displayTitle, stack));
+			builder.setNegativeButton(R.string.close, (dialog, which) -> dialog.dismiss());
+			builder.setNeutralButton(R.string.copy, (dialog, which) -> copyDebugInfo(context, title, stack));
 		} else {
-			builder.setPositiveButton(R.string.copy, (dialog, which) -> copyDebugInfo(context, displayTitle, stack));
+			builder.setPositiveButton(R.string.copy, (dialog, which) -> copyDebugInfo(context, title, stack));
 			builder.setNegativeButton(R.string.close, (dialog, which) -> dialog.dismiss());
 		}
 

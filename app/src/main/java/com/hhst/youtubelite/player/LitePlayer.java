@@ -1,6 +1,11 @@
 package com.hhst.youtubelite.player;
 
 import android.app.Activity;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -107,6 +112,8 @@ public class LitePlayer {
 	private boolean inMiniPlayer;
 	private boolean wasInPip;
 	private int retryCount = 0;
+	@Nullable
+	private ConnectivityManager.NetworkCallback networkCallback;
 
 	@Inject
 	public LitePlayer(@NonNull Activity activity,
@@ -133,6 +140,7 @@ public class LitePlayer {
 		queueRepo.addListener(queueListener);
 		controller.setOnRetryPlayback(this::retryPlayback);
 		setupEngineListeners();
+		setupNetworkCallback();
 	}
 
 	private static boolean containsException(@Nullable Throwable throwable,
@@ -655,6 +663,14 @@ public class LitePlayer {
 	public void release() {
 		cancelExtraction();
 		if (task != null) task.cancel(true);
+		if (networkCallback != null) {
+			try {
+				ConnectivityManager cm = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
+				if (cm != null) cm.unregisterNetworkCallback(networkCallback);
+			} catch (Exception ignored) {
+			}
+			networkCallback = null;
+		}
 		activeId = null;
 		queueRepo.removeListener(queueListener);
 		stateStore.clear();
@@ -668,6 +684,29 @@ public class LitePlayer {
 		});
 		inMiniPlayer = false;
 		engine.release();
+	}
+
+	private void setupNetworkCallback() {
+		try {
+			ConnectivityManager cm = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
+			if (cm != null) {
+				NetworkRequest request = new NetworkRequest.Builder()
+								.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+								.build();
+				networkCallback = new ConnectivityManager.NetworkCallback() {
+					@Override
+					public void onAvailable(@NonNull Network network) {
+						activity.runOnUiThread(() -> {
+							if (engine.isIdleOrError() && (activeId != null || queuedId != null)) {
+								retryPlayback();
+							}
+						});
+					}
+				};
+				cm.registerNetworkCallback(request, networkCallback);
+			}
+		} catch (Exception ignored) {
+		}
 	}
 
 	private void cancelExtraction() {

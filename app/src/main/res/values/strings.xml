@@ -81,6 +81,10 @@
     <string name="lock_screen">Lock Screen</string>
     <string name="unlock_screen">Unlock screen</string>
     <string name="error_title">Error</string>
+    <string name="network_error_title">Connection Error</string>
+    <string name="network_error_message">Internet connection was lost. Please check your network connection and try again.</string>
+    <string name="show_details">Show details</string>
+    <string name="hide_details">Hide details</string>
     <string name="copy">Copy</string>
     <string name="retry">Retry</string>
     <string name="refresh_video">Refresh video</string>
