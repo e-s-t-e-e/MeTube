@@ -144,12 +144,32 @@ ytm-search,
 ytm-watch,
 ytd-app,
 #content,
-#page-manager {
+#page-manager,
+ytm-notification-topbar-renderer,
+ytm-notification-section-renderer,
+ytm-notification-multi-item-renderer,
+ytm-notification-options-renderer,
+ytm-section-list-renderer,
+ytm-item-section-renderer,
+ytm-compact-listItem-renderer,
+.ytm-notification-multi-item-renderer,
+.notification-item,
+ytm-message-renderer,
+.ytm-message-renderer,
+ytm-alert-renderer {
     background-color: #000000 !important;
     background: #000000 !important;
     color: #ffffff !important;
     opacity: 1 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+}
+
+ytm-notification-multi-item-renderer *,
+ytm-compact-listItem-renderer *,
+ytm-message-renderer *,
+ytm-alert-renderer *,
+ytm-section-list-renderer * {
+    color: #ffffff !important;
 }
 

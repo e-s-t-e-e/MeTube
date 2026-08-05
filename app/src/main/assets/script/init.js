@@ -1803,7 +1803,7 @@
                     if (!pivotBar) return true;
 
                     let notifItem = document.getElementById('metube-notifications-pivot-item');
-                    const isOnNotifications = location.pathname.includes('/feed/notifications') || location.href.includes('/feed/notifications');
+                    const isOnNotifications = location.pathname.includes('/notification') || location.pathname.includes('/feed/notifications') || location.href.includes('/notification');
 
                     if (!notifItem) {
                         const template = pivotBar.querySelector('ytm-pivot-bar-item-renderer, .pivot-bar-item');
@@ -1813,7 +1813,7 @@
                         notifItem.style.cssText = 'display: inline-flex; align-items: center; justify-content: center; flex: 1; text-align: center; text-decoration: none; cursor: pointer; color: inherit;';
 
                         notifItem.innerHTML = `
-                            <a href="/feed/notifications" class="pivot-bar-item-tab" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; text-decoration: none; color: inherit; font-size: 10px;">
+                            <a href="/notification" class="pivot-bar-item-tab" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; text-decoration: none; color: inherit; font-size: 10px;">
                                 <div class="pivot-bar-item-icon" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
                                     <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor; display: block;"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
                                 </div>

@@ -178,6 +178,7 @@ public final class UrlUtils {
 		return switch (s0) {
 			case "shorts" -> Constant.PAGE_SHORTS;
 			case "watch" -> Constant.PAGE_WATCH;
+			case "notification", "notifications" -> Constant.PAGE_NOTIFICATIONS;
 			case "channel" -> "channel";
 			case "gaming" -> "gaming";
 			case "select_site" -> "select_site";
