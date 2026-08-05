@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.hhst.litube"
+        applicationId = "com.me.tube"
         minSdk = 26
         targetSdk = 36
         versionCode = appVersionCode

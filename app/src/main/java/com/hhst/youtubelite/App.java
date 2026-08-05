@@ -22,6 +22,7 @@ public class App extends Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
 		MMKV.initialize(this);
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
 			String processName = getProcessName();
