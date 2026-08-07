@@ -183,8 +183,9 @@ ytd-app,
 
 /* Prefetch pagination items by translating the loading sentinel/continuation element upwards.
    This tricks the browser's native IntersectionObserver into loading the next page of videos
-   much earlier, yielding a completely smooth, seamless, and jump-free scroll experience. */
-ytm-continuation-item-renderer {
+   much earlier, yielding a completely smooth, seamless, and jump-free scroll experience.
+   Only applied after the user scrolls, so feeds do not paginate/reload on launch. */
+html.metube-scrolled ytm-continuation-item-renderer {
     transform: translateY(-2000px) !important;
     margin-bottom: -2000px !important;
 }

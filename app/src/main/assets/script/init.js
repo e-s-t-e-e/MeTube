@@ -436,6 +436,23 @@
                 Post.init();
                 window.__liteActive = State.active;
                 window.__liteSetActive = App.setActive;
+
+                // Enable pagination prefetch only on a real user scroll gesture, so
+                // feeds do not paginate/reload on launch or after a manual refresh
+                // (which restores the scroll position without firing touch/wheel events).
+                const root = document.documentElement;
+                const gateScroll = () => {
+                    const y = document.scrollingElement?.scrollTop ?? window.scrollY;
+                    if (y <= 0 || root.classList.contains('metube-scrolled')) return;
+                    root.classList.add('metube-scrolled');
+                    for (const type of ['touchmove', 'wheel', 'keydown']) {
+                        window.removeEventListener(type, gateScroll, true);
+                    }
+                };
+                for (const type of ['touchmove', 'wheel', 'keydown']) {
+                    window.addEventListener(type, gateScroll, { capture: true, passive: true });
+                }
+
                 Loop.runSoon();
                 window.injected = true;
             },
