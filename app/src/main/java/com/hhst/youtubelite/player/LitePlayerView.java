@@ -116,7 +116,13 @@ public class LitePlayerView extends PlayerView {
 		void onDragCancel();
 	}
 	private int miniPlayerRestoreResizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT;
+	private int activeResizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT;
 	private boolean miniPlayerRestoreFullscreen;
+
+	public void resetActiveResizeMode() {
+		activeResizeMode = prefs.getResizeMode();
+		setResizeMode(activeResizeMode);
+	}
 	private float miniPlayerTouchDownRawX;
 	private float miniPlayerTouchDownRawY;
 	private float miniPlayerStartTranslationX;
@@ -188,9 +194,9 @@ public class LitePlayerView extends PlayerView {
 	                                 int defaultResizeMode) {
 		post(() -> {
 			switch (newState) {
-				case NORMAL, MINI_PLAYER -> applyNormalState(defaultResizeMode);
+				case NORMAL, MINI_PLAYER -> applyNormalState(activeResizeMode);
 				case FULLSCREEN_UNLOCK, FULLSCREEN_LOCK ->
-								applyFullscreenState(previousState, fsOrientation, defaultResizeMode);
+								applyFullscreenState(previousState, fsOrientation, activeResizeMode);
 				case PIP -> applyPictureInPictureState(previousState);
 			}
 		});
@@ -380,8 +386,12 @@ public class LitePlayerView extends PlayerView {
 				}
 				if (tap != null) {
 					tap.performClick();
-				} else if (onMiniPlayerBackgroundTap != null) {
-					onMiniPlayerBackgroundTap.run();
+				} else {
+					if (onMiniPlayerBackgroundTap != null) {
+						onMiniPlayerBackgroundTap.run();
+					} else if (onMiniPlayerRestore != null) {
+						onMiniPlayerRestore.run();
+					}
 				}
 				return true;
 			}
@@ -700,8 +710,8 @@ public class LitePlayerView extends PlayerView {
 		miniPlayerWidthOverrideDp = state.widthDp() > 0
 						? MiniPlayerLayout.clampWidthDp(screenWidthDp, state.widthDp())
 						: defaultWidthDp;
-		miniPlayerSavedTranslationX = dpToPx(state.translationX());
-		miniPlayerSavedTranslationY = dpToPx(state.translationY());
+		miniPlayerSavedTranslationX = 0.0f;
+		miniPlayerSavedTranslationY = 0.0f;
 		miniPlayerTranslationStashedForFullscreen = false;
 		clearViewTranslation();
 	}
@@ -904,6 +914,9 @@ public class LitePlayerView extends PlayerView {
 		View videoSurfaceView = getVideoSurfaceView();
 		if (videoSurfaceView instanceof AspectRatioFrameLayout frameLayout) {
 			frameLayout.setResizeMode(resizeMode);
+		}
+		if (!inAppMiniPlayer && !activity.isInPictureInPictureMode()) {
+			activeResizeMode = resizeMode;
 		}
 	}
 

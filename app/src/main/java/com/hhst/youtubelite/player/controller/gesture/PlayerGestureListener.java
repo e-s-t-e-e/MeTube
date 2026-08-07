@@ -32,6 +32,7 @@ import java.util.Locale;
 public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListener {
 	/** Reset each time a new video starts, or when volume drops back to ≤50%. */
 	private boolean btVolumeAboveThreshold = false;
+	private boolean btVolumeWarningConfirmed = false;
 	private static final int AUTO_HIDE_DELAY_MS = 200;
 	private static final int SEEK_WINDOW_MS = 600;
 
@@ -261,14 +262,29 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 		if (am == null) return;
 		int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 		if (volume == -1) volume = (float) am.getStreamVolume(AudioManager.STREAM_MUSIC);
+
+		float tempVolume = DeviceUtils.adjustVolume(activity, dy, playerView, volume, 0.4f);
+		int pct = Math.round((tempVolume / maxVolume) * 100);
+		if (isBluetoothHeadphoneConnected(am) && !btVolumeWarningConfirmed && pct > 50) {
+			int halfVolume = Math.round(maxVolume * 0.5f);
+			am.setStreamVolume(AudioManager.STREAM_MUSIC, halfVolume, 0);
+			volume = halfVolume;
+			controller.showHint("50%", -1);
+			if (!btVolumeAboveThreshold) {
+				btVolumeAboveThreshold = true;
+				showBluetoothVolumeWarning(am, maxVolume);
+			}
+			return;
+		}
+
 		float prevVolume = volume;
-		volume = DeviceUtils.adjustVolume(activity, dy, playerView, volume, 0.4f);
-		int pct = Math.round((volume / maxVolume) * 100);
+		volume = tempVolume;
 		controller.showHint(pct + "%", -1);
 
 		// Auto-reset threshold flag when volume comes back down to ≤50%.
 		if (pct <= 50) {
 			btVolumeAboveThreshold = false;
+			btVolumeWarningConfirmed = false;
 			return;
 		}
 
@@ -285,6 +301,7 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 	 */
 	public void resetBtVolumeWarning() {
 		btVolumeAboveThreshold = false;
+		btVolumeWarningConfirmed = false;
 		// Check immediately if current volume already exceeds 50%; warn if so.
 		AudioManager am = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
 		if (am == null) return;
@@ -330,7 +347,9 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 			new MaterialAlertDialogBuilder(activity)
 					.setTitle(R.string.bt_volume_warning_title)
 					.setMessage(R.string.bt_volume_warning_message)
-					.setPositiveButton(R.string.bt_volume_continue, null)
+					.setPositiveButton(R.string.bt_volume_continue, (d, w) -> {
+						btVolumeWarningConfirmed = true;
+					})
 					.setNegativeButton(R.string.bt_volume_lower, (d, w) -> {
 						// Set volume to exactly 50%
 						int halfVolume = Math.round(maxVolume * 0.5f);
@@ -338,6 +357,7 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 						volume = halfVolume;
 						int halfPct = Math.round((halfVolume / (float) maxVolume) * 100);
 						controller.showHint(halfPct + "%", 1500);
+						btVolumeWarningConfirmed = false;
 					})
 					.setCancelable(false)
 					.show();

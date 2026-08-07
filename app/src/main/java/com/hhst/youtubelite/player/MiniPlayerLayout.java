@@ -7,12 +7,12 @@ public final class MiniPlayerLayout {
 
 	static final int NO_WIDTH_OVERRIDE_DP = -1;
 	private static final int COMPACT_BREAKPOINT_DP = 600;
-	private static final float COMPACT_WIDTH_RATIO = 0.62f;
-	private static final float LARGE_WIDTH_RATIO = 0.46f;
-	private static final int COMPACT_MIN_WIDTH_DP = 190;
-	private static final int COMPACT_MAX_WIDTH_DP = 320;
-	private static final int LARGE_MIN_WIDTH_DP = 240;
-	private static final int LARGE_MAX_WIDTH_DP = 420;
+	private static final float COMPACT_WIDTH_RATIO = 0.80f;
+	private static final float LARGE_WIDTH_RATIO = 0.55f;
+	private static final int COMPACT_MIN_WIDTH_DP = 240;
+	private static final int COMPACT_MAX_WIDTH_DP = 360;
+	private static final int LARGE_MIN_WIDTH_DP = 320;
+	private static final int LARGE_MAX_WIDTH_DP = 480;
 	private static final int OUTER_MARGIN_DP = 12;
 	private static final int MIN_BOTTOM_DOCK_DP = 56;
 

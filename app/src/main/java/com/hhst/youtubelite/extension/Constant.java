@@ -8,6 +8,7 @@ import static com.hhst.youtubelite.Constant.REMEMBER_RESIZE_MODE;
 import static com.hhst.youtubelite.Constant.SKIP_POI_HIGHLIGHT;
 import static com.hhst.youtubelite.Constant.SKIP_SELF_PROMO;
 import static com.hhst.youtubelite.Constant.SKIP_SPONSORS;
+import static com.hhst.youtubelite.Constant.AUTO_SKIP_SPONSORS;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ public final class Constant {
 	public static final String ENABLE_INCOGNITO_BUTTON = com.hhst.youtubelite.Constant.ENABLE_INCOGNITO_BUTTON;
 	public static final String ENABLE_VIDEO_HOLD_POPUP = com.hhst.youtubelite.Constant.ENABLE_VIDEO_HOLD_POPUP;
 	public static final String ENABLE_DISPLAY_DISLIKES = "enable_display_dislikes";
+	public static final String AUTO_SKIP_SPONSORS = com.hhst.youtubelite.Constant.AUTO_SKIP_SPONSORS;
 	public static final String ENABLE_HIDE_SHORTS = "enable_hide_shorts";
 	public static final String REMEMBER_QUALITY = "remember_quality";
 	public static final String REMEMBER_PLAYBACK_SPEED = "remember_playback_speed";
@@ -60,6 +62,7 @@ public final class Constant {
 					Map.entry(ENABLE_INCOGNITO_BUTTON, true),
 					Map.entry(ENABLE_VIDEO_HOLD_POPUP, true),
 					Map.entry(SKIP_SPONSORS, true),
+					Map.entry(AUTO_SKIP_SPONSORS, true),
 					Map.entry(SKIP_SELF_PROMO, true),
 					Map.entry(SKIP_POI_HIGHLIGHT, true),
 					Map.entry(REMEMBER_LAST_POSITION, true),

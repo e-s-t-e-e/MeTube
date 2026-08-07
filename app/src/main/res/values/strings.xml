@@ -64,6 +64,8 @@
     <string name="volume">Volume</string>
     <string name="sponsorblock">SponsorBlock</string>
     <string name="skip_sponsors">Skip sponsors</string>
+    <string name="auto_skip_sponsors">Skip automatically</string>
+    <string name="skip_sponsor_button">Skip Sponsor</string>
     <string name="skip_sponsors_selfpromo">Skip self-promotion</string>
     <string name="skip_sponsors_highlight">Skip highlights</string>
 

@@ -28,6 +28,7 @@ import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 
 import com.hhst.youtubelite.Constant;
+import com.hhst.youtubelite.R;
 import com.hhst.youtubelite.browser.TabManager;
 import com.hhst.youtubelite.extractor.Delivery;
 import com.hhst.youtubelite.extractor.DeliveryCatalog;
@@ -94,9 +95,48 @@ public class Engine {
 	private final PlayerDataSource sources;
 	private final Handler handler = new Handler(Looper.getMainLooper());
 	@NonNull
+	private final LitePlayerView playerView;
+	@NonNull
 	private PlayerLoopMode loopMode = PlayerLoopMode.PLAYLIST_NEXT;
 	@Nullable
 	private String videoId;
+	private void checkSponsorBlockSegments() {
+		if (player == null) return;
+		long pos = player.getCurrentPosition();
+		List<long[]> segs = sponsor.getSegments();
+		boolean insideSponsor = false;
+		long targetSeekPosition = -1;
+		for (final long[] segment : segs) {
+			if (pos >= segment[0] && pos < segment[1]) {
+				insideSponsor = true;
+				targetSeekPosition = segment[1];
+				break;
+			}
+		}
+
+		final long seekPos = targetSeekPosition;
+		final boolean showButton = insideSponsor && !prefs.getExtensionManager().isEnabled(Constant.AUTO_SKIP_SPONSORS);
+
+		if (insideSponsor && prefs.getExtensionManager().isEnabled(Constant.AUTO_SKIP_SPONSORS)) {
+			player.seekTo(seekPos);
+		}
+
+		handler.post(() -> {
+			android.view.View skipBtn = playerView.findViewById(R.id.btn_skip_sponsor);
+			if (skipBtn != null) {
+				if (showButton) {
+					skipBtn.setVisibility(android.view.View.VISIBLE);
+					skipBtn.setOnClickListener(v -> {
+						player.seekTo(seekPos);
+						skipBtn.setVisibility(android.view.View.GONE);
+					});
+				} else {
+					skipBtn.setVisibility(android.view.View.GONE);
+				}
+			}
+		});
+	}
+
 	private final Runnable onTimeUpdate = new Runnable() {
 		@Override
 		public void run() {
@@ -109,14 +149,7 @@ public class Engine {
 					prefs.persistProgress(videoId, pos, duration, TimeUnit.MILLISECONDS);
 				}
 			}
-			// Skip sponsor segments.
-			List<long[]> segments = sponsor.getSegments();
-			for (final long[] segment : segments) {
-				if (pos >= segment[0] && pos < segment[1]) {
-					player.seekTo(segment[1]);
-					break;
-				}
-			}
+			checkSponsorBlockSegments();
 			handler.postDelayed(this, 1000);
 		}
 	};
@@ -145,6 +178,7 @@ public class Engine {
 	              @NonNull TabManager tabManager,
 	              @NonNull SponsorBlockManager sponsor,
 	              @NonNull QueueRepository queueRepository) {
+		this.playerView = playerView;
 		this.prefs = prefs;
 		this.tabManager = tabManager;
 		this.sponsor = sponsor;
@@ -200,6 +234,11 @@ public class Engine {
 			@Override
 			public void onTracksChanged(@NonNull Tracks tracks) {
 				applyPreferredVideoTrack();
+			}
+
+			@Override
+			public void onPositionDiscontinuity(@NonNull Player.PositionInfo oldPosition, @NonNull Player.PositionInfo newPosition, int reason) {
+				checkSponsorBlockSegments();
 			}
 		});
 		playerView.setPlayer(this.player);
@@ -1036,6 +1075,9 @@ public class Engine {
 		handler.removeCallbacks(onTimeUpdate);
 		this.player.stop();
 		this.player.clearMediaItems();
+		android.view.View skipBtn = playerView.findViewById(R.id.btn_skip_sponsor);
+		if (skipBtn != null) skipBtn.setVisibility(android.view.View.GONE);
+		playerView.resetActiveResizeMode();
 	}
 
 	public void release() {

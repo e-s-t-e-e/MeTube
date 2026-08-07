@@ -8,6 +8,7 @@ import static com.hhst.youtubelite.Constant.REMEMBER_RESIZE_MODE;
 import static com.hhst.youtubelite.Constant.SKIP_POI_HIGHLIGHT;
 import static com.hhst.youtubelite.Constant.SKIP_SELF_PROMO;
 import static com.hhst.youtubelite.Constant.SKIP_SPONSORS;
+import static com.hhst.youtubelite.Constant.AUTO_SKIP_SPONSORS;
 
 import com.hhst.youtubelite.R;
 
@@ -73,6 +74,7 @@ public record Extension(String key, int title, int summary, int icon, List<Exten
 						)),
 						page(R.string.sponsorblock, R.string.sponsorblock_summary, R.drawable.ic_block, List.of(
 										toggle(SKIP_SPONSORS, R.string.skip_sponsors),
+										toggle(AUTO_SKIP_SPONSORS, R.string.auto_skip_sponsors),
 										toggle(SKIP_SELF_PROMO, R.string.skip_sponsors_selfpromo),
 										toggle(SKIP_POI_HIGHLIGHT, R.string.skip_sponsors_highlight)
 						))

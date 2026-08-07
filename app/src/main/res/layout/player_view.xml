@@ -503,6 +503,22 @@
             android:src="@drawable/ic_next" />
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/btn_skip_sponsor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="80dp"
+        android:background="@drawable/bg_gesture_hint"
+        android:clickable="true"
+        android:focusable="true"
+        android:text="@string/skip_sponsor_button"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
 </FrameLayout>
 
 

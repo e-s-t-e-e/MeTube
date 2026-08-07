@@ -17,6 +17,7 @@ public final class Constant {
 	public static final String SKIP_SPONSORS = "skip_sponsors";
 	public static final String SKIP_SELF_PROMO = "skip_self_promo";
 	public static final String SKIP_POI_HIGHLIGHT = "skip_poi_highlight";
+	public static final String AUTO_SKIP_SPONSORS = "auto_skip_sponsors";
 	public static final String REMEMBER_LAST_POSITION = "remember_last_position";
 	public static final String ENABLE_BACKGROUND_PLAY = "enable_background_play";
 	public static final String ENABLE_PIP = "enable_pip";
