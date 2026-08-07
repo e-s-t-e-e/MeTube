@@ -17,9 +17,13 @@ import java.util.List;
 /**
  * Value object for app logic.
  */
-public record Extension(String key, int title, int summary, int icon, List<Extension> children) {
+public record Extension(String key, int title, int summary, int icon, List<DropdownOption> dropdownOptions, List<Extension> children) {
+
+	public record DropdownOption(String value, int labelRes) {
+	}
 
 	public Extension {
+		dropdownOptions = dropdownOptions == null ? List.of() : dropdownOptions;
 		children = children == null ? List.of() : children;
 	}
 
@@ -35,7 +39,12 @@ public record Extension(String key, int title, int summary, int icon, List<Exten
 										toggle(REMEMBER_LAST_POSITION, R.string.remember_last_position),
 										toggle(Constant.REMEMBER_QUALITY, R.string.remember_quality),
 										toggle(Constant.REMEMBER_PLAYBACK_SPEED, R.string.remember_playback_speed),
-										toggle(REMEMBER_RESIZE_MODE, R.string.remember_resize_mode)
+										toggle(REMEMBER_RESIZE_MODE, R.string.remember_resize_mode),
+										dropdown(Constant.PLAYER_SIDE_BUTTONS, R.string.side_buttons_layout, List.of(
+														new DropdownOption(Constant.SIDE_BUTTONS_BOTH, R.string.side_buttons_both),
+														new DropdownOption(Constant.SIDE_BUTTONS_LEFT, R.string.side_buttons_left),
+														new DropdownOption(Constant.SIDE_BUTTONS_RIGHT, R.string.side_buttons_right)
+										))
 						)),
 						page(R.string.gesture, R.string.gesture_summary, R.drawable.ic_gesture, List.of(
 										page(R.string.gesture_single_tap, 0, 0, List.of(
@@ -82,11 +91,15 @@ public record Extension(String key, int title, int summary, int icon, List<Exten
 	}
 
 	private static Extension page(int title, int summary, int icon, List<Extension> children) {
-		return new Extension(null, title, summary, icon, children);
+		return new Extension(null, title, summary, icon, List.of(), children);
 	}
 
 	private static Extension toggle(String key, int title) {
-		return new Extension(key, title, 0, 0, List.of());
+		return new Extension(key, title, 0, 0, List.of(), List.of());
+	}
+
+	private static Extension dropdown(String key, int title, List<DropdownOption> options) {
+		return new Extension(key, title, 0, 0, options, List.of());
 	}
 
 	public boolean hasChildren() {

@@ -25,6 +25,10 @@ public final class Constant {
 	public static final String ENABLE_INCOGNITO_BUTTON = "enable_incognito_button";
 	public static final String ENABLE_VIDEO_HOLD_POPUP = "enable_video_hold_popup";
 	public static final String REMEMBER_RESIZE_MODE = "remember_resize_mode";
+	public static final String PLAYER_SIDE_BUTTONS = "player_side_buttons";
+	public static final String SIDE_BUTTONS_LEFT = "left";
+	public static final String SIDE_BUTTONS_RIGHT = "right";
+	public static final String SIDE_BUTTONS_BOTH = "both";
 	public static String USER_AGENT = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36";
 
 	private Constant() {

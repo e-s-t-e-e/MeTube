@@ -40,6 +40,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class ExtensionActivity extends AppCompatActivity {
 	private static final int TYPE_NAV = 0;
 	private static final int TYPE_TOGGLE = 1;
+	private static final int TYPE_DROPDOWN = 2;
 	@Inject
 	ExtensionManager manager;
 	private final Deque<Extension> stack = new ArrayDeque<>();
@@ -135,7 +136,9 @@ public class ExtensionActivity extends AppCompatActivity {
 
 		@Override
 		public int getItemViewType(int position) {
-			return items.get(position).hasChildren() ? TYPE_NAV : TYPE_TOGGLE;
+			Extension item = items.get(position);
+			if (item.hasChildren()) return TYPE_NAV;
+			return item.dropdownOptions().isEmpty() ? TYPE_TOGGLE : TYPE_DROPDOWN;
 		}
 
 		@Override
@@ -150,6 +153,9 @@ public class ExtensionActivity extends AppCompatActivity {
 			if (viewType == TYPE_NAV) {
 				return new NavHolder(inflater.inflate(R.layout.item_extension_nav, parent, false));
 			}
+			if (viewType == TYPE_DROPDOWN) {
+				return new DropdownHolder(inflater.inflate(R.layout.item_extension_dropdown, parent, false));
+			}
 			return new ToggleHolder(inflater.inflate(R.layout.item_extension_toggle, parent, false));
 		}
 
@@ -158,6 +164,10 @@ public class ExtensionActivity extends AppCompatActivity {
 			Extension item = items.get(position);
 			if (holder instanceof NavHolder nav) {
 				nav.bind(item);
+				return;
+			}
+			if (holder instanceof DropdownHolder dropdown) {
+				dropdown.bind(item);
 				return;
 			}
 			((ToggleHolder) holder).bind(item);
@@ -221,6 +231,48 @@ public class ExtensionActivity extends AppCompatActivity {
 			toggle.setChecked(manager.isEnabled(item.key()));
 			toggle.setOnCheckedChangeListener((buttonView, isChecked) -> manager.setEnabled(item.key(), isChecked));
 			itemView.setOnClickListener(v -> toggle.toggle());
+		}
+	}
+
+	private final class DropdownHolder extends RecyclerView.ViewHolder {
+		private final TextView title;
+		private final TextView summary;
+
+		private DropdownHolder(@NonNull View itemView) {
+			super(itemView);
+			title = itemView.findViewById(R.id.title);
+			summary = itemView.findViewById(R.id.summary);
+		}
+
+		private void bind(@NonNull Extension item) {
+			List<Extension.DropdownOption> options = item.dropdownOptions();
+			title.setText(item.title());
+			String current = manager.getString(item.key());
+			int selected = indexOf(options, current);
+			summary.setVisibility(View.VISIBLE);
+			summary.setText(selected >= 0 ? options.get(selected).labelRes() : R.string.unknown);
+			itemView.setOnClickListener(v -> {
+				String[] labels = new String[options.size()];
+				for (int i = 0; i < options.size(); i++) {
+					labels[i] = v.getContext().getString(options.get(i).labelRes());
+				}
+				new MaterialAlertDialogBuilder(v.getContext())
+								.setTitle(item.title())
+								.setSingleChoiceItems(labels, selected, (dialog, which) -> {
+									manager.setString(item.key(), options.get(which).value());
+									dialog.dismiss();
+									bind(item);
+								})
+								.setNegativeButton(R.string.cancel, null)
+								.show();
+			});
+		}
+
+		private int indexOf(List<Extension.DropdownOption> options, String value) {
+			for (int i = 0; i < options.size(); i++) {
+				if (options.get(i).value().equals(value)) return i;
+			}
+			return -1;
 		}
 	}
 }

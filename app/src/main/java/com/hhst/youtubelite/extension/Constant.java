@@ -24,6 +24,10 @@ public final class Constant {
 	public static final String ENABLE_HIDE_SHORTS = "enable_hide_shorts";
 	public static final String REMEMBER_QUALITY = "remember_quality";
 	public static final String REMEMBER_PLAYBACK_SPEED = "remember_playback_speed";
+	public static final String PLAYER_SIDE_BUTTONS = com.hhst.youtubelite.Constant.PLAYER_SIDE_BUTTONS;
+	public static final String SIDE_BUTTONS_LEFT = com.hhst.youtubelite.Constant.SIDE_BUTTONS_LEFT;
+	public static final String SIDE_BUTTONS_RIGHT = com.hhst.youtubelite.Constant.SIDE_BUTTONS_RIGHT;
+	public static final String SIDE_BUTTONS_BOTH = com.hhst.youtubelite.Constant.SIDE_BUTTONS_BOTH;
 	// Legacy key kept for migration only.
 	public static final String ENABLE_PLAYER_GESTURES = "enable_player_gestures";
 	public static final String GESTURE_TAP_WINDOWED = "gesture_tap_windowed";
@@ -86,6 +90,10 @@ public final class Constant {
 					Map.entry(GESTURE_SEEK_FULLSCREEN, true),
 					Map.entry(GESTURE_FULLSCREEN_WINDOWED, true),
 					Map.entry(GESTURE_FULLSCREEN_FULLSCREEN, true)
+	);
+
+	public static final Map<String, String> DEFAULT_STRING_PREFERENCES = Map.of(
+					PLAYER_SIDE_BUTTONS, SIDE_BUTTONS_BOTH
 	);
 
 	private Constant() {

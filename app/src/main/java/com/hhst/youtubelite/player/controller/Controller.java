@@ -11,6 +11,7 @@ import android.os.SystemClock;
 import android.text.format.DateUtils;
 import android.util.TypedValue;
 import android.view.GestureDetector;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
@@ -213,6 +214,7 @@ public class Controller {
 			setupHintOverlay();
 			setupListeners();
 			setupButtonListeners();
+			applySideButtonLayout();
 			refreshPlaybackButtons();
 			refreshQueueNavigationAvailability(engine.getQueueNavigationAvailability());
 			playerView.showController();
@@ -1165,6 +1167,58 @@ public class Controller {
 			ViewUtils.animateViewAlpha(resizeBtn, renderState.lockVisible() && !state.isLocked() ? 1.0f : 0.0f, View.GONE);
 		}
 		updateMiniControls(renderState.miniVisible(), renderState.scrimVisible());
+	}
+
+	private void applySideButtonLayout() {
+		ImageButton lockBtn = playerView.findViewById(R.id.btn_lock);
+		ImageButton resizeBtn = playerView.findViewById(R.id.btn_resize_mode);
+		if (lockBtn == null || resizeBtn == null) return;
+		String layout = extensionManager.getString(Constant.PLAYER_SIDE_BUTTONS);
+		if (layout == null) return;
+		FrameLayout.LayoutParams lockLp = (FrameLayout.LayoutParams) lockBtn.getLayoutParams();
+		FrameLayout.LayoutParams resizeLp = (FrameLayout.LayoutParams) resizeBtn.getLayoutParams();
+		int sideMargin = dp(24);
+		int topMargin = dp(52);
+		int stackedTopMargin = dp(108);
+		switch (layout) {
+			case Constant.SIDE_BUTTONS_LEFT -> {
+				lockLp.gravity = Gravity.TOP | Gravity.START;
+				lockLp.setMarginStart(sideMargin);
+				lockLp.topMargin = topMargin;
+				lockLp.setMarginEnd(0);
+				resizeLp.gravity = Gravity.TOP | Gravity.START;
+				resizeLp.setMarginStart(sideMargin);
+				resizeLp.topMargin = stackedTopMargin;
+				resizeLp.setMarginEnd(0);
+			}
+			case Constant.SIDE_BUTTONS_RIGHT -> {
+				lockLp.gravity = Gravity.TOP | Gravity.END;
+				lockLp.setMarginEnd(sideMargin);
+				lockLp.topMargin = topMargin;
+				lockLp.setMarginStart(0);
+				resizeLp.gravity = Gravity.TOP | Gravity.END;
+				resizeLp.setMarginEnd(sideMargin);
+				resizeLp.topMargin = stackedTopMargin;
+				resizeLp.setMarginStart(0);
+			}
+			default -> {
+				lockLp.gravity = Gravity.TOP | Gravity.START;
+				lockLp.setMarginStart(sideMargin);
+				lockLp.topMargin = topMargin;
+				lockLp.setMarginEnd(0);
+				resizeLp.gravity = Gravity.TOP | Gravity.END;
+				resizeLp.setMarginEnd(sideMargin);
+				resizeLp.topMargin = topMargin;
+				resizeLp.setMarginStart(0);
+			}
+		}
+		lockBtn.setLayoutParams(lockLp);
+		resizeBtn.setLayoutParams(resizeLp);
+	}
+
+	private int dp(int value) {
+		return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value,
+						activity.getResources().getDisplayMetrics());
 	}
 
 	private void updateResizeButton(@Nullable ImageButton resizeBtn) {

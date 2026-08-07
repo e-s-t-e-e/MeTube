@@ -31,6 +31,12 @@ public class ExtensionManager {
 				mmkv.encode(key, entry.getValue());
 			}
 		}
+		for (Map.Entry<String, String> entry : Constant.DEFAULT_STRING_PREFERENCES.entrySet()) {
+			String key = prefKey(entry.getKey());
+			if (!mmkv.contains(key)) {
+				mmkv.encode(key, entry.getValue());
+			}
+		}
 	}
 
 	private void initializeGesturePreferences() {
@@ -66,12 +72,34 @@ public class ExtensionManager {
 		return mmkv.decodeBool(prefKey(key), Boolean.TRUE.equals(Constant.DEFAULT_PREFERENCES.getOrDefault(key, false)));
 	}
 
+	public void setString(String key, String value) {
+		String pref = prefKey(key);
+		String current = mmkv.decodeString(pref, null);
+		mmkv.encode(pref, value);
+		if (current == null || !current.equals(value)) {
+			bumpVersion();
+		}
+	}
+
+	public String getString(String key) {
+		return mmkv.decodeString(prefKey(key), Constant.DEFAULT_STRING_PREFERENCES.getOrDefault(key, null));
+	}
+
 	public void resetToDefault() {
 		boolean changed = false;
 		for (Map.Entry<String, Boolean> entry : Constant.DEFAULT_PREFERENCES.entrySet()) {
 			String key = prefKey(entry.getKey());
 			boolean value = entry.getValue();
 			if (!mmkv.contains(key) || mmkv.decodeBool(key, value) != value) {
+				changed = true;
+			}
+			mmkv.encode(key, value);
+		}
+		for (Map.Entry<String, String> entry : Constant.DEFAULT_STRING_PREFERENCES.entrySet()) {
+			String key = prefKey(entry.getKey());
+			String value = entry.getValue();
+			String current = mmkv.decodeString(key, value);
+			if (!mmkv.contains(key) || !current.equals(value)) {
 				changed = true;
 			}
 			mmkv.encode(key, value);
