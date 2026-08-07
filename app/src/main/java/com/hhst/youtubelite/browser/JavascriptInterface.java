@@ -24,7 +24,6 @@ import com.hhst.youtubelite.downloader.ui.DownloadDialog;
 import com.hhst.youtubelite.downloader.ui.PlaylistDownloadDialog;
 import com.hhst.youtubelite.downloader.ui.PlaylistDownloadItem;
 import com.hhst.youtubelite.extension.ExtensionActivity;
-import com.hhst.youtubelite.ui.AccountManagerActivity;
 import com.hhst.youtubelite.extension.ExtensionManager;
 import com.hhst.youtubelite.extractor.YoutubeExtractor;
 import com.hhst.youtubelite.gallery.GalleryActivity;
@@ -218,17 +217,6 @@ public final class JavascriptInterface {
 	}
 
 	@android.webkit.JavascriptInterface
-	public void accounts() {
-		handler.post(() -> {
-			Intent intent = new Intent(context, AccountManagerActivity.class);
-			if (!(context instanceof Activity)) {
-				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			}
-			context.startActivity(intent);
-		});
-	}
-
-	@android.webkit.JavascriptInterface
 	public void syncAccount(String name) {
 		handler.post(() -> {
 			android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
@@ -272,60 +260,6 @@ public final class JavascriptInterface {
 
 			String newJson = new com.google.gson.Gson().toJson(list);
 			prefs.edit().putString("profiles", newJson).apply();
-		});
-	}
-
-	@android.webkit.JavascriptInterface
-	public void quickSwitchAccount() {
-		handler.post(() -> {
-			android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
-			String activeSid = AccountProfile.getCookieValue(cookieManager.getCookie("https://youtube.com"), "SID");
-
-			android.content.SharedPreferences prefs = context.getSharedPreferences("account_prefs", android.content.Context.MODE_PRIVATE);
-			String json = prefs.getString("profiles", "[]");
-			java.lang.reflect.Type type = new com.google.gson.reflect.TypeToken<java.util.ArrayList<AccountProfile>>(){}.getType();
-			java.util.List<AccountProfile> list = new com.google.gson.Gson().fromJson(json, type);
-			if (list == null) list = new java.util.ArrayList<>();
-
-			if (list.isEmpty()) {
-				com.hhst.youtubelite.util.ToastUtils.show(context, "No saved accounts found. Switch account to sign in.");
-				return;
-			}
-
-			int activeIndex = -1;
-			if (activeSid != null) {
-				for (int i = 0; i < list.size(); i++) {
-					String profileSid = AccountProfile.getCookieValue(list.get(i).getDomainCookies().get("https://youtube.com"), "SID");
-					if (activeSid.equals(profileSid)) {
-						activeIndex = i;
-						break;
-					}
-				}
-			}
-
-			int nextIndex = (activeIndex + 1) % list.size();
-			AccountProfile nextProfile = list.get(nextIndex);
-
-			cookieManager.removeAllCookies(null);
-			for (java.util.Map.Entry<String, String> entry : nextProfile.getDomainCookies().entrySet()) {
-				String url = entry.getKey();
-				String val = entry.getValue();
-				if (val != null) {
-					for (String pair : val.split(";")) {
-						cookieManager.setCookie(url, pair.trim());
-					}
-				}
-			}
-			cookieManager.flush();
-
-			com.hhst.youtubelite.util.ToastUtils.show(context, "Switched to: " + nextProfile.getName());
-
-			Intent intent = new Intent(context, com.hhst.youtubelite.ui.MainActivity.class);
-			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-			context.startActivity(intent);
-			if (context instanceof Activity) {
-				((Activity) context).finish();
-			}
 		});
 	}
 

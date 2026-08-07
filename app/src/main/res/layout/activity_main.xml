@@ -89,19 +89,20 @@
             android:src="@drawable/ic_close"
             android:tint="@android:color/white" />
     </FrameLayout>
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btn_switch_account"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginBottom="72dp"
-        android:text="Switch Account"
-        android:textColor="@android:color/white"
+        android:contentDescription="@string/switch_account"
+        android:src="@drawable/ic_switch_account"
         android:visibility="gone"
-        app:icon="@drawable/ic_profile"
-        app:iconTint="@android:color/white"
-        app:backgroundTint="#FF0000"
-        app:elevation="6dp"
+        app:backgroundTint="@color/surface"
+        app:elevation="3dp"
+        app:fabCustomSize="44dp"
+        app:maxImageSize="22dp"
+        app:tint="@color/on_surface_variant"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

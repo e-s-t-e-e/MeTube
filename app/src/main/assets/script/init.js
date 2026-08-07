@@ -1887,43 +1887,9 @@
             }
         };
 
-
-
-        document.addEventListener('click', (e) => {
-            let target = e.target;
-            while (target && target !== document.body) {
-                const text = target.textContent || "";
-                const isSwitchAccount = (/Switch account/i.test(text) || /Manage Accounts/i.test(text)) && 
-                    (target.tagName === 'A' || target.tagName === 'BUTTON' || target.classList.contains('menu-item') || target.getAttribute('role') === 'button' || target.closest('ytm-menu-item') !== null);
-                
-                if (isSwitchAccount || (target.tagName === 'A' && target.getAttribute('href') && (target.getAttribute('href').includes('/switch_account') || target.getAttribute('href').includes('/manage_accounts')))) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (typeof lite !== 'undefined' && lite.accounts) {
-                        lite.accounts();
-                    }
-                    return;
-                }
-                target = target.parentNode;
-            }
-        }, true);
-
         const syncAccountAndInjectHeader = () => {
             try {
-                // Rename "Switch account" -> "Manage Accounts" in the profile menu
-                const items = document.querySelectorAll('ytm-menu-item, .ytm-menu-item, button, a');
-                items.forEach(el => {
-                    if (el.textContent && /Switch account/i.test(el.textContent)) {
-                        const targetEl = Array.from(el.querySelectorAll('span, div, .ytAttributedStringHost, .ytm-menu-item-text')).find(sub => sub.children.length === 0 && /Switch account/i.test(sub.textContent))
-                            || el;
-                        if (targetEl && !targetEl.dataset.metubeRenamed) {
-                            targetEl.textContent = "Manage Accounts";
-                            targetEl.dataset.metubeRenamed = "1";
-                        }
-                    }
-                });
-
-                // Auto-save the currently logged-in account silently by reading the account name from the page
+                // Auto-save the currently logged-in account silently by reading the account name from the page.
                 const header = document.querySelector('ytm-active-account-header-renderer') 
                     || document.querySelector('.ytm-active-account-header-renderer');
                 if (header) {

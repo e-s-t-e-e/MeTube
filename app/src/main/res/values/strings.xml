@@ -136,8 +136,6 @@
     <string name="source_code">Source Code</string>
     <string name="clear_cache">Clear Cache</string>
     <string name="export_error_log">Export Error Log</string>
-    <string name="accounts_setting_title">Accounts</string>
-    <string name="accounts_setting_summary">Manage and switch between multiple YouTube profiles</string>
     <string name="cache_cleared">Cache cleared</string>
     <string name="failed_to_export_log">Failed to export log</string>
     <string name="version">Version: %1$s</string>
@@ -213,6 +211,7 @@
     <string name="playlist_download_batch_segment_failed" tools:ignore="PluralsCandidate">%1$d failed</string>
     <string name="playlist_download_started">Playlist download started</string>
     <string name="incognito_toggle">Toggle incognito</string>
+    <string name="switch_account">Switch account</string>
     <string name="incognito_on">Incognito on \u2014 browsing as guest</string>
     <string name="incognito_off">Incognito off \u2014 signed back in</string>
     <string name="enable_incognito_button">Incognito button</string>

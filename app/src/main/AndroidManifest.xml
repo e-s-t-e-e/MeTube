@@ -162,10 +162,5 @@
             android:configChanges="orientation|screenSize|keyboard|keyboardHidden|screenLayout|smallestScreenSize|uiMode"
             android:exported="false" />
 
-        <activity
-            android:name=".ui.AccountManagerActivity"
-            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false" />
-
     </application>
 </manifest>

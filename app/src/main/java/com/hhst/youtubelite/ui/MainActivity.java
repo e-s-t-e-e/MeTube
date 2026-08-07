@@ -241,14 +241,14 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 	}
 
 	private void setupSwitchAccountButton() {
-		com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton btn = findViewById(R.id.btn_switch_account);
+		com.google.android.material.floatingactionbutton.FloatingActionButton btn = findViewById(R.id.btn_switch_account);
 		if (btn != null) {
 			btn.setOnClickListener(v -> performQuickSwitch());
 		}
 	}
 
 	private void updateSwitchAccountButtonVisibility(@Nullable String url) {
-		com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton btn = findViewById(R.id.btn_switch_account);
+		com.google.android.material.floatingactionbutton.FloatingActionButton btn = findViewById(R.id.btn_switch_account);
 		if (btn == null) return;
 		boolean onProfilePage = url != null && (url.contains("/menu") || url.contains("m.youtube.com/menu"));
 		btn.setVisibility(onProfilePage ? View.VISIBLE : View.GONE);
@@ -259,12 +259,26 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 		String json = prefs.getString("profiles", "[]");
 		java.lang.reflect.Type type = new com.google.gson.reflect.TypeToken<java.util.ArrayList<com.hhst.youtubelite.browser.AccountProfile>>(){}.getType();
 		java.util.List<com.hhst.youtubelite.browser.AccountProfile> list = new com.google.gson.Gson().fromJson(json, type);
-		if (list == null || list.isEmpty()) {
-			Toast.makeText(this, "No saved accounts. Add another account first via \"Manage Accounts\".", Toast.LENGTH_LONG).show();
-			return;
-		}
+		if (list == null) list = new java.util.ArrayList<>();
+
 		android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
 		String activeSid = com.hhst.youtubelite.browser.AccountProfile.getCookieValue(cookieManager.getCookie("https://youtube.com"), "SID");
+
+		// Back up the current session if it hasn't been auto-saved yet, so switching never drops it.
+		if (activeSid != null && !isProfileSaved(activeSid, list)) {
+			list.add(new com.hhst.youtubelite.browser.AccountProfile(
+					java.util.UUID.randomUUID().toString(),
+					"Account " + (list.size() + 1),
+					activeCookies(),
+					System.currentTimeMillis()));
+			prefs.edit().putString("profiles", new com.google.gson.Gson().toJson(list)).apply();
+		}
+
+		if (list.isEmpty()) {
+			Toast.makeText(this, "No accounts yet. Open your profile and sign in to save one.", Toast.LENGTH_LONG).show();
+			return;
+		}
+
 		int activeIndex = -1;
 		if (activeSid != null) {
 			for (int i = 0; i < list.size(); i++) {
@@ -293,6 +307,28 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
 		startActivity(intent);
 		finish();
+	}
+
+	private boolean isProfileSaved(String activeSid, java.util.List<com.hhst.youtubelite.browser.AccountProfile> savedProfiles) {
+		for (com.hhst.youtubelite.browser.AccountProfile profile : savedProfiles) {
+			String profileSid = com.hhst.youtubelite.browser.AccountProfile.getCookieValue(profile.getDomainCookies().get("https://youtube.com"), "SID");
+			if (activeSid.equals(profileSid)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private java.util.Map<String, String> activeCookies() {
+		android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
+		java.util.Map<String, String> cookies = new java.util.HashMap<>();
+		for (String url : java.util.List.of("https://youtube.com", "https://.youtube.com", "https://google.com", "https://accounts.google.com")) {
+			String cookieString = cookieManager.getCookie(url);
+			if (cookieString != null && !cookieString.trim().isEmpty()) {
+				cookies.put(url, cookieString);
+			}
+		}
+		return cookies;
 	}
 
 	@Override
