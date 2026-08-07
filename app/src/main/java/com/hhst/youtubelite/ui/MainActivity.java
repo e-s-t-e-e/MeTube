@@ -175,6 +175,8 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 		});
 		setupIncognitoButton(playerRoot);
 		setupMiniPlayerDismiss(playerRoot);
+		setupSwitchAccountButton();
+		tabManager.setUrlChangeListener(url -> runOnUiThread(() -> updateSwitchAccountButtonVisibility(url)));
 		if (PermissionUtils.needsPostNotificationsPermission()
 						&& !PermissionUtils.hasPostNotificationsPermission(this)) {
 			ActivityCompat.requestPermissions(
@@ -233,8 +235,64 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 				}
 				bootstrapped = true;
 				handleIntent(getIntent());
+				checkAppLinksStatus();
 			}
 		});
+	}
+
+	private void setupSwitchAccountButton() {
+		com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton btn = findViewById(R.id.btn_switch_account);
+		if (btn != null) {
+			btn.setOnClickListener(v -> performQuickSwitch());
+		}
+	}
+
+	private void updateSwitchAccountButtonVisibility(@Nullable String url) {
+		com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton btn = findViewById(R.id.btn_switch_account);
+		if (btn == null) return;
+		boolean onProfilePage = url != null && (url.contains("/menu") || url.contains("m.youtube.com/menu"));
+		btn.setVisibility(onProfilePage ? View.VISIBLE : View.GONE);
+	}
+
+	private void performQuickSwitch() {
+		android.content.SharedPreferences prefs = getSharedPreferences("account_prefs", MODE_PRIVATE);
+		String json = prefs.getString("profiles", "[]");
+		java.lang.reflect.Type type = new com.google.gson.reflect.TypeToken<java.util.ArrayList<com.hhst.youtubelite.browser.AccountProfile>>(){}.getType();
+		java.util.List<com.hhst.youtubelite.browser.AccountProfile> list = new com.google.gson.Gson().fromJson(json, type);
+		if (list == null || list.isEmpty()) {
+			Toast.makeText(this, "No saved accounts. Add another account first via \"Manage Accounts\".", Toast.LENGTH_LONG).show();
+			return;
+		}
+		android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
+		String activeSid = com.hhst.youtubelite.browser.AccountProfile.getCookieValue(cookieManager.getCookie("https://youtube.com"), "SID");
+		int activeIndex = -1;
+		if (activeSid != null) {
+			for (int i = 0; i < list.size(); i++) {
+				String profileSid = com.hhst.youtubelite.browser.AccountProfile.getCookieValue(list.get(i).getDomainCookies().get("https://youtube.com"), "SID");
+				if (activeSid.equals(profileSid)) {
+					activeIndex = i;
+					break;
+				}
+			}
+		}
+		int nextIndex = (activeIndex + 1) % list.size();
+		com.hhst.youtubelite.browser.AccountProfile next = list.get(nextIndex);
+		cookieManager.removeAllCookies(null);
+		for (java.util.Map.Entry<String, String> entry : next.getDomainCookies().entrySet()) {
+			String url = entry.getKey();
+			String val = entry.getValue();
+			if (val != null) {
+				for (String pair : val.split(";")) {
+					cookieManager.setCookie(url, pair.trim());
+				}
+			}
+		}
+		cookieManager.flush();
+		Toast.makeText(this, "Switching to: " + next.getName(), Toast.LENGTH_SHORT).show();
+		Intent intent = new Intent(this, MainActivity.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+		startActivity(intent);
+		finish();
 	}
 
 	@Override
@@ -279,6 +337,27 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 		player.syncRotation(DeviceUtils.isRotateOn(this), newConfig.orientation);
 	}
 
+	private static String normalizeYoutubeUrl(String url) {
+		if (url == null) return null;
+		if (url.startsWith("vnd.youtube:")) {
+			String part = url.substring("vnd.youtube:".length());
+			if (part.startsWith("//")) {
+				part = part.substring(2);
+			}
+			if (part.isEmpty()) {
+				return Constant.HOME_URL;
+			}
+			if (part.startsWith("watch?")) {
+				return "https://m.youtube.com/" + part;
+			} else if (part.contains("?")) {
+				return "https://m.youtube.com/watch?" + part;
+			} else {
+				return "https://m.youtube.com/watch?v=" + part;
+			}
+		}
+		return url;
+	}
+
 	private void handleIntent(@Nullable Intent intent) {
 		if (intent == null) return;
 		String action = intent.getAction();
@@ -291,7 +370,7 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 
 		String url = null;
 		if (Intent.ACTION_VIEW.equals(action) && intent.getData() != null) {
-			url = intent.getData().toString();
+			url = normalizeYoutubeUrl(intent.getData().toString());
 		} else if (Intent.ACTION_SEND.equals(action) || isDownloadAction) {
 			// Extract a shared YouTube URL from the incoming text.
 			String text = intent.getStringExtra(Intent.EXTRA_TEXT);
@@ -828,6 +907,63 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 
 	public void suppressNextPiP() {
 		this.suppressPiP = true;
+	}
+
+	private void checkAppLinksStatus() {
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+			android.content.SharedPreferences sp = getSharedPreferences("metube_prefs", android.content.Context.MODE_PRIVATE);
+			if (!sp.getBoolean("ask_app_links", true)) {
+				return;
+			}
+			try {
+				android.content.pm.verify.domain.DomainVerificationManager manager =
+								getSystemService(android.content.pm.verify.domain.DomainVerificationManager.class);
+				if (manager != null) {
+					android.content.pm.verify.domain.DomainVerificationUserState userState =
+									manager.getDomainVerificationUserState(getPackageName());
+					if (userState != null) {
+						java.util.Map<String, Integer> hostMap = userState.getHostToStateMap();
+						boolean allVerified = true;
+						for (String host : List.of("youtube.com", "youtu.be", "m.youtube.com", "www.youtube.com")) {
+							Integer state = hostMap.get(host);
+							if (state == null || state != android.content.pm.verify.domain.DomainVerificationUserState.DOMAIN_STATE_VERIFIED) {
+								allVerified = false;
+								break;
+							}
+						}
+						if (!allVerified) {
+							showAppLinksDialog(sp);
+						}
+					}
+				}
+			} catch (Exception e) {
+				android.util.Log.e("MainActivity", "Failed to check domain verification state", e);
+			}
+		}
+	}
+
+	private void showAppLinksDialog(android.content.SharedPreferences sp) {
+		new MaterialAlertDialogBuilder(this)
+						.setTitle("Open Links in MeTube")
+						.setMessage("To open YouTube links directly in MeTube, you need to enable 'Open by default' in Android system settings.\n\nWould you like to open settings now?")
+						.setPositiveButton("Open Settings", (dialog, which) -> {
+							try {
+								Intent intent = new Intent(android.provider.Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS);
+								intent.setData(android.net.Uri.parse("package:" + getPackageName()));
+								startActivity(intent);
+							} catch (Exception e) {
+								try {
+									Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+									intent.setData(android.net.Uri.parse("package:" + getPackageName()));
+									startActivity(intent);
+								} catch (Exception ignored) {}
+							}
+						})
+						.setNegativeButton("Later", null)
+						.setNeutralButton("Don't ask again", (dialog, which) -> {
+							sp.edit().putBoolean("ask_app_links", false).apply();
+						})
+						.show();
 	}
 
 	private boolean shouldSuppressPiPForStartedActivity(@Nullable Intent intent) {

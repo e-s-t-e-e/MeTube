@@ -1887,50 +1887,57 @@
             }
         };
 
-        const updateMeTubeBranding = () => {
-            try {
-                if (document.title && /YouTube/i.test(document.title)) {
-                    document.title = document.title.replace(/YouTube/gi, 'MeTube');
-                }
-                const inputs = document.querySelectorAll('input[placeholder*="YouTube"], input[placeholder*="youtube"]');
-                inputs.forEach(input => {
-                    input.placeholder = input.placeholder.replace(/YouTube/gi, 'MeTube');
-                });
-                const attrs = document.querySelectorAll('[aria-label*="YouTube"], [aria-label*="youtube"], [title*="YouTube"], [title*="youtube"]');
-                attrs.forEach(el => {
-                    if (el.hasAttribute('aria-label')) {
-                        el.setAttribute('aria-label', el.getAttribute('aria-label').replace(/YouTube/gi, 'MeTube'));
+
+
+        document.addEventListener('click', (e) => {
+            let target = e.target;
+            while (target && target !== document.body) {
+                const text = target.textContent || "";
+                const isSwitchAccount = (/Switch account/i.test(text) || /Manage Accounts/i.test(text)) && 
+                    (target.tagName === 'A' || target.tagName === 'BUTTON' || target.classList.contains('menu-item') || target.getAttribute('role') === 'button' || target.closest('ytm-menu-item') !== null);
+                
+                if (isSwitchAccount || (target.tagName === 'A' && target.getAttribute('href') && (target.getAttribute('href').includes('/switch_account') || target.getAttribute('href').includes('/manage_accounts')))) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof lite !== 'undefined' && lite.accounts) {
+                        lite.accounts();
                     }
-                    if (el.hasAttribute('title')) {
-                        el.setAttribute('title', el.getAttribute('title').replace(/YouTube/gi, 'MeTube'));
+                    return;
+                }
+                target = target.parentNode;
+            }
+        }, true);
+
+        const syncAccountAndInjectHeader = () => {
+            try {
+                // Rename "Switch account" -> "Manage Accounts" in the profile menu
+                const items = document.querySelectorAll('ytm-menu-item, .ytm-menu-item, button, a');
+                items.forEach(el => {
+                    if (el.textContent && /Switch account/i.test(el.textContent)) {
+                        const targetEl = Array.from(el.querySelectorAll('span, div, .ytAttributedStringHost, .ytm-menu-item-text')).find(sub => sub.children.length === 0 && /Switch account/i.test(sub.textContent))
+                            || el;
+                        if (targetEl && !targetEl.dataset.metubeRenamed) {
+                            targetEl.textContent = "Manage Accounts";
+                            targetEl.dataset.metubeRenamed = "1";
+                        }
                     }
                 });
 
-                const root = document.body || document.documentElement;
-                if (!root) return;
-                const walker = document.createTreeWalker(
-                    root,
-                    NodeFilter.SHOW_TEXT,
-                    {
-                        acceptNode: (node) => {
-                            const tag = node.parentNode?.tagName?.toLowerCase();
-                            if (tag === 'script' || tag === 'style' || tag === 'noscript' || tag === 'textarea') {
-                                return NodeFilter.FILTER_REJECT;
-                            }
-                            if (node.nodeValue && /YouTube/i.test(node.nodeValue)) {
-                                return NodeFilter.FILTER_ACCEPT;
-                            }
-                            return NodeFilter.FILTER_SKIP;
+                // Auto-save the currently logged-in account silently by reading the account name from the page
+                const header = document.querySelector('ytm-active-account-header-renderer') 
+                    || document.querySelector('.ytm-active-account-header-renderer');
+                if (header) {
+                    const nameEl = header.querySelector('[class*="name"]') || header.querySelector('h1');
+                    if (nameEl && nameEl.textContent) {
+                        const name = nameEl.textContent.trim();
+                        if (name && name.length > 0 && !name.includes('\n') && typeof lite !== 'undefined' && lite.syncAccount) {
+                            lite.syncAccount(name);
                         }
                     }
-                );
-                let textNode;
-                while ((textNode = walker.nextNode())) {
-                    textNode.nodeValue = textNode.nodeValue.replace(/YouTube/gi, 'MeTube');
                 }
             } catch (e) {}
         };
-        setInterval(updateMeTubeBranding, 1200);
+        setInterval(syncAccountAndInjectHeader, 600);
 
         App.init();
     } catch (error) {

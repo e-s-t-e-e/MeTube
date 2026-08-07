@@ -52,6 +52,8 @@ public class TabManager {
 	private YoutubeFragment tab;
 	@Nullable
 	private YoutubeFragment suspendedTab;
+	@Nullable
+	private java.util.function.Consumer<String> urlChangeListener;
 
 	@Inject
 	public TabManager(@NonNull Activity activity, @NonNull Lazy<LitePlayer> player, @NonNull ExtensionManager extensionManager) {
@@ -73,8 +75,13 @@ public class TabManager {
 		return Objects.requireNonNull(player.get());
 	}
 
+	public void setUrlChangeListener(@Nullable java.util.function.Consumer<String> listener) {
+		this.urlChangeListener = listener;
+	}
+
 	public void onUrlChanged(@NonNull YoutubeFragment fragment, @NonNull String url) {
 		if (fragment != tab) return;
+		if (urlChangeListener != null) urlChangeListener.accept(url);
 		LitePlayer litePlayer = litePlayer();
 		if (Constant.PAGE_WATCH.equals(UrlUtils.getPageClass(url))) {
 			if (litePlayer.isInMiniPlayer()) litePlayer.exitInAppMiniPlayer();

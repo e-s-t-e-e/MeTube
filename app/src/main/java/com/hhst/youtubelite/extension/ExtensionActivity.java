@@ -24,6 +24,7 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.hhst.youtubelite.R;
+import com.hhst.youtubelite.ui.AccountManagerActivity;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

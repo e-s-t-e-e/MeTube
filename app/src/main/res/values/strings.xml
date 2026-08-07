@@ -136,6 +136,8 @@
     <string name="source_code">Source Code</string>
     <string name="clear_cache">Clear Cache</string>
     <string name="export_error_log">Export Error Log</string>
+    <string name="accounts_setting_title">Accounts</string>
+    <string name="accounts_setting_summary">Manage and switch between multiple YouTube profiles</string>
     <string name="cache_cleared">Cache cleared</string>
     <string name="failed_to_export_log">Failed to export log</string>
     <string name="version">Version: %1$s</string>

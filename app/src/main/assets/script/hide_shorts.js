@@ -17,7 +17,6 @@
         "ytm-shorts-lockup-view-model",
         ".pivot-bar-item-tab.pivot-shorts",
         "a[href^=\"/shorts/\"]",
-        "grid-shelf-view-model",
     ];
     let enabled = false;
 
@@ -79,7 +78,6 @@
             element.matches("ytm-shorts-lockup-view-model")
             || element.matches(".pivot-bar-item-tab.pivot-shorts")
             || element.matches("a[href^=\"/shorts/\"]")
-            || element.matches("grid-shelf-view-model")
         ) {
             hideElement(element);
         }

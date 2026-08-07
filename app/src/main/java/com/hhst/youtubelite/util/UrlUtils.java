@@ -27,6 +27,8 @@ public final class UrlUtils {
 					"ytimg.com",
 					"accounts.google",
 					"accounts.google.com",
+					"google.com",
+					"www.google.com",
 					"googleusercontent.com",
 					"apis.google.com",
 					"gstatic.com"

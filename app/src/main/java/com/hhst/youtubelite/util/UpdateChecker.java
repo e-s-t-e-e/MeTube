@@ -99,9 +99,7 @@ public class UpdateChecker {
 					}
 
 					String currentVersion = getAppVersionName(activity);
-					boolean matches = currentVersion != null && currentVersion.trim().replaceAll("^v", "")
-									.equalsIgnoreCase(latestTag.trim().replaceAll("^v", ""));
-					if (!matches) {
+					if (isNewerVersion(currentVersion, latestTag)) {
 						final String downloadUrl = targetUrl;
 						activity.runOnUiThread(() -> showUpdateDialog(activity, latestTag, downloadUrl));
 					}
