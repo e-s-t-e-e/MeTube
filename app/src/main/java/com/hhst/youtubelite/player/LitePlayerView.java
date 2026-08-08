@@ -163,7 +163,7 @@ public class LitePlayerView extends PlayerView {
 	public void setPlayerBrightness(float brightness) {
 		this.customBrightness = Math.max(0.01f, Math.min(1.0f, brightness));
 		this.hasAdjustedBrightness = true;
-		if (!inAppMiniPlayer && getVisibility() == View.VISIBLE) {
+		if (!inAppMiniPlayer && isFs && getVisibility() == View.VISIBLE) {
 			applyWindowBrightness(this.customBrightness);
 		}
 	}
@@ -184,15 +184,29 @@ public class LitePlayerView extends PlayerView {
 		});
 	}
 
+	private void updateBrightnessForState() {
+		if (getVisibility() != View.VISIBLE) {
+			applyWindowBrightness(-1f);
+			return;
+		}
+		if (inAppMiniPlayer || !isFs) {
+			applyWindowBrightness(0.25f);
+		} else {
+			if (hasAdjustedBrightness) {
+				applyWindowBrightness(customBrightness);
+			} else {
+				applyWindowBrightness(-1f);
+			}
+		}
+	}
+
 	@Override
 	public void onWindowFocusChanged(boolean hasWindowFocus) {
 		super.onWindowFocusChanged(hasWindowFocus);
 		if (!hasWindowFocus) {
 			applyWindowBrightness(-1f);
 		} else {
-			if (hasAdjustedBrightness && !inAppMiniPlayer && getVisibility() == View.VISIBLE) {
-				applyWindowBrightness(customBrightness);
-			}
+			updateBrightnessForState();
 		}
 	}
 
@@ -200,13 +214,7 @@ public class LitePlayerView extends PlayerView {
 	protected void onVisibilityChanged(@NonNull View changedView, int visibility) {
 		super.onVisibilityChanged(changedView, visibility);
 		if (changedView == this) {
-			if (visibility != View.VISIBLE) {
-				applyWindowBrightness(-1f);
-			} else {
-				if (hasAdjustedBrightness && !inAppMiniPlayer) {
-					applyWindowBrightness(customBrightness);
-				}
-			}
+			updateBrightnessForState();
 		}
 	}
 
@@ -324,7 +332,7 @@ public class LitePlayerView extends PlayerView {
 		miniPlayerRestoreResizeMode = getResizeMode();
 		miniPlayerRestoreFullscreen = isFs;
 		inAppMiniPlayer = true;
-		applyWindowBrightness(-1f);
+		updateBrightnessForState();
 		loadPersistedMiniPlayerLayoutState();
 		updatePlayerLayout(false);
 		updateMiniPlayerCornerClipping();
@@ -340,9 +348,7 @@ public class LitePlayerView extends PlayerView {
 		int startHeight = getHeight();
 		stopMiniTransition();
 		inAppMiniPlayer = false;
-		if (hasAdjustedBrightness && getVisibility() == View.VISIBLE) {
-			applyWindowBrightness(customBrightness);
-		}
+		updateBrightnessForState();
 		resetMiniPlayerTouchTracking();
 		miniPlayerWidthOverrideDp = MiniPlayerLayout.NO_WIDTH_OVERRIDE_DP;
 		resetMiniPlayerTranslation();
@@ -898,6 +904,7 @@ public class LitePlayerView extends PlayerView {
 		setResizeMode(inAppMiniPlayer ? AspectRatioFrameLayout.RESIZE_MODE_FIT : defaultResizeMode);
 		updateMiniPlayerCornerClipping();
 		updateFullscreenButton(false);
+		updateBrightnessForState();
 	}
 
 	private void applyFullscreenState(@NonNull ControllerState.Mode previousState,
@@ -914,6 +921,7 @@ public class LitePlayerView extends PlayerView {
 		setResizeMode(defaultResizeMode);
 		updateMiniPlayerCornerClipping();
 		updateFullscreenButton(true);
+		updateBrightnessForState();
 	}
 
 	private void applyPictureInPictureState(@NonNull ControllerState.Mode previousState) {
@@ -925,6 +933,7 @@ public class LitePlayerView extends PlayerView {
 		updatePlayerLayout(true);
 		setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
 		updateMiniPlayerCornerClipping();
+		updateBrightnessForState();
 	}
 
 	public void requestPortraitNormalState() {
