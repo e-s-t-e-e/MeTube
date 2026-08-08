@@ -163,7 +163,7 @@ public class LitePlayerView extends PlayerView {
 	public void setPlayerBrightness(float brightness) {
 		this.customBrightness = Math.max(0.01f, Math.min(1.0f, brightness));
 		this.hasAdjustedBrightness = true;
-		if (!inAppMiniPlayer && isFs && getVisibility() == View.VISIBLE) {
+		if (!inAppMiniPlayer && getVisibility() == View.VISIBLE) {
 			applyWindowBrightness(this.customBrightness);
 		}
 	}
@@ -997,7 +997,9 @@ public class LitePlayerView extends PlayerView {
 	}
 
 	public void show() {
+		hasAdjustedBrightness = false;
 		setVisibility(View.VISIBLE);
+		updateBrightnessForState();
 	}
 
 	public void hide() {
