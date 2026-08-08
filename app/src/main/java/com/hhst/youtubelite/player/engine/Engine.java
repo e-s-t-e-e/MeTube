@@ -83,6 +83,29 @@ public class Engine {
 	private static final int SAFE_ZONE_MS = 5000;
 	@NonNull
 	private final ExoPlayer player;
+	private android.media.audiofx.LoudnessEnhancer loudnessEnhancer;
+	private float volumeBoostProgress = 0f;
+
+	public void setVolumeBoostProgress(float progress) {
+		this.volumeBoostProgress = Math.max(0f, Math.min(1f, progress));
+		updateLoudnessEnhancerGain();
+	}
+
+	public float getVolumeBoostProgress() {
+		return volumeBoostProgress;
+	}
+
+	private void updateLoudnessEnhancerGain() {
+		if (loudnessEnhancer != null) {
+			try {
+				int gainmB = Math.round(volumeBoostProgress * 1500f);
+				loudnessEnhancer.setTargetGain(gainmB);
+				loudnessEnhancer.setEnabled(gainmB > 0);
+			} catch (Exception e) {
+				android.util.Log.e("Engine", "Failed to update target gain on LoudnessEnhancer", e);
+			}
+		}
+	}
 	@NonNull
 	private final PlayerPreferences prefs;
 	@NonNull
@@ -217,6 +240,22 @@ public class Engine {
 					if (loopMode.selectsRandomPlaylistItemOnEnded()) {
 						playRandomPlaylistItem();
 					}
+				}
+			}
+
+			@Override
+			public void onAudioSessionIdChanged(int audioSessionId) {
+				try {
+					if (loudnessEnhancer != null) {
+						loudnessEnhancer.release();
+						loudnessEnhancer = null;
+					}
+					if (audioSessionId != androidx.media3.common.C.AUDIO_SESSION_ID_UNSET) {
+						loudnessEnhancer = new android.media.audiofx.LoudnessEnhancer(audioSessionId);
+						updateLoudnessEnhancerGain();
+					}
+				} catch (Exception e) {
+					android.util.Log.e("Engine", "Failed to create LoudnessEnhancer", e);
 				}
 			}
 
@@ -1105,6 +1144,12 @@ public class Engine {
 	public void release() {
 		handler.removeCallbacks(onTimeUpdate);
 		this.player.release();
+		if (loudnessEnhancer != null) {
+			try {
+				loudnessEnhancer.release();
+			} catch (Exception e) {}
+			loudnessEnhancer = null;
+		}
 	}
 
 /**

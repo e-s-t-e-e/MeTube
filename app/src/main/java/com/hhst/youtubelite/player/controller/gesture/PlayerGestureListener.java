@@ -51,7 +51,7 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 	private int seekAccum;
 	private final Runnable resetSeek = () -> seekAccum = 0;
 	private long lastTapTime;
-	private float volume = -1;
+	private float customVolume = -1;
 
 	public PlayerGestureListener(Activity activity, LitePlayerView playerView, Engine engine, Controller controller) {
 		this.activity = activity;
@@ -121,7 +121,7 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 		handler.removeCallbacks(hideHint);
 		gestureMode = GestureMode.NONE;
 		brightness = -1;
-		volume = -1;
+		customVolume = -1;
 		gesturing = false;
 		swipeTriggered = false;
 		seekStartPos = engine.position();
@@ -266,14 +266,29 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 		AudioManager am = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
 		if (am == null) return;
 		int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-		if (volume == -1) volume = (float) am.getStreamVolume(AudioManager.STREAM_MUSIC);
+		if (customVolume == -1) {
+			int sysVol = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+			float boost = engine.getVolumeBoostProgress();
+			if (sysVol < maxVolume) {
+				boost = 0f;
+				engine.setVolumeBoostProgress(0f);
+			}
+			if (boost > 0) {
+				customVolume = 100f + boost * 100f;
+			} else {
+				customVolume = (sysVol / (float) maxVolume) * 100f;
+			}
+		}
 
-		float tempVolume = DeviceUtils.adjustVolume(activity, dy, playerView, volume, 0.4f);
-		int pct = Math.round((tempVolume / maxVolume) * 100);
+		float delta = (dy / playerView.getHeight()) * 200f * 0.4f * 1.5f;
+		float targetVolume = Math.max(0f, Math.min(200f, customVolume + delta));
+		int pct = Math.round(targetVolume);
+
 		if (isBluetoothHeadphoneConnected(am) && !btVolumeWarningConfirmed && pct > 50) {
 			int halfVolume = Math.round(maxVolume * 0.5f);
 			am.setStreamVolume(AudioManager.STREAM_MUSIC, halfVolume, 0);
-			volume = halfVolume;
+			engine.setVolumeBoostProgress(0f);
+			customVolume = 50f;
 			controller.showHint("50%", -1);
 			if (!btVolumeAboveThreshold) {
 				btVolumeAboveThreshold = true;
@@ -282,9 +297,20 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 			return;
 		}
 
-		float prevVolume = volume;
-		volume = tempVolume;
-		controller.showHint(pct + "%", -1);
+		float prevVolume = customVolume;
+		customVolume = targetVolume;
+
+		if (customVolume <= 100f) {
+			int sysVol = Math.round((customVolume / 100f) * maxVolume);
+			am.setStreamVolume(AudioManager.STREAM_MUSIC, sysVol, 0);
+			engine.setVolumeBoostProgress(0f);
+			controller.showHint(pct + "%", -1);
+		} else {
+			am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
+			float boost = (customVolume - 100f) / 100f;
+			engine.setVolumeBoostProgress(boost);
+			controller.showHint("Boost: " + pct + "%", -1);
+		}
 
 		// Auto-reset threshold flag when volume comes back down to ≤50%.
 		if (pct <= 50) {
@@ -294,7 +320,7 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 		}
 
 		// Warn every time volume crosses upward past 50% while BT headphones are connected.
-		int prevPct = Math.round((prevVolume / maxVolume) * 100);
+		int prevPct = Math.round(prevVolume);
 		if (prevPct <= 50 && !btVolumeAboveThreshold && isBluetoothHeadphoneConnected(am)) {
 			btVolumeAboveThreshold = true;
 			showBluetoothVolumeWarning(am, maxVolume);
@@ -359,7 +385,7 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 						// Set volume to exactly 50%
 						int halfVolume = Math.round(maxVolume * 0.5f);
 						am.setStreamVolume(AudioManager.STREAM_MUSIC, halfVolume, 0);
-						volume = halfVolume;
+						customVolume = 50f;
 						int halfPct = Math.round((halfVolume / (float) maxVolume) * 100);
 						controller.showHint(halfPct + "%", 1500);
 						btVolumeWarningConfirmed = false;
