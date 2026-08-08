@@ -33,6 +33,9 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 	/** Reset each time a new video starts, or when volume drops back to ≤50%. */
 	private boolean btVolumeAboveThreshold = false;
 	private boolean btVolumeWarningConfirmed = false;
+	/** Reset each time a new video starts, or when volume drops back to ≤100%. */
+	private boolean boostAboveThreshold = false;
+	private boolean boostWarningConfirmed = false;
 	private static final int AUTO_HIDE_DELAY_MS = 200;
 	private static final int SEEK_WINDOW_MS = 600;
 
@@ -305,6 +308,17 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 			am.setStreamVolume(AudioManager.STREAM_MUSIC, sysVol, 0);
 			engine.setVolumeBoostProgress(0f);
 			controller.showHint(pct + "%", -1);
+		} else if (!boostWarningConfirmed) {
+			// Clamp at 100% until the boost warning is accepted.
+			customVolume = 100f;
+			am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
+			engine.setVolumeBoostProgress(0f);
+			controller.showHint("100%", -1);
+			if (!boostAboveThreshold) {
+				boostAboveThreshold = true;
+				showBoostVolumeWarning(am, maxVolume);
+			}
+			return;
 		} else {
 			am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
 			float boost = (customVolume - 100f) / 100f;
@@ -317,6 +331,12 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 			btVolumeAboveThreshold = false;
 			btVolumeWarningConfirmed = false;
 			return;
+		}
+
+		// Auto-reset boost flag when volume comes back down to ≤100%.
+		if (pct <= 100) {
+			boostAboveThreshold = false;
+			boostWarningConfirmed = false;
 		}
 
 		// Warn every time volume crosses upward past 50% while BT headphones are connected.
@@ -333,6 +353,8 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 	public void resetBtVolumeWarning() {
 		btVolumeAboveThreshold = false;
 		btVolumeWarningConfirmed = false;
+		boostAboveThreshold = false;
+		boostWarningConfirmed = false;
 		// Check immediately if current volume already exceeds 50%; warn if so.
 		AudioManager am = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
 		if (am == null) return;
@@ -389,6 +411,32 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 						int halfPct = Math.round((halfVolume / (float) maxVolume) * 100);
 						controller.showHint(halfPct + "%", 1500);
 						btVolumeWarningConfirmed = false;
+					})
+					.setCancelable(false)
+					.show();
+		});
+	}
+
+	/**
+	 * Shows a warning dialog before allowing volume above 100%;
+	 * does NOT set boostAboveThreshold — caller must do that.
+	 */
+	private void showBoostVolumeWarning(@NonNull AudioManager am, int maxVolume) {
+		activity.runOnUiThread(() -> {
+			if (activity.isFinishing() || activity.isDestroyed()) return;
+			new MaterialAlertDialogBuilder(activity)
+					.setTitle(R.string.boost_volume_warning_title)
+					.setMessage(R.string.boost_volume_warning_message)
+					.setPositiveButton(R.string.boost_volume_continue, (d, w) -> {
+						boostWarningConfirmed = true;
+					})
+					.setNegativeButton(R.string.boost_volume_limit, (d, w) -> {
+						// Keep volume at exactly 100%.
+						am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
+						engine.setVolumeBoostProgress(0f);
+						customVolume = 100f;
+						controller.showHint("100%", 1500);
+						boostWarningConfirmed = false;
 					})
 					.setCancelable(false)
 					.show();

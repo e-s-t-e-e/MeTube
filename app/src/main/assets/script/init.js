@@ -453,7 +453,9 @@
                     Chat.run(ctx),
                     Watch.run(ctx),
                     Settings.run(ctx),
-                    IncognitoPivot.run(ctx)
+                    IncognitoPivot.run(ctx),
+                    NotificationsPivot.run(ctx),
+                    NotificationsFeed.run(ctx)
                 ];
                 return !results.some(result => result === false);
             }
@@ -1874,6 +1876,188 @@
                     }
                 }
                 return true;
+            }
+        };
+
+        // Notifications item injection into bottom navigation bar.
+        const NotificationsPivot = {
+            run(ctx) {
+                const pivotBar = document.querySelector('ytm-pivot-bar-renderer');
+                if (!pivotBar) return true;
+
+                let enabled = true;
+                if (typeof lite !== 'undefined' && lite.getPreferences) {
+                    try {
+                        const prefs = JSON.parse(lite.getPreferences());
+                        if (prefs && prefs.enable_notifications_button === false) {
+                            enabled = false;
+                        }
+                    } catch (e) {}
+                }
+
+                let item = document.getElementById('metube-notifications-pivot-item');
+
+                if (!enabled) {
+                    if (item) item.remove();
+                    return true;
+                }
+
+                if (!item) {
+                    item = document.createElement('ytm-pivot-bar-item-renderer');
+                    item.id = 'metube-notifications-pivot-item';
+                    item.className = 'pivot-bar-item-tab';
+                    item.setAttribute('role', 'tab');
+                    item.setAttribute('tabindex', '0');
+
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'pivot-bar-item-tab-content';
+
+                    const iconDiv = document.createElement('div');
+                    iconDiv.className = 'pivot-bar-icon';
+
+                    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.setAttribute('viewBox', '0 0 24 24');
+                    svg.style.width = '24px';
+                    svg.style.height = '24px';
+                    svg.style.display = 'block';
+                    svg.style.margin = 'auto';
+                    svg.style.setProperty('fill', '#ffffff', 'important');
+
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', 'M12,22c1.1,0 2,-0.9 2,-2h-4c0,1.1 0.89,2 2,2zM18,16v-5c0,-3.07 -1.63,-5.64 -4.5,-6.32L13.5,4c0,-0.83 -0.67,-1.5 -1.5,-1.5s-1.5,0.67 -1.5,1.5l0,0.68C7.63,5.36 6,7.92 6,11v5l-2,2v1h16v-1l-2,-2z');
+                    path.setAttribute('fill', '#ffffff');
+                    svg.appendChild(path);
+                    iconDiv.appendChild(svg);
+
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'pivot-bar-item-title';
+                    titleDiv.textContent = 'Notifications';
+
+                    contentDiv.appendChild(iconDiv);
+                    contentDiv.appendChild(titleDiv);
+                    item.appendChild(contentDiv);
+
+                    DOM.bind(item, 'click', (e) => {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        if (typeof lite !== 'undefined' && lite.openTab) {
+                            lite.openTab('https://m.youtube.com/feed/notifications', 'notifications');
+                        }
+                    }, true);
+                }
+
+                if (item.parentNode !== pivotBar) {
+                    const children = Array.from(pivotBar.children).filter(c => c !== item);
+                    if (children.length > 0) {
+                        pivotBar.insertBefore(item, children[children.length - 1]);
+                    } else {
+                        pivotBar.appendChild(item);
+                    }
+                }
+                return true;
+            }
+        };
+
+        // Empty-state rendering for the notifications tab.
+        const NotificationsFeed = {
+            rendered: null,
+            run(ctx) {
+                if (ctx.pageClass !== 'notifications') {
+                    NotificationsFeed.rendered = null;
+                    NotificationsFeed.removeEmptyState();
+                    return true;
+                }
+                if (NotificationsFeed.rendered === location.href) return true;
+                NotificationsFeed.rendered = location.href;
+
+                if (document.querySelector('ytm-section-list-renderer, ytm-rich-grid-renderer')) {
+                    return true;
+                }
+
+                const container = document.querySelector('ytm-app');
+                if (!container) return false;
+
+                let payload = null;
+                if (typeof lite !== 'undefined' && lite.fetchNotificationsInbox) {
+                    try {
+                        payload = lite.fetchNotificationsInbox();
+                    } catch (e) {}
+                }
+                if (payload) {
+                    NotificationsFeed.renderEmptyState(container, payload);
+                }
+                return true;
+            },
+
+            renderEmptyState(container, payload) {
+                let data = null;
+                try {
+                    data = JSON.parse(payload);
+                } catch (e) {
+                    return;
+                }
+                if (!data || (!data.title && !data.body)) return;
+
+                NotificationsFeed.removeEmptyState();
+                const box = document.createElement('div');
+                box.id = 'metube-notifications-empty-state';
+                box.style.cssText = `
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    padding: 64px 32px;
+                    gap: 12px;
+                `;
+
+                const iconDiv = document.createElement('div');
+                iconDiv.style.cssText = 'opacity: 0.6; margin-bottom: 8px;';
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('viewBox', '0 0 24 24');
+                svg.style.cssText = 'width: 56px; height: 56px; display: block; fill: currentColor;';
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', 'M12,22c1.1,0 2,-0.9 2,-2h-4c0,1.1 0.89,2 2,2zM18,16v-5c0,-3.07 -1.63,-5.64 -4.5,-6.32L13.5,4c0,-0.83 -0.67,-1.5 -1.5,-1.5s-1.5,0.67 -1.5,1.5l0,0.68C7.63,5.36 6,7.92 6,11v5l-2,2v1h16v-1l-2,-2z');
+                svg.appendChild(path);
+                iconDiv.appendChild(svg);
+
+                if (data.title) {
+                    const title = document.createElement('h2');
+                    title.textContent = data.title;
+                    title.style.cssText = `
+                        font-family: "YouTube Sans", "Roboto", sans-serif;
+                        font-size: 1.8rem;
+                        font-weight: 600;
+                        color: var(--yt-spec-text-primary, #ffffff);
+                        margin: 0;
+                    `;
+                    box.appendChild(title);
+                }
+                if (data.body) {
+                    const body = document.createElement('p');
+                    body.textContent = data.body;
+                    body.style.cssText = `
+                        font-size: 1.4rem;
+                        line-height: 1.5;
+                        color: var(--yt-spec-text-secondary, #aaaaaa);
+                        margin: 0;
+                        max-width: 32rem;
+                    `;
+                    box.appendChild(body);
+                }
+
+                const spinner = container.querySelector('.spinner');
+                const refNode = spinner instanceof Element ? spinner : container.firstElementChild;
+                if (refNode instanceof Element) {
+                    container.insertBefore(box, refNode);
+                } else {
+                    container.appendChild(box);
+                }
+            },
+
+            removeEmptyState() {
+                const existing = document.getElementById('metube-notifications-empty-state');
+                if (existing) existing.remove();
             }
         };
 

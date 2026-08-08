@@ -422,6 +422,12 @@ public final class JavascriptInterface {
 		return gson.toJson(extensionManager.getAllPreferences());
 	}
 
+	@Nullable
+	@android.webkit.JavascriptInterface
+	public String fetchNotificationsInbox() {
+		return youtubeExtractor.fetchNotificationsInbox();
+	}
+
 	@android.webkit.JavascriptInterface
 	public void openTab(@Nullable String url, @Nullable String tag) {
 		if (url == null || tag == null) return;

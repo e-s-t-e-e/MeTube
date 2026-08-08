@@ -33,6 +33,7 @@ public record Extension(String key, int title, int summary, int icon, List<Dropd
 										toggle(Constant.ENABLE_DISPLAY_DISLIKES, R.string.display_dislikes),
 										toggle(Constant.ENABLE_HIDE_SHORTS, R.string.hide_shorts),
 										toggle(Constant.ENABLE_INCOGNITO_BUTTON, R.string.enable_incognito_button),
+										toggle(Constant.ENABLE_NOTIFICATIONS_BUTTON, R.string.enable_notifications_button),
 										toggle(Constant.ENABLE_VIDEO_HOLD_POPUP, R.string.enable_video_hold_popup)
 						)),
 						page(R.string.player, R.string.playback_summary, R.drawable.ic_play, List.of(

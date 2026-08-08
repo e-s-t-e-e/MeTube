@@ -42,7 +42,7 @@ import lombok.Getter;
 public class TabManager {
 
 	private static final String TAG = "TabManager";
-	private static final Set<String> NAV_TAGS = Set.of(Constant.PAGE_HOME, Constant.PAGE_SUBSCRIPTIONS, Constant.PAGE_LIBRARY);
+	private static final Set<String> NAV_TAGS = Set.of(Constant.PAGE_HOME, Constant.PAGE_SUBSCRIPTIONS, Constant.PAGE_LIBRARY, Constant.PAGE_NOTIFICATIONS);
 	private final Activity activity;
 	private final Lazy<LitePlayer> player;
 	private final ExtensionManager extensionManager;

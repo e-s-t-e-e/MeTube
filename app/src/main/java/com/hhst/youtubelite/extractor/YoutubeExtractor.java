@@ -4,12 +4,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.hhst.youtubelite.extractor.potoken.LitePoTokenProvider;
 
 import org.schabi.newpipe.extractor.Image;
 import org.schabi.newpipe.extractor.MediaFormat;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.ServiceList;
+import org.schabi.newpipe.extractor.downloader.Downloader;
+import org.schabi.newpipe.extractor.downloader.Request;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor;
 import org.schabi.newpipe.extractor.stream.AudioStream;
 import org.schabi.newpipe.extractor.stream.Description;
@@ -20,6 +25,7 @@ import org.schabi.newpipe.extractor.stream.VideoStream;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -551,6 +557,105 @@ public final class YoutubeExtractor {
 			}
 		}
 		return result;
+	}
+
+	@Nullable
+	public String fetchNotificationsInbox() {
+		Downloader downloader = NewPipe.getDownloader();
+		if (!(downloader instanceof DownloaderImpl impl)) {
+			return null;
+		}
+		AuthContext context = auth.create("https://m.youtube.com/feed/notifications");
+		String endpoint = "https://m.youtube.com/youtubei/v1/browse?prettyPrint=false";
+		String body = "{\"context\":{\"client\":{\"clientName\":\"WEB\",\"clientVersion\":\"2.20260806.07.00\",\"hl\":\"en\",\"gl\":\"IN\"}},\"browseId\":\"FEnotifications_inbox\"}";
+		Request request = Request.newBuilder()
+						.post(endpoint, body.getBytes(StandardCharsets.UTF_8))
+						.build();
+		try {
+			org.schabi.newpipe.extractor.downloader.Response response = impl.withExtractionSession(
+							() -> impl.execute(request),
+							new ExtractionSession(context));
+			if (response.responseCode() != 200) {
+				return null;
+			}
+			return extractInboxPromo(response.responseBody());
+		} catch (IOException | org.schabi.newpipe.extractor.exceptions.ExtractionException e) {
+			return null;
+		}
+	}
+
+	@Nullable
+	private String extractInboxPromo(@NonNull String json) {
+		try {
+			JsonObject root = com.google.gson.JsonParser.parseString(json).getAsJsonObject();
+			JsonArray endpoints = root.getAsJsonArray("onResponseReceivedEndpoints");
+			if (endpoints == null || endpoints.size() == 0) {
+				return null;
+			}
+			JsonObject popup = endpoints.get(0).getAsJsonObject()
+							.getAsJsonObject("openPopupAction");
+			if (popup == null) {
+				return null;
+			}
+			JsonObject menu = popup.getAsJsonObject("popup")
+							.getAsJsonObject("multiPageMenuRenderer");
+			if (menu == null) {
+				return null;
+			}
+			JsonArray sections = menu.getAsJsonArray("sections");
+			if (sections == null) {
+				return null;
+			}
+			for (JsonElement element : sections) {
+				JsonObject promo = element.getAsJsonObject()
+								.getAsJsonObject("backgroundPromoRenderer");
+				if (promo == null) {
+					continue;
+				}
+				JsonObject result = new JsonObject();
+				JsonElement titleEl = promo.get("title");
+				JsonElement bodyEl = promo.get("bodyText");
+				String title = extractText(titleEl);
+				String bodyText = extractText(bodyEl);
+				if (title == null && bodyText == null) {
+					return null;
+				}
+				if (title != null) {
+					result.addProperty("title", title);
+				}
+				if (bodyText != null) {
+					result.addProperty("body", bodyText);
+				}
+				return gson.toJson(result);
+			}
+			return null;
+		} catch (RuntimeException e) {
+			return null;
+		}
+	}
+
+	@Nullable
+	private String extractText(@Nullable JsonElement element) {
+		if (element == null || !element.isJsonObject()) {
+			return null;
+		}
+		JsonObject object = element.getAsJsonObject();
+		JsonElement simpleText = object.get("simpleText");
+		if (simpleText != null && simpleText.isJsonPrimitive()) {
+			return simpleText.getAsString();
+		}
+		JsonElement runs = object.get("runs");
+		if (runs != null && runs.isJsonArray()) {
+			StringBuilder builder = new StringBuilder();
+			for (JsonElement run : runs.getAsJsonArray()) {
+				JsonElement text = run.getAsJsonObject().get("text");
+				if (text != null && text.isJsonPrimitive()) {
+					builder.append(text.getAsString());
+				}
+			}
+			return builder.length() > 0 ? builder.toString() : null;
+		}
+		return null;
 	}
 
 	@Nullable

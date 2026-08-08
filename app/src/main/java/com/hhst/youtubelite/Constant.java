@@ -14,6 +14,7 @@ public final class Constant {
 	public static final String PAGE_WATCH = "watch";
 	public static final String PAGE_SUBSCRIPTIONS = "subscriptions";
 	public static final String PAGE_LIBRARY = "library";
+	public static final String PAGE_NOTIFICATIONS = "notifications";
 	public static final String SKIP_SPONSORS = "skip_sponsors";
 	public static final String SKIP_SELF_PROMO = "skip_self_promo";
 	public static final String SKIP_POI_HIGHLIGHT = "skip_poi_highlight";
@@ -23,6 +24,7 @@ public final class Constant {
 	public static final String ENABLE_PIP = "enable_pip";
 	public static final String ENABLE_IN_APP_MINI_PLAYER = "enable_in_app_mini_player";
 	public static final String ENABLE_INCOGNITO_BUTTON = "enable_incognito_button";
+	public static final String ENABLE_NOTIFICATIONS_BUTTON = "enable_notifications_button";
 	public static final String ENABLE_VIDEO_HOLD_POPUP = "enable_video_hold_popup";
 	public static final String REMEMBER_RESIZE_MODE = "remember_resize_mode";
 	public static final String PLAYER_SIDE_BUTTONS = "player_side_buttons";
