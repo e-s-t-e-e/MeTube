@@ -1,22 +1,18 @@
 html {
-    -webkit-tap-highlight-color:transparent;
- }
+    -webkit-tap-highlight-color: transparent;
+}
 
 :root {
     --safe-area-inset-bottom: 0px !important;
 }
 
-body {
-    padding-bottom: 0px !important;
-    margin-bottom: 0px !important;
+body, ytm-app {
+    padding-bottom: 52px !important;
 }
 
 ytm-pivot-bar-renderer {
-    height: 48px !important;
-    padding-bottom: 0px !important;
-    bottom: 0px !important;
-    margin-bottom: 0px !important;
-    min-height: 48px !important;
+    height: 52px !important;
+    min-height: 52px !important;
 }
 
 a {

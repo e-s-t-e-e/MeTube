@@ -1,27 +1,41 @@
 /*
- * Litube modern touch — deliberately conservative so it degrades gracefully if
- * YouTube changes its markup. These rules are cosmetic only and never affect layout flow.
+ * MeTube modern touch — Spotify/Netflix-inspired premium mobile UI overlay.
+ * AMOLED black-friendly, minimal, sharp edges, and grid layouts.
  */
 
-/* Smoother, native-feeling scrolling and no visible web scrollbars. */
 html {
     scroll-behavior: smooth;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
 }
 ::-webkit-scrollbar {
     width: 0;
     height: 0;
 }
 
-/* Gently round media so thumbnails/avatars feel app-native rather than web-square. */
+/* Allow text selection in search fields only */
+input, textarea {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+
+/* Disable focus outlines globally for a clean look */
+*:focus {
+    outline: none !important;
+}
+
+/* Sharp media elements (Spotify/Netflix style) */
 ytm-thumbnail-cover img,
 img.ytCoreImageHost,
 ytd-thumbnail img,
 .video-thumbnail img,
-.ytp-videowall-still-image {
-    border-radius: 12px !important;
+.ytp-videowall-still-image,
+.media-item-thumbnail-container img {
+    border-radius: 4px !important;
 }
 
-/* Softer tap feedback on pressable rows. */
+/* Softer tap feedback on pressable rows */
 ytm-media-item,
 ytd-rich-item-renderer {
     transition: background-color 0.12s ease;
@@ -31,7 +45,7 @@ ytd-rich-item-renderer {
    MeTube Header Branding Replacement
    ========================================================================== */
 
-/* Hide default YouTube logo SVG icons, pictures, graphics, and elements on web header */
+/* Hide default YouTube logo elements */
 ytm-header-bar .header-logo *,
 #header-bar .header-logo *,
 ytd-topbar-logo-renderer #logo *,
@@ -69,7 +83,7 @@ ytm-header-bar .header-back-button,
     flex-shrink: 0 !important;
 }
 
-/* Disable Emblem Icon */
+/* MeTube Text Logo - "Me" in Red */
 ytm-header-bar .header-logo::before,
 #header-bar .header-logo::before,
 ytd-topbar-logo-renderer #logo::before,
@@ -78,8 +92,37 @@ a.header-logo::before,
 ytm-home-logo::before,
 .ytm-header-bar-logo::before,
 .mobile-topbar-header .header-logo::before {
-    display: none !important;
-    content: none !important;
+    display: inline-block !important;
+    content: "Me" !important;
+    font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #e50914 !important;
+    letter-spacing: -0.4px !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+    visibility: visible !important;
+}
+
+/* MeTube Text Logo - "Tube" in White */
+ytm-header-bar .header-logo::after,
+#header-bar .header-logo::after,
+ytd-topbar-logo-renderer #logo::after,
+a#logo::after,
+a.header-logo::after,
+ytm-home-logo::after,
+.ytm-header-bar-logo::after,
+.mobile-topbar-header .header-logo::after {
+    display: inline-block !important;
+    content: "Tube" !important;
+    font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: -0.4px !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+    visibility: visible !important;
 }
 
 /* ==========================================================================
@@ -103,26 +146,6 @@ body {
     --yt-spec-icon-active: #ffffff !important;
 }
 
-/* MeTube Text Logo - Pure White */
-ytm-header-bar .header-logo::after,
-#header-bar .header-logo::after,
-ytd-topbar-logo-renderer #logo::after,
-a#logo::after,
-a.header-logo::after,
-ytm-home-logo::after,
-.ytm-header-bar-logo::after,
-.mobile-topbar-header .header-logo::after {
-    content: "MeTube" !important;
-    font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-    font-size: 19px !important;
-    font-weight: 700 !important;
-    color: #ffffff !important;
-    letter-spacing: -0.4px !important;
-    vertical-align: middle !important;
-    line-height: 1 !important;
-    visibility: visible !important;
-}
-
 /* Always force AMOLED Black on all header navigation bars, top bars, and app containers */
 ytm-header-bar,
 #header-bar,
@@ -136,7 +159,6 @@ ytd-masthead,
 header,
 .c4-tabbed-header,
 ytm-c4-tabbed-header-renderer,
-ytm-pivot-bar-renderer,
 ytm-app,
 ytm-single-column-browse-results-renderer,
 ytm-browse,
@@ -151,6 +173,77 @@ ytd-app,
     opacity: 1 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    border-bottom: 1px solid #111111 !important;
+}
+
+/* ==========================================================================
+   DOCK-TO-BOTTOM BOTTOM NAVIGATION BAR (AMOLED black, clean icons)
+   ========================================================================== */
+
+ytm-pivot-bar-renderer {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 52px !important;
+    background: #000000 !important;
+    border-top: 1px solid #111111 !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    z-index: 9999 !important;
+}
+
+/* Avoid using flex display override to prevent breaking the JS Shorts toggle */
+.pivot-bar-item-tab-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Modernize SVG icon displays inside bottom bar */
+.pivot-bar-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 3px !important;
+    height: 22px !important;
+    width: 22px !important;
+}
+
+.pivot-bar-icon svg {
+    width: 21px !important;
+    height: 21px !important;
+    fill: #aaaaaa !important;
+    stroke: none !important;
+    transition: fill 0.2s ease, transform 0.2s ease !important;
+}
+
+/* Active tab styles - Netflix Red */
+.pivot-bar-item-tab[aria-selected="true"] .pivot-bar-icon svg,
+ytm-pivot-bar-item-renderer[aria-selected="true"] .pivot-bar-icon svg {
+    fill: #e50914 !important;
+    transform: scale(1.05) !important;
+}
+
+/* Stylized item labels */
+.pivot-bar-item-title {
+    font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: #aaaaaa !important;
+    margin-top: 1px !important;
+    line-height: 1 !important;
+    transition: color 0.2s ease !important;
+}
+
+.pivot-bar-item-tab[aria-selected="true"] .pivot-bar-item-title,
+ytm-pivot-bar-item-renderer[aria-selected="true"] .pivot-bar-item-title {
+    color: #e50914 !important;
+    font-weight: 600 !important;
 }
 
 /* Styling for injected Incognito item in bottom pivot bar */
@@ -162,23 +255,305 @@ ytd-app,
     justify-content: center !important;
     text-decoration: none !important;
     cursor: pointer !important;
-    padding: 6px 0 !important;
+    padding: 0 !important;
     user-select: none !important;
     -webkit-tap-highlight-color: transparent !important;
 }
 
-#metube-incognito-pivot-item .pivot-bar-item-tab-content {
+/* ==========================================================================
+   PREMIUM SHARP FEED CARDS (Spotify/Netflix Bento style)
+   ========================================================================== */
+
+ytm-media-item,
+ytd-rich-item-renderer,
+ytm-compact-video-renderer,
+ytm-compact-show-renderer {
+    background-color: #000000 !important;
+    border: 1px solid #121212 !important;
+    border-radius: 4px !important;
+    padding: 10px !important;
+    margin: 8px 12px 14px 12px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+    overflow: hidden !important;
+}
+
+.media-item-thumbnail-container,
+.video-thumbnail,
+ytm-thumbnail-cover {
+    border-radius: 4px !important;
+    overflow: hidden !important;
+}
+
+/* ==========================================================================
+   CAPSULE CONTROL ROWS & WATCH PAGE ELEMENTS
+   ========================================================================== */
+
+/* Equally spaced grid under player */
+.watch-actions-layout,
+ytm-watch-actions-renderer {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    padding: 8px 12px !important;
+    box-sizing: border-box !important;
+}
+
+.watch-actions-layout::-webkit-scrollbar,
+ytm-watch-actions-renderer::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Clean rectangular Spotify action items */
+ytm-watch-actions-item-renderer,
+ytm-watch-actions-item-renderer button,
+ytm-watch-actions-item-renderer a,
+.segmented-buttons-item,
+.ytm-watch-actions-item,
+.watch-action-button,
+.watch-actions-item {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 38px !important;
+    width: 100% !important;
+    padding: 0 !important;
+    background: #121212 !important;
+    border: 1px solid #222222 !important;
+    border-radius: 4px !important;
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    transition: background 0.15s ease !important;
+}
+
+.segmented-buttons-item:active,
+.ytm-watch-actions-item:active,
+ytm-watch-actions-item-renderer:active,
+ytm-watch-actions-item-renderer button:active {
+    background: #222222 !important;
+}
+
+/* SVG sizes and spacing inside action buttons */
+.watch-actions-item c3-icon,
+.watch-actions-item svg,
+.watch-action-button svg,
+.segmented-buttons-item svg,
+ytm-watch-actions-item-renderer svg,
+c3-icon,
+c3-icon svg {
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 4px !important;
+    fill: #ffffff !important;
+    flex-shrink: 0 !important;
+    transition: transform 0.2s ease !important;
+}
+
+/* Adjust scales to compensate for native icon viewport padding mismatches */
+c3-icon[type*="like"] svg,
+c3-icon[type*="dislike"] svg {
+    transform: scale(0.85) !important;
+}
+c3-icon[type*="share"] svg {
+    transform: scale(1.05) !important;
+}
+c3-icon[type*="download"] svg {
+    transform: scale(0.95) !important;
+}
+
+/* Netflix Red Subscribe Button */
+ytm-subscribe-button-renderer,
+ytm-subscribe-button-renderer button,
+.subscribe-button,
+.cbox button[aria-label*="Subscribe"],
+.cbox button[aria-label*="subscribed"] {
+    background: #e50914 !important;
+    color: #ffffff !important;
+    border-radius: 4px !important;
+    font-weight: 700 !important;
+    border: none !important;
+    height: 38px !important;
+    padding: 0 16px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    min-width: 90px !important;
+    width: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-transform: none !important;
+    flex-shrink: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+ytm-subscribe-button-renderer[aria-selected="true"] button,
+ytm-subscribe-button-renderer button[aria-selected="true"],
+.cbox button[aria-label*="subscribed"] {
+    background: #222222 !important;
+    color: #aaaaaa !important;
+    border: 1px solid #333333 !important;
+}
+
+/* Comments segment preview card */
+ytm-comments-entry-point-teaser-renderer {
+    background: #070707 !important;
+    border: 1px solid #121212 !important;
+    border-radius: 4px !important;
+    padding: 12px !important;
+    margin: 12px !important;
+}
+
+/* ==========================================================================
+   MODERN MINIMALIST SEARCH & SUGGESTIONS OVERHAUL
+   ========================================================================== */
+
+/* Search input field capsule */
+.searchbox-input-wrapper,
+ytm-searchbox-renderer form,
+form.search-form {
+    background: #121212 !important;
+    border: 1px solid #222222 !important;
+    border-radius: 4px !important;
+    padding: 2px 12px !important;
     display: flex !important;
-    flex-direction: column !important;
+    align-items: center !important;
+    height: 38px !important;
+}
+
+.search-input,
+ytm-searchbox-renderer input {
+    color: #ffffff !important;
+    font-size: 14px !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Suggestions container list card */
+.search-suggestions,
+ytm-search-suggestions-renderer,
+.sgs-container {
+    background-color: #000000 !important;
+    background: #000000 !important;
+    border: none !important;
+    padding: 8px 0 !important;
+    margin-top: 4px !important;
+}
+
+/* Individual suggestion row list item */
+.search-suggestion,
+ytm-search-suggestion-renderer,
+.sgs-item,
+.sgs-row {
+    display: flex !important;
+    align-items: center !important;
+    padding: 14px 16px !important;
+    background-color: #000000 !important;
+    background: #000000 !important;
+    border-bottom: 1px solid #111111 !important;
+    transition: background-color 0.15s ease !important;
+}
+
+.search-suggestion:active,
+.sgs-item:active,
+.sgs-row:active {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Suggestion text & hyperlink formatting (removes old blue color) */
+.search-suggestions a,
+ytm-search-suggestions-renderer a,
+.sgs-container a,
+.search-suggestion a,
+.sgs-item a,
+.sgs-row a,
+.search-suggestion-text,
+.sgs-text,
+.sgs-text-container {
+    color: #ffffff !important;
+    text-decoration: none !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.search-suggestion-text b,
+.sgs-text b,
+.sgs-text-container b {
+    color: #e50914 !important;
+    font-weight: 700 !important;
+}
+
+/* Icons (search/history) styling */
+.search-suggestion-icon,
+.sgs-icon,
+.sgs-icon-wrapper {
+    margin-right: 12px !important;
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
 
-#metube-incognito-pivot-item .pivot-bar-item-title {
-    font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-    font-size: 10px !important;
-    margin-top: 2px !important;
-    line-height: 1 !important;
+.search-suggestion-icon svg,
+.sgs-icon svg {
+    width: 18px !important;
+    height: 18px !important;
+    fill: #888888 !important;
+    stroke: none !important;
 }
 
+/* History delete/remove button styling */
+.search-suggestion-remove,
+.sgs-remove,
+.sgs-remove-button {
+    color: #555555 !important;
+    font-size: 12px !important;
+    padding: 6px !important;
+    margin-left: auto !important;
+    background: transparent !important;
+    border: none !important;
+}
 
+/* ==========================================================================
+   AMOLED LOADING TRANSITION OVERLAY (Native App Spinner)
+   ========================================================================== */
+
+html[loading="true"]::before {
+    content: "" !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: #000000 !important;
+    z-index: 999999 !important;
+    display: block !important;
+}
+
+html[loading="true"]::after {
+    content: "" !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 32px !important;
+    height: 32px !important;
+    margin: -16px 0 0 -16px !important;
+    border: 3px solid rgba(229, 9, 20, 0.2) !important;
+    border-top: 3px solid #e50914 !important;
+    border-radius: 50% !important;
+    animation: loadingSpinner 0.8s linear infinite !important;
+    z-index: 1000000 !important;
+    display: block !important;
+}
+
+@keyframes loadingSpinner {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -328,6 +328,7 @@ public class YoutubeWebview extends WebView {
 		setFocusableInTouchMode(true);
 		setLayerType(LAYER_TYPE_HARDWARE, null);
 		setBackgroundColor(android.graphics.Color.BLACK);
+		setOverScrollMode(OVER_SCROLL_NEVER);
 
 		CookieManager.getInstance().setAcceptCookie(true);
 
@@ -391,7 +392,7 @@ public class YoutubeWebview extends WebView {
 				frame.url = url;
 				onNavStarted();
 				if (progressBar != null) progressBar.beginLoading();
-				evaluateJavascript("document.documentElement.setAttribute('dark', 'true'); window.dispatchEvent(new Event('onPageStarted'));", null);
+				evaluateJavascript("document.documentElement.setAttribute('loading', 'true'); document.documentElement.setAttribute('dark', 'true'); window.dispatchEvent(new Event('onPageStarted'));", null);
 				injectJavaScript(url);
 			}
 
@@ -400,7 +401,7 @@ public class YoutubeWebview extends WebView {
 				super.onPageFinished(view, url);
 				frame.finished = true;
 				frame.url = url;
-				evaluateJavascript("document.documentElement.setAttribute('dark', 'true'); window.dispatchEvent(new Event('onPageFinished'));", null);
+				evaluateJavascript("document.documentElement.removeAttribute('loading'); document.documentElement.setAttribute('dark', 'true'); window.dispatchEvent(new Event('onPageFinished'));", null);
 				injectJavaScript(url);
 				refreshPoTokenContext();
 				if (onPageFinishedListener != null) onPageFinishedListener.accept(url);
