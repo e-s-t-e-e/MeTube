@@ -183,6 +183,8 @@ public class Controller {
 	private Runnable onRetryPlayback;
 	@Nullable
 	private PlayerGestureListener gestureListener;
+	private boolean showLeftButtons = true;
+	private boolean showRightButtons = true;
 
 	@Inject
 	public Controller(@NonNull Activity activity, @NonNull LitePlayerView playerView, @NonNull Engine engine, @NonNull PlayerPreferences prefs, @NonNull ZoomTouchListener zoomListener, @NonNull TabManager tabManager, @NonNull ExtensionManager extensionManager) {
@@ -477,20 +479,32 @@ public class Controller {
 			setControlsVisible(true);
 		});
 
-		ImageButton lockBtn = playerView.findViewById(R.id.btn_lock);
-		if (lockBtn != null) {
-			lockBtn.setOnClickListener(v -> {
-				toggleLockState();
-				showHint(activity.getString(state.isLocked() ? R.string.lock_screen : R.string.unlock_screen),
-								com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
-			});
+		ImageButton lockLeft = playerView.findViewById(R.id.btn_lock_left);
+		ImageButton lockRight = playerView.findViewById(R.id.btn_lock_right);
+		View.OnClickListener lockListener = v -> {
+			toggleLockState();
+			showHint(activity.getString(state.isLocked() ? R.string.lock_screen : R.string.unlock_screen),
+							com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
+		};
+		if (lockLeft != null) lockLeft.setOnClickListener(lockListener);
+		if (lockRight != null) lockRight.setOnClickListener(lockListener);
+
+		ImageButton resizeLeft = playerView.findViewById(R.id.btn_resize_mode_left);
+		ImageButton resizeRight = playerView.findViewById(R.id.btn_resize_mode_right);
+		updateResizeButton(resizeLeft);
+		updateResizeButton(resizeRight);
+		if (resizeLeft != null) {
+			resizeLeft.setOnClickListener(v -> cycleResizeMode());
+		}
+		if (resizeRight != null) {
+			resizeRight.setOnClickListener(v -> cycleResizeMode());
 		}
 
-		ImageButton resizeBtn = playerView.findViewById(R.id.btn_resize_mode);
-		updateResizeButton(resizeBtn);
-		if (resizeBtn != null) {
-			resizeBtn.setOnClickListener(v -> cycleResizeMode(resizeBtn));
-		}
+		ImageButton pipLeft = playerView.findViewById(R.id.btn_pip_left);
+		ImageButton pipRight = playerView.findViewById(R.id.btn_pip_right);
+		View.OnClickListener pipListener = v -> playerView.enterPiP();
+		if (pipLeft != null) pipLeft.setOnClickListener(pipListener);
+		if (pipRight != null) pipRight.setOnClickListener(pipListener);
 
 		ImageButton fsBtn = playerView.findViewById(R.id.btn_fullscreen);
 		if (fsBtn != null) {
@@ -1164,10 +1178,17 @@ public class Controller {
 		View center = playerView.findViewById(R.id.center_controls);
 		View other = playerView.findViewById(R.id.other_controls);
 		View bar = playerView.findViewById(R.id.exo_progress);
-		ImageButton lockBtn = playerView.findViewById(R.id.btn_lock);
-		ImageButton resizeBtn = playerView.findViewById(R.id.btn_resize_mode);
-		updateLockButton(lockBtn);
-		updateResizeButton(resizeBtn);
+
+		ImageButton lockLeft = playerView.findViewById(R.id.btn_lock_left);
+		ImageButton lockRight = playerView.findViewById(R.id.btn_lock_right);
+		ImageButton resizeLeft = playerView.findViewById(R.id.btn_resize_mode_left);
+		ImageButton resizeRight = playerView.findViewById(R.id.btn_resize_mode_right);
+		ImageButton pipLeft = playerView.findViewById(R.id.btn_pip_left);
+		ImageButton pipRight = playerView.findViewById(R.id.btn_pip_right);
+
+		updateLockButtons();
+		updateResizeButtons();
+
 		if (center != null) {
 			ViewUtils.animateViewAlpha(center, renderState.centerVisible() ? 1.0f : 0.0f, View.GONE);
 		}
@@ -1178,65 +1199,62 @@ public class Controller {
 			ViewUtils.animateViewAlpha(bar, renderState.progressVisible() ? 1.0f : 0.0f, View.GONE);
 		}
 		showReset(renderState.resetVisible());
-		if (lockBtn != null) {
-			ViewUtils.animateViewAlpha(lockBtn, renderState.lockVisible() ? 1.0f : 0.0f, View.GONE);
+
+		boolean lockVisible = renderState.lockVisible();
+		boolean otherSideButtonsVisible = lockVisible && !state.isLocked();
+		boolean pipVisible = otherSideButtonsVisible && extensionManager.isEnabled(Constant.ENABLE_PIP);
+
+		if (lockLeft != null) {
+			ViewUtils.animateViewAlpha(lockLeft, (showLeftButtons && lockVisible) ? 1.0f : 0.0f, View.GONE);
 		}
-		if (resizeBtn != null) {
-			ViewUtils.animateViewAlpha(resizeBtn, renderState.lockVisible() && !state.isLocked() ? 1.0f : 0.0f, View.GONE);
+		if (lockRight != null) {
+			ViewUtils.animateViewAlpha(lockRight, (showRightButtons && lockVisible) ? 1.0f : 0.0f, View.GONE);
 		}
+		if (resizeLeft != null) {
+			ViewUtils.animateViewAlpha(resizeLeft, (showLeftButtons && otherSideButtonsVisible) ? 1.0f : 0.0f, View.GONE);
+		}
+		if (resizeRight != null) {
+			ViewUtils.animateViewAlpha(resizeRight, (showRightButtons && otherSideButtonsVisible) ? 1.0f : 0.0f, View.GONE);
+		}
+		if (pipLeft != null) {
+			ViewUtils.animateViewAlpha(pipLeft, (showLeftButtons && pipVisible) ? 1.0f : 0.0f, View.GONE);
+		}
+		if (pipRight != null) {
+			ViewUtils.animateViewAlpha(pipRight, (showRightButtons && pipVisible) ? 1.0f : 0.0f, View.GONE);
+		}
+
 		updateMiniControls(renderState.miniVisible(), renderState.scrimVisible());
 	}
 
 	private void applySideButtonLayout() {
-		ImageButton lockBtn = playerView.findViewById(R.id.btn_lock);
-		ImageButton resizeBtn = playerView.findViewById(R.id.btn_resize_mode);
-		if (lockBtn == null || resizeBtn == null) return;
 		String layout = extensionManager.getString(Constant.PLAYER_SIDE_BUTTONS);
-		if (layout == null) return;
-		FrameLayout.LayoutParams lockLp = (FrameLayout.LayoutParams) lockBtn.getLayoutParams();
-		FrameLayout.LayoutParams resizeLp = (FrameLayout.LayoutParams) resizeBtn.getLayoutParams();
-		int sideMargin = dp(24);
-		int topMargin = dp(52);
-		int stackedTopMargin = dp(108);
+		if (layout == null) layout = "both";
 		switch (layout) {
 			case Constant.SIDE_BUTTONS_LEFT -> {
-				lockLp.gravity = Gravity.TOP | Gravity.START;
-				lockLp.setMarginStart(sideMargin);
-				lockLp.topMargin = topMargin;
-				lockLp.setMarginEnd(0);
-				resizeLp.gravity = Gravity.TOP | Gravity.START;
-				resizeLp.setMarginStart(sideMargin);
-				resizeLp.topMargin = stackedTopMargin;
-				resizeLp.setMarginEnd(0);
+				showLeftButtons = true;
+				showRightButtons = false;
 			}
 			case Constant.SIDE_BUTTONS_RIGHT -> {
-				lockLp.gravity = Gravity.TOP | Gravity.END;
-				lockLp.setMarginEnd(sideMargin);
-				lockLp.topMargin = topMargin;
-				lockLp.setMarginStart(0);
-				resizeLp.gravity = Gravity.TOP | Gravity.END;
-				resizeLp.setMarginEnd(sideMargin);
-				resizeLp.topMargin = stackedTopMargin;
-				resizeLp.setMarginStart(0);
+				showLeftButtons = false;
+				showRightButtons = true;
 			}
 			default -> {
-				lockLp.gravity = Gravity.TOP | Gravity.START;
-				lockLp.setMarginStart(sideMargin);
-				lockLp.topMargin = topMargin;
-				lockLp.setMarginEnd(0);
-				resizeLp.gravity = Gravity.TOP | Gravity.END;
-				resizeLp.setMarginEnd(sideMargin);
-				resizeLp.topMargin = topMargin;
-				resizeLp.setMarginStart(0);
+				showLeftButtons = true;
+				showRightButtons = true;
 			}
 		}
-		lockBtn.setLayoutParams(lockLp);
-		resizeBtn.setLayoutParams(resizeLp);
 	}
 
 	private int dp(int value) {
 		return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value,
 						activity.getResources().getDisplayMetrics());
+	}
+
+	private void updateResizeButtons() {
+		ImageButton left = playerView.findViewById(R.id.btn_resize_mode_left);
+		ImageButton right = playerView.findViewById(R.id.btn_resize_mode_right);
+		updateResizeButton(left);
+		updateResizeButton(right);
 	}
 
 	private void updateResizeButton(@Nullable ImageButton resizeBtn) {
@@ -1252,7 +1270,7 @@ public class Controller {
 		resizeBtn.setImageResource(iconRes);
 	}
 
-	private void cycleResizeMode(@Nullable ImageButton resizeBtn) {
+	private void cycleResizeMode() {
 		int[] modes = {
 						AspectRatioFrameLayout.RESIZE_MODE_FIT,
 						AspectRatioFrameLayout.RESIZE_MODE_FILL,
@@ -1278,7 +1296,7 @@ public class Controller {
 		int newMode = modes[nextIndex];
 		playerView.setResizeMode(newMode);
 		prefs.setResizeMode(newMode);
-		updateResizeButton(resizeBtn);
+		updateResizeButtons();
 		showHint(names[nextIndex], com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
 		setControlsVisible(true);
 	}
@@ -1371,6 +1389,13 @@ public class Controller {
 		if (Constant.PAGE_WATCH.equals(tab.getTabTag())) return true;
 		String url = tab.getUrl();
 		return url != null && Constant.PAGE_WATCH.equals(UrlUtils.getPageClass(url));
+	}
+
+	private void updateLockButtons() {
+		ImageButton left = playerView.findViewById(R.id.btn_lock_left);
+		ImageButton right = playerView.findViewById(R.id.btn_lock_right);
+		updateLockButton(left);
+		updateLockButton(right);
 	}
 
 	private void updateLockButton(@Nullable ImageButton lockBtn) {

@@ -106,7 +106,7 @@ public final class PoTokenCoordinator {
 
 			String visitorData = fetchVisitorData();
 			if (visitorData == null) {
-				return null;
+				visitorData = "Cgtsb2dfc2VsZWN0Sg%3D%3D";
 			}
 
 			return mintClientPoToken(hostGeneration, videoId, visitorData);
@@ -387,7 +387,7 @@ public final class PoTokenCoordinator {
 				.url(url)
 				.post(RequestBody.create(body, MediaType.get("application/json+protobuf")))
 				.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-						+ "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3")
+						+ "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 				.header("Accept", "application/json")
 				.header("Content-Type", "application/json+protobuf")
 				.header("x-goog-api-key", Constant.GOOGLE_API_KEY)

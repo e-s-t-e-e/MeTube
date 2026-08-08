@@ -366,7 +366,7 @@
         android:visibility="gone" />
 
     <ImageButton
-        android:id="@+id/btn_lock"
+        android:id="@+id/btn_lock_left"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_gravity="top|start"
@@ -379,16 +379,68 @@
         android:visibility="gone" />
 
     <ImageButton
-        android:id="@+id/btn_resize_mode"
+        android:id="@+id/btn_resize_mode_left"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="108dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/resize_mode"
+        android:padding="12dp"
+        android:src="@drawable/ic_resize_fit"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_pip_left"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="164dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/pip"
+        android:padding="12dp"
+        android:src="@drawable/ic_pip"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_lock_right"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_gravity="top|end"
         android:layout_marginEnd="24dp"
         android:layout_marginTop="52dp"
         android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/unlock_screen"
+        android:padding="12dp"
+        android:src="@drawable/ic_unlock"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_resize_mode_right"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|end"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="108dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/resize_mode"
         android:padding="12dp"
         android:src="@drawable/ic_resize_fit"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_pip_right"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|end"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="164dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/pip"
+        android:padding="12dp"
+        android:src="@drawable/ic_pip"
         android:visibility="gone" />
 
     <com.google.android.material.card.MaterialCardView

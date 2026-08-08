@@ -170,7 +170,7 @@ public final class PoTokenHost {
 		settings.setDomStorageEnabled(false);
 		settings.setDatabaseEnabled(false);
 		settings.setUserAgentString(USER_AGENT);
-		settings.setBlockNetworkLoads(true);
+		settings.setBlockNetworkLoads(false);
 		if (WebViewFeature.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ENABLE)) {
 			WebSettingsCompat.setSafeBrowsingEnabled(settings, false);
 		}
