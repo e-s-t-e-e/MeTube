@@ -1808,17 +1808,36 @@
                     item.setAttribute('role', 'tab');
                     item.setAttribute('tabindex', '0');
 
-                    item.innerHTML = `
-                        <div class="pivot-bar-item-tab-content">
-                            <div class="pivot-bar-icon">
-                                <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; display: block; margin: auto;">
-                                    <path d="M17.06,13c-1.86,0 -3.42,1.33 -3.82,3.1 -0.95,-0.41 -1.82,-0.3 -2.48,-0.01C10.35,14.31 8.79,13 6.94,13 4.77,13 3,14.79 3,17s1.77,4 3.94,4c2.06,0 3.74,-1.62 3.9,-3.68 0.34,-0.24 1.23,-0.61 2.32,0.02 0.19,2.05 1.85,3.66 3.9,3.66 2.17,0 3.94,-1.79 3.94,-4s-1.77,-4 -3.94,-4zM6.94,19.86c-1.56,0 -2.81,-1.28 -2.81,-2.86s1.26,-2.86 2.81,-2.86c1.56,0 2.81,1.28 2.81,2.86s-1.25,2.86 -2.81,2.86zM17.06,19.86c-1.56,0 -2.81,-1.28 -2.81,-2.86s1.26,-2.86 2.81,-2.86c1.56,0 2.81,1.28 2.81,2.86s-1.25,2.86 -2.81,2.86z"/>
-                                    <path d="M22,10.5L2,10.5c-0.55,0 -1,0.45 -1,1s0.45,1 1,1h20c0.55,0 1,-0.45 1,-1s-0.45,-1 -1,-1zM15.53,2.63c-0.17,-0.36 -0.57,-0.55 -0.96,-0.44L12,2.9l-2.58,-0.7c-0.39,-0.11 -0.79,0.08 -0.96,0.44L5.16,9.5h13.68l-3.31,-6.87z"/>
-                                </svg>
-                            </div>
-                            <div class="pivot-bar-item-title">Incognito</div>
-                        </div>
-                    `;
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'pivot-bar-item-tab-content';
+
+                    const iconDiv = document.createElement('div');
+                    iconDiv.className = 'pivot-bar-icon';
+
+                    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.setAttribute('viewBox', '0 0 24 24');
+                    svg.style.width = '24px';
+                    svg.style.height = '24px';
+                    svg.style.display = 'block';
+                    svg.style.margin = 'auto';
+
+                    const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path1.setAttribute('d', 'M17.06,13c-1.86,0 -3.42,1.33 -3.82,3.1 -0.95,-0.41 -1.82,-0.3 -2.48,-0.01C10.35,14.31 8.79,13 6.94,13 4.77,13 3,14.79 3,17s1.77,4 3.94,4c2.06,0 3.74,-1.62 3.9,-3.68 0.34,-0.24 1.23,-0.61 2.32,0.02 0.19,2.05 1.85,3.66 3.9,3.66 2.17,0 3.94,-1.79 3.94,-4s-1.77,-4 -3.94,-4zM6.94,19.86c-1.56,0 -2.81,-1.28 -2.81,-2.86s1.26,-2.86 2.81,-2.86c1.56,0 2.81,1.28 2.81,2.86s-1.25,2.86 -2.81,2.86zM17.06,19.86c-1.56,0 -2.81,-1.28 -2.81,-2.86s1.26,-2.86 2.81,-2.86c1.56,0 2.81,1.28 2.81,2.86s-1.25,2.86 -2.81,2.86z');
+
+                    const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path2.setAttribute('d', 'M22,10.5L2,10.5c-0.55,0 -1,0.45 -1,1s0.45,1 1,1h20c0.55,0 1,-0.45 1,-1s-0.45,-1 -1,-1zM15.53,2.63c-0.17,-0.36 -0.57,-0.55 -0.96,-0.44L12,2.9l-2.58,-0.7c-0.39,-0.11 -0.79,0.08 -0.96,0.44L5.16,9.5h13.68l-3.31,-6.87z');
+
+                    svg.appendChild(path1);
+                    svg.appendChild(path2);
+                    iconDiv.appendChild(svg);
+
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'pivot-bar-item-title';
+                    titleDiv.textContent = 'Incognito';
+
+                    contentDiv.appendChild(iconDiv);
+                    contentDiv.appendChild(titleDiv);
+                    item.appendChild(contentDiv);
 
                     DOM.bind(item, 'click', (e) => {
                         e.preventDefault();
