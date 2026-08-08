@@ -16,9 +16,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hhst.youtubelite.R;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import androidx.core.content.FileProvider;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -52,6 +56,15 @@ public class UpdateChecker {
 	 * If a newer release is found, prompts the user with an update dialog on the UI thread.
 	 */
 	public void checkForUpdatesOnAppStart(@NonNull Activity activity) {
+		try {
+			File oldUpdate = new File(activity.getCacheDir(), "metube_update.apk");
+			if (oldUpdate.exists()) {
+				oldUpdate.delete();
+			}
+		} catch (Exception e) {
+			Log.e(TAG, "Failed to delete old update APK", e);
+		}
+
 		if (checkPerformedInSession.getAndSet(true)) {
 			return;
 		}
@@ -119,15 +132,112 @@ public class UpdateChecker {
 						.setMessage(message)
 						.setCancelable(true)
 						.setPositiveButton(R.string.update_now, (dialog, which) -> {
-							try {
-								Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl));
-								activity.startActivity(intent);
-							} catch (Exception e) {
-								Log.e(TAG, "Failed to launch update URL", e);
-							}
+							downloadAndInstallApk(activity, downloadUrl);
 						})
 						.setNegativeButton(R.string.update_later, (dialog, which) -> dialog.dismiss())
 						.show();
+	}
+
+	private void downloadAndInstallApk(@NonNull Activity activity, @NonNull String downloadUrl) {
+		activity.runOnUiThread(() -> {
+			final com.google.android.material.dialog.MaterialAlertDialogBuilder progressBuilder = new com.google.android.material.dialog.MaterialAlertDialogBuilder(activity);
+			progressBuilder.setTitle("Downloading Update");
+			progressBuilder.setMessage("Connecting...");
+			progressBuilder.setCancelable(false);
+
+			final android.widget.LinearLayout layout = new android.widget.LinearLayout(activity);
+			layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+			int padding = (int) (16 * activity.getResources().getDisplayMetrics().density);
+			layout.setPadding(padding, padding, padding, padding);
+
+			final com.google.android.material.progressindicator.LinearProgressIndicator progressIndicator = new com.google.android.material.progressindicator.LinearProgressIndicator(activity);
+			progressIndicator.setIndeterminate(true);
+			layout.addView(progressIndicator);
+
+			progressBuilder.setView(layout);
+			final androidx.appcompat.app.AlertDialog progressDialog = progressBuilder.show();
+
+			// Run download in background
+			OkHttpClient client = this.client;
+			Request request = new Request.Builder().url(downloadUrl).build();
+			client.newCall(request).enqueue(new Callback() {
+				@Override
+				public void onFailure(@NonNull Call call, @NonNull IOException e) {
+					activity.runOnUiThread(() -> {
+						progressDialog.dismiss();
+						new MaterialAlertDialogBuilder(activity)
+								.setTitle("Update Failed")
+								.setMessage("Could not download the update package: " + e.getMessage())
+								.setPositiveButton(android.R.string.ok, null)
+								.show();
+					});
+				}
+
+				@Override
+				public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+					if (!response.isSuccessful()) {
+						activity.runOnUiThread(() -> {
+							progressDialog.dismiss();
+							ToastUtils.show(activity, "Download failed: " + response.message());
+						});
+						return;
+					}
+
+					try (response) {
+						InputStream is = response.body().byteStream();
+						long contentLength = response.body().contentLength();
+						File apkFile = new File(activity.getCacheDir(), "metube_update.apk");
+						try (FileOutputStream fos = new FileOutputStream(apkFile)) {
+							byte[] buffer = new byte[8192];
+							long bytesReadTotal = 0;
+							int len;
+							while ((len = is.read(buffer)) != -1) {
+								fos.write(buffer, 0, len);
+								bytesReadTotal += len;
+								final long currentProgress = bytesReadTotal;
+								activity.runOnUiThread(() -> {
+									if (progressIndicator.isIndeterminate()) {
+										progressIndicator.setIndeterminate(false);
+									}
+									if (contentLength > 0) {
+										int percent = (int) ((currentProgress * 100) / contentLength);
+										progressIndicator.setProgress(percent);
+										progressDialog.setMessage("Downloaded " + percent + "%");
+									} else {
+										progressDialog.setMessage("Downloaded " + (currentProgress / 1024) + " KB");
+									}
+								});
+							}
+							fos.flush();
+						}
+
+						activity.runOnUiThread(() -> {
+							progressDialog.dismiss();
+							installApk(activity, apkFile);
+						});
+					} catch (Exception e) {
+						activity.runOnUiThread(() -> {
+							progressDialog.dismiss();
+							ToastUtils.show(activity, "Error saving update: " + e.getMessage());
+						});
+					}
+				}
+			});
+		});
+	}
+
+	private void installApk(@NonNull Activity activity, @NonNull File file) {
+		try {
+			Uri apkUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".provider", file);
+			Intent intent = new Intent(Intent.ACTION_VIEW);
+			intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			activity.startActivity(intent);
+		} catch (Exception e) {
+			Log.e(TAG, "Failed to start install intent", e);
+			activity.runOnUiThread(() -> ToastUtils.show(activity, "Failed to launch package installer: " + e.getMessage()));
+		}
 	}
 
 	@Nullable

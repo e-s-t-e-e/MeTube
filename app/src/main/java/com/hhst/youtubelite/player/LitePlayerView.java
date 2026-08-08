@@ -144,8 +144,71 @@ public class LitePlayerView extends PlayerView {
 	private float miniPlayerPinchStartDistancePx;
 	private int miniPlayerPinchStartWidthPx;
 	private int miniPlayerWidthOverrideDp = MiniPlayerLayout.NO_WIDTH_OVERRIDE_DP;
+	private float customBrightness = -1f;
+	private boolean hasAdjustedBrightness = false;
 	private boolean miniAnimating;
 	private int miniAnimToken;
+
+	public float getPlayerBrightness() {
+		if (customBrightness < 0) {
+			try {
+				android.view.WindowManager.LayoutParams lp = activity.getWindow().getAttributes();
+				if (lp.screenBrightness >= 0) return lp.screenBrightness;
+			} catch (Exception e) {}
+			return 0.5f;
+		}
+		return customBrightness;
+	}
+
+	public void setPlayerBrightness(float brightness) {
+		this.customBrightness = Math.max(0.01f, Math.min(1.0f, brightness));
+		this.hasAdjustedBrightness = true;
+		if (!inAppMiniPlayer && getVisibility() == View.VISIBLE) {
+			applyWindowBrightness(this.customBrightness);
+		}
+	}
+
+	private void applyWindowBrightness(float brightness) {
+		if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
+		activity.runOnUiThread(() -> {
+			try {
+				android.view.Window window = activity.getWindow();
+				if (window != null) {
+					android.view.WindowManager.LayoutParams lp = window.getAttributes();
+					lp.screenBrightness = brightness;
+					window.setAttributes(lp);
+				}
+			} catch (Exception e) {
+				android.util.Log.e("LitePlayerView", "Failed to apply window brightness", e);
+			}
+		});
+	}
+
+	@Override
+	public void onWindowFocusChanged(boolean hasWindowFocus) {
+		super.onWindowFocusChanged(hasWindowFocus);
+		if (!hasWindowFocus) {
+			applyWindowBrightness(-1f);
+		} else {
+			if (hasAdjustedBrightness && !inAppMiniPlayer && getVisibility() == View.VISIBLE) {
+				applyWindowBrightness(customBrightness);
+			}
+		}
+	}
+
+	@Override
+	protected void onVisibilityChanged(@NonNull View changedView, int visibility) {
+		super.onVisibilityChanged(changedView, visibility);
+		if (changedView == this) {
+			if (visibility != View.VISIBLE) {
+				applyWindowBrightness(-1f);
+			} else {
+				if (hasAdjustedBrightness && !inAppMiniPlayer) {
+					applyWindowBrightness(customBrightness);
+				}
+			}
+		}
+	}
 
 	public LitePlayerView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
@@ -261,6 +324,7 @@ public class LitePlayerView extends PlayerView {
 		miniPlayerRestoreResizeMode = getResizeMode();
 		miniPlayerRestoreFullscreen = isFs;
 		inAppMiniPlayer = true;
+		applyWindowBrightness(-1f);
 		loadPersistedMiniPlayerLayoutState();
 		updatePlayerLayout(false);
 		updateMiniPlayerCornerClipping();
@@ -276,6 +340,9 @@ public class LitePlayerView extends PlayerView {
 		int startHeight = getHeight();
 		stopMiniTransition();
 		inAppMiniPlayer = false;
+		if (hasAdjustedBrightness && getVisibility() == View.VISIBLE) {
+			applyWindowBrightness(customBrightness);
+		}
 		resetMiniPlayerTouchTracking();
 		miniPlayerWidthOverrideDp = MiniPlayerLayout.NO_WIDTH_OVERRIDE_DP;
 		resetMiniPlayerTranslation();

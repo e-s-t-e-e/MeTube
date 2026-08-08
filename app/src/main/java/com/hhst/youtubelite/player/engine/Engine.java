@@ -772,12 +772,34 @@ public class Engine {
 	}
 
 	public void onQualitySelected(@Nullable String res) {
-		if (res == null) return;
 		State state = state();
 		if (state == null) return;
 		prefs.setPreferredQuality(res);
 		PlaybackPlan plan = PlaybackPlanner.plan(state.deliveries(), res, null);
 		this.playbackPlan = plan;
+
+		if (res == null) {
+			DefaultTrackSelector trackSelector = trackSelector();
+			if (trackSelector != null) {
+				trackSelector.setParameters(params(trackSelector)
+								.clearOverridesOfType(C.TRACK_TYPE_VIDEO)
+								.setMaxVideoSize(Integer.MAX_VALUE, Integer.MAX_VALUE)
+								.setMinVideoSize(0, 0));
+			}
+			Delivery delivery = plan.getDelivery();
+			if (delivery != null && !delivery.isTrackLock()) {
+				long pos = this.player.getCurrentPosition();
+				float speed = this.player.getPlaybackParameters().speed;
+				play(new PlaybackDetails(state.video(), state.catalog(), state.deliveries(), plan, segments, subtitles));
+				if (plan.getMode() != PlaybackMode.LIVE_DASH
+								&& plan.getMode() != PlaybackMode.LIVE_HLS) {
+					this.player.seekTo(pos);
+				}
+				this.player.setPlaybackParameters(new PlaybackParameters(speed));
+			}
+			return;
+		}
+
 		Delivery delivery = plan.getDelivery();
 		if (isLiveMode(plan) && delivery != null && !delivery.isTrackLock()) {
 			applyPlaybackTrackMode();

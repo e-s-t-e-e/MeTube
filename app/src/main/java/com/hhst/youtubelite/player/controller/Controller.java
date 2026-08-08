@@ -597,15 +597,33 @@ public class Controller {
 			qualityView.setOnClickListener(v -> {
 				List<String> available = engine.getAvailableResolutions();
 				if (available.isEmpty()) return;
-				String[] labels = available.toArray(new String[0]);
-				String[] values = available.toArray(new String[0]);
-				int checked = prefs.getPreferredQuality() == null ? -1 : Arrays.asList(values).indexOf(engine.getQuality());
+				String[] labels = new String[available.size() + 1];
+				String[] values = new String[available.size() + 1];
+				labels[0] = activity.getString(R.string.player_quality_auto);
+				values[0] = "auto";
+				for (int i = 0; i < available.size(); i++) {
+					labels[i + 1] = available.get(i);
+					values[i + 1] = available.get(i);
+				}
+				int checked = 0;
+				String prefQuality = prefs.getPreferredQuality();
+				if (prefQuality != null) {
+					int idx = Arrays.asList(values).indexOf(prefQuality);
+					if (idx >= 0) checked = idx;
+				}
 				showSelectionPopup(v, labels, checked, (index, label) -> {
 					String selected = values[index];
-					engine.onQualitySelected(selected);
-					qualityView.setText(label);
-					String js = String.format("(function(t){const p=document.querySelector('#movie_player');const ls=p.getAvailableQualityLabels();const v=l=>parseInt(l.replace(/\\D/g,''));const target=v(t);const closest=ls.reduce((b,c,i)=>Math.abs(v(c)-target)<Math.abs(v(ls[b])-target)?i:b,0);const quality=p.getAvailableQualityLevels()[closest];p.setPlaybackQualityRange(quality,quality);})('%s')", label);
-					tabManager.evaluateJavascript(js, null);
+					if ("auto".equals(selected)) {
+						engine.onQualitySelected(null);
+						qualityView.setText(activity.getString(R.string.player_quality_auto));
+						String js = "const p=document.querySelector('#movie_player'); if (p) { p.setPlaybackQualityRange('default','default'); }";
+						tabManager.evaluateJavascript(js, null);
+					} else {
+						engine.onQualitySelected(selected);
+						qualityView.setText(label);
+						String js = String.format("(function(t){const p=document.querySelector('#movie_player');const ls=p.getAvailableQualityLabels();const v=l=>parseInt(l.replace(/\\D/g,''));const target=v(t);const closest=ls.reduce((b,c,i)=>Math.abs(v(c)-target)<Math.abs(v(ls[b])-target)?i:b,0);const quality=p.getAvailableQualityLevels()[closest];p.setPlaybackQualityRange(quality,quality);})('%s')", label);
+						tabManager.evaluateJavascript(js, null);
+					}
 				});
 			});
 		}

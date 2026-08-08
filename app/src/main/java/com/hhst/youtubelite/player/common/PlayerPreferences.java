@@ -84,10 +84,14 @@ public final class PlayerPreferences {
 		return quality == null || quality.isBlank() ? null : quality;
 	}
 
-	public void setPreferredQuality(@NonNull String quality) {
+	public void setPreferredQuality(@Nullable String quality) {
 		boolean enabled = extensionManager.isEnabled(com.hhst.youtubelite.extension.Constant.REMEMBER_QUALITY);
 		if (!enabled) return;
-		mmkv.encode(KEY_VIDEO_QUALITY, quality);
+		if (quality == null) {
+			mmkv.removeValueForKey(KEY_VIDEO_QUALITY);
+		} else {
+			mmkv.encode(KEY_VIDEO_QUALITY, quality);
+		}
 	}
 
 	@NonNull

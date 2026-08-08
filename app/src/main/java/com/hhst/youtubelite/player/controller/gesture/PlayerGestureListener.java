@@ -253,7 +253,12 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 	}
 
 	private void adjustBrightness(float dy) {
-		brightness = DeviceUtils.adjustBrightness(activity, dy, playerView, brightness, 0.5f);
+		if (brightness == -1) {
+			brightness = playerView.getPlayerBrightness();
+		}
+		float delta = (dy / playerView.getHeight()) * 0.5f * 1.5f;
+		brightness = Math.max(0.01f, Math.min(1.0f, brightness + delta));
+		playerView.setPlayerBrightness(brightness);
 		controller.showHint(Math.round(brightness * 100) + "%", -1);
 	}
 

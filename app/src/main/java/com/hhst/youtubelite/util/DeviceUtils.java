@@ -16,7 +16,6 @@ import androidx.annotation.NonNull;
  */
 public final class DeviceUtils {
 
-	private static final float DEFAULT_BRIGHTNESS = 0.5f;
 	private static final float SCROLL_SENSITIVITY_FACTOR = 3.0f;
 
 
@@ -40,25 +39,6 @@ public final class DeviceUtils {
 			ClipData clip = ClipData.newPlainText(label, text);
 			clipboard.setPrimaryClip(clip);
 		}
-	}
-
-	/**
-	 * Adjusts device brightness based on vertical movement.
-	 */
-	public static float adjustBrightness(@NonNull Activity activity, float dy, @NonNull View view, float brightness, float scrollSens) {
-		float b = brightness;
-		if (b == -1) {
-			final WindowManager.LayoutParams lp = activity.getWindow().getAttributes();
-			b = lp.screenBrightness < 0 ? DEFAULT_BRIGHTNESS : lp.screenBrightness;
-		}
-		float delta = (dy / view.getHeight()) * scrollSens * SCROLL_SENSITIVITY_FACTOR;
-		b = Math.max(0.01f, Math.min(1.0f, b + delta));
-
-		final WindowManager.LayoutParams lp = activity.getWindow().getAttributes();
-		lp.screenBrightness = b;
-		activity.getWindow().setAttributes(lp);
-
-		return b;
 	}
 
 	/**
