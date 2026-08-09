@@ -262,7 +262,7 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 		float delta = (dy / playerView.getHeight()) * 0.5f * 1.5f;
 		brightness = Math.max(0.01f, Math.min(1.0f, brightness + delta));
 		playerView.setPlayerBrightness(brightness);
-		controller.showHint(Math.round(brightness * 100) + "%", -1);
+		controller.showBrightnessLevel(Math.round(brightness * 100));
 	}
 
 	private void adjustVolume(float dy) {
@@ -292,7 +292,7 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 			am.setStreamVolume(AudioManager.STREAM_MUSIC, halfVolume, 0);
 			engine.setVolumeBoostProgress(0f);
 			customVolume = 50f;
-			controller.showHint("50%", -1);
+			controller.showVolumeLevel(50);
 			if (!btVolumeAboveThreshold) {
 				btVolumeAboveThreshold = true;
 				showBluetoothVolumeWarning(am, maxVolume);
@@ -307,13 +307,13 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 			int sysVol = Math.round((customVolume / 100f) * maxVolume);
 			am.setStreamVolume(AudioManager.STREAM_MUSIC, sysVol, 0);
 			engine.setVolumeBoostProgress(0f);
-			controller.showHint(pct + "%", -1);
+			controller.showVolumeLevel(pct);
 		} else if (!boostWarningConfirmed) {
 			// Clamp at 100% until the boost warning is accepted.
 			customVolume = 100f;
 			am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
 			engine.setVolumeBoostProgress(0f);
-			controller.showHint("100%", -1);
+			controller.showVolumeLevel(100);
 			if (!boostAboveThreshold) {
 				boostAboveThreshold = true;
 				showBoostVolumeWarning(am, maxVolume);
@@ -323,7 +323,7 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 			am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
 			float boost = (customVolume - 100f) / 100f;
 			engine.setVolumeBoostProgress(boost);
-			controller.showHint("Boost: " + pct + "%", -1);
+			controller.showVolumeLevel(pct);
 		}
 
 		// Auto-reset threshold flag when volume comes back down to ≤50%.

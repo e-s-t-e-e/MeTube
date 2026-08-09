@@ -25,6 +25,76 @@
         android:textSize="12sp"
         android:visibility="gone" />
 
+    <LinearLayout
+        android:id="@+id/level_brightness"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="228dp"
+        android:alpha="0"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_brightness"
+            android:tint="@android:color/white" />
+
+        <com.hhst.youtubelite.player.controller.LevelIndicatorView
+            android:id="@+id/level_brightness_bar"
+            android:layout_width="6dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="6dp" />
+
+        <TextView
+            android:id="@+id/level_brightness_pct"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@android:color/white"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/level_volume"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="228dp"
+        android:alpha="0"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_volume"
+            android:tint="@android:color/white" />
+
+        <com.hhst.youtubelite.player.controller.LevelIndicatorView
+            android:id="@+id/level_volume_bar"
+            android:layout_width="6dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="6dp" />
+
+        <TextView
+            android:id="@+id/level_volume_pct"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@android:color/white"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
     <FrameLayout
         android:id="@+id/other_controls"
         android:layout_width="match_parent"
@@ -135,6 +205,32 @@
                     android:padding="8dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_replay" />
+
+                <TextView
+                    android:id="@+id/tv_sleep_timer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.92"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <ImageButton
+                    android:id="@+id/btn_sleep_timer"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="4dp"
+                    android:alpha="0.92"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/sleep_timer"
+                    android:maxWidth="40dp"
+                    android:maxHeight="40dp"
+                    android:minWidth="40dp"
+                    android:minHeight="40dp"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_sleep" />
             </LinearLayout>
 
             <Space

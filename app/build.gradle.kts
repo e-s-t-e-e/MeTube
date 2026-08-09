@@ -3,8 +3,8 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-val appVersionName = (project.findProperty("APP_VERSION_NAME") as? String) ?: "3.5"
-val appVersionCode = (project.findProperty("APP_VERSION_CODE") as? String)?.toIntOrNull() ?: 350
+val appVersionName = (project.findProperty("APP_VERSION_NAME") as? String) ?: "4.0"
+val appVersionCode = (project.findProperty("APP_VERSION_CODE") as? String)?.toIntOrNull() ?: 400
 
 android {
     namespace = "com.hhst.youtubelite"

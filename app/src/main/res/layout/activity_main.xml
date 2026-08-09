@@ -70,9 +70,9 @@
 
     <FrameLayout
         android:id="@+id/mini_dismiss"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_marginBottom="40dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="128dp"
         android:alpha="0"
         android:background="@drawable/bg_mini_dismiss"
         android:elevation="24dp"
@@ -82,11 +82,11 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
-            android:layout_width="26dp"
-            android:layout_height="26dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_gravity="center"
             android:importantForAccessibility="no"
-            android:src="@drawable/ic_close"
+            android:src="@drawable/ic_delete"
             android:tint="@android:color/white" />
     </FrameLayout>
     <com.google.android.material.floatingactionbutton.FloatingActionButton

@@ -20,9 +20,11 @@ import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListPopupWindow;
 import android.widget.ListView;
+import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.TextView;
 import com.google.android.material.switchmaterial.SwitchMaterial;
@@ -188,6 +190,46 @@ public class Controller {
 	private PlayerGestureListener gestureListener;
 	private boolean showLeftButtons = true;
 	private boolean showRightButtons = true;
+	@Nullable
+	private View levelVolumeContainer;
+	@Nullable
+	private View levelBrightnessContainer;
+	@Nullable
+	private LevelIndicatorView levelVolumeBar;
+	@Nullable
+	private LevelIndicatorView levelBrightnessBar;
+	@Nullable
+	private TextView levelVolumePct;
+	@Nullable
+	private TextView levelBrightnessPct;
+	@Nullable
+	private ImageButton sleepTimerButton;
+	@Nullable
+	private TextView sleepTimerView;
+	private static final int[] SLEEP_TIMER_MINUTES = {15, 30, 45, 60, 90, 120};
+	private long sleepTimerEndAtMs = 0;
+	private int sleepTimerMinutes = 0;
+	private boolean sleepTimerCustom = false;
+	private final Runnable sleepTimerTick = new Runnable() {
+		@Override
+		public void run() {
+			if (sleepTimerEndAtMs <= 0L) return;
+			final long leftMs = sleepTimerEndAtMs - SystemClock.elapsedRealtime();
+			if (leftMs <= 0L) {
+				sleepTimerEndAtMs = 0L;
+				sleepTimerMinutes = 0;
+				sleepTimerCustom = false;
+				updateSleepTimerView();
+				engine.pause();
+				sleepDevice();
+				showHint(activity.getString(R.string.sleep_timer_ended),
+								com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
+				return;
+			}
+			updateSleepTimerView();
+			handler.postDelayed(sleepTimerTick, 1_000L);
+		}
+	};
 
 	@Inject
 	public Controller(@NonNull Activity activity, @NonNull LitePlayerView playerView, @NonNull Engine engine, @NonNull PlayerPreferences prefs, @NonNull ZoomTouchListener zoomListener, @NonNull TabManager tabManager, @NonNull ExtensionManager extensionManager) {
@@ -217,8 +259,10 @@ public class Controller {
 
 		playerView.post(() -> {
 			setupHintOverlay();
+			setupLevelOverlay();
 			setupListeners();
 			setupButtonListeners();
+			setupSleepTimerButton();
 			applySideButtonLayout();
 			refreshPlaybackButtons();
 			refreshQueueNavigationAvailability(engine.getQueueNavigationAvailability());
@@ -354,6 +398,224 @@ public class Controller {
 			final FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) this.hintText.getLayoutParams();
 			lp.topMargin = ViewUtils.dpToPx(activity, 24);
 			this.hintText.setLayoutParams(lp);
+		}
+	}
+
+	private void setupLevelOverlay() {
+		this.levelVolumeContainer = playerView.findViewById(R.id.level_volume);
+		this.levelBrightnessContainer = playerView.findViewById(R.id.level_brightness);
+		this.levelVolumeBar = playerView.findViewById(R.id.level_volume_bar);
+		this.levelBrightnessBar = playerView.findViewById(R.id.level_brightness_bar);
+		this.levelVolumePct = playerView.findViewById(R.id.level_volume_pct);
+		this.levelBrightnessPct = playerView.findViewById(R.id.level_brightness_pct);
+	}
+
+	/**
+	 * Positions the level indicators in the side-button column in fullscreen
+	 * (below the lock/resize/PiP buttons) and just under the top tray when windowed,
+	 * so they stay inside short portrait players.
+	 */
+	private void updateLevelIndicatorMargins() {
+		final int top = ViewUtils.dpToPx(activity, state.isFullscreen() ? 220f : 56f);
+		if (levelVolumeContainer != null) {
+			final FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) levelVolumeContainer.getLayoutParams();
+			if (lp.topMargin != top) {
+				lp.topMargin = top;
+				levelVolumeContainer.setLayoutParams(lp);
+			}
+		}
+		if (levelBrightnessContainer != null) {
+			final FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) levelBrightnessContainer.getLayoutParams();
+			if (lp.topMargin != top) {
+				lp.topMargin = top;
+				levelBrightnessContainer.setLayoutParams(lp);
+			}
+		}
+	}
+
+	/** Shows the gesture volume indicator; pct may exceed 100 when the boost is active. */
+	public void showVolumeLevel(int pct) {
+		if (levelVolumeContainer == null
+						|| activity.isInPictureInPictureMode() || state.isInPictureInPicture() || state.isInMiniPlayer())
+			return;
+		updateLevelIndicatorMargins();
+		if (levelVolumeContainer.getVisibility() != View.VISIBLE) {
+			levelVolumeContainer.setVisibility(View.VISIBLE);
+		}
+		levelVolumeContainer.setAlpha(1f);
+		if (levelVolumeBar != null) {
+			levelVolumeBar.setFillColor(pct > 100 ? 0xFFFF5252 : 0xFFFFFFFF);
+			levelVolumeBar.setLevel(pct / 100f);
+		}
+		if (levelVolumePct != null) levelVolumePct.setText(pct + "%");
+	}
+
+	/** Shows the gesture brightness indicator (0-100%). */
+	public void showBrightnessLevel(int pct) {
+		if (levelBrightnessContainer == null
+						|| activity.isInPictureInPictureMode() || state.isInPictureInPicture() || state.isInMiniPlayer())
+			return;
+		updateLevelIndicatorMargins();
+		if (levelBrightnessContainer.getVisibility() != View.VISIBLE) {
+			levelBrightnessContainer.setVisibility(View.VISIBLE);
+		}
+		levelBrightnessContainer.setAlpha(1f);
+		if (levelBrightnessBar != null) levelBrightnessBar.setLevel(pct / 100f);
+		if (levelBrightnessPct != null) levelBrightnessPct.setText(pct + "%");
+	}
+
+	private void hideLevelIndicators() {
+		if (levelVolumeContainer != null) levelVolumeContainer.setAlpha(0f);
+		if (levelBrightnessContainer != null) levelBrightnessContainer.setAlpha(0f);
+	}
+
+	private void setupSleepTimerButton() {
+		this.sleepTimerButton = playerView.findViewById(R.id.btn_sleep_timer);
+		this.sleepTimerView = playerView.findViewById(R.id.tv_sleep_timer);
+		if (this.sleepTimerButton != null) {
+			this.sleepTimerButton.setOnClickListener(v -> showSleepTimerDialog());
+		}
+	}
+
+	private void showSleepTimerDialog() {
+		final int customIndex = SLEEP_TIMER_MINUTES.length + 1;
+		final String[] options = new String[customIndex + 1];
+		options[0] = activity.getString(R.string.sleep_timer_off);
+		for (int i = 0; i < SLEEP_TIMER_MINUTES.length; i++) {
+			options[i + 1] = activity.getString(R.string.sleep_timer_minutes, SLEEP_TIMER_MINUTES[i]);
+		}
+		options[customIndex] = activity.getString(R.string.sleep_timer_custom);
+		int checked = 0;
+		if (sleepTimerEndAtMs > 0L && !sleepTimerCustom) {
+			for (int i = 0; i < SLEEP_TIMER_MINUTES.length; i++) {
+				if (SLEEP_TIMER_MINUTES[i] == sleepTimerMinutes) {
+					checked = i + 1;
+					break;
+				}
+			}
+		} else if (sleepTimerEndAtMs > 0L) {
+			checked = -1;
+		}
+		new MaterialAlertDialogBuilder(activity)
+						.setTitle(R.string.sleep_timer)
+						.setSingleChoiceItems(options, checked, (d, w) -> {
+							d.dismiss();
+							if (w == 0) {
+								cancelSleepTimer();
+							} else if (w == customIndex) {
+								showCustomSleepTimerDialog();
+							} else {
+								startSleepTimerMs(SLEEP_TIMER_MINUTES[w - 1] * 60_000L, false);
+							}
+						})
+						.setNegativeButton(R.string.cancel, null)
+						.show();
+	}
+
+	private void showCustomSleepTimerDialog() {
+		final String[] units = {
+						activity.getString(R.string.sleep_timer_unit_minutes),
+						activity.getString(R.string.sleep_timer_unit_seconds)};
+		new MaterialAlertDialogBuilder(activity)
+						.setTitle(R.string.sleep_timer_custom_title)
+						.setItems(units, (d, w) -> {
+							d.dismiss();
+							showCustomSleepTimerValueDialog(w == 0);
+						})
+						.setNegativeButton(R.string.cancel, null)
+						.show();
+	}
+
+	private void showCustomSleepTimerValueDialog(boolean minutes) {
+		final NumberPicker picker = new NumberPicker(activity);
+		picker.setMinValue(1);
+		picker.setMaxValue(minutes ? 240 : 90);
+		picker.setValue(minutes ? 15 : 30);
+		picker.setWrapSelectorWheel(false);
+
+		final LinearLayout row = new LinearLayout(activity);
+		row.setOrientation(LinearLayout.HORIZONTAL);
+		row.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+		final int pad = ViewUtils.dpToPx(activity, 16);
+		row.setPadding(pad, ViewUtils.dpToPx(activity, 12), pad, 0);
+		final TextView unit = new TextView(activity);
+		unit.setText(activity.getString(minutes ? R.string.sleep_timer_unit_minutes : R.string.sleep_timer_unit_seconds));
+		unit.setTextSize(16f);
+		unit.setTextColor(0xFFFFFFFF);
+		final LinearLayout.LayoutParams unitLp =
+						new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+		unitLp.setMarginStart(ViewUtils.dpToPx(activity, 12));
+		row.addView(picker, new LinearLayout.LayoutParams(
+						ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+		row.addView(unit, unitLp);
+
+		new MaterialAlertDialogBuilder(activity)
+						.setTitle(R.string.sleep_timer_custom_title)
+						.setView(row)
+						.setPositiveButton(R.string.sleep_timer_apply, (d, w) ->
+										startSleepTimerMs(picker.getValue() * (minutes ? 60_000L : 1000L), true))
+						.setNegativeButton(R.string.cancel, null)
+						.show();
+	}
+
+	private void startSleepTimerMs(long durationMs, boolean custom) {
+		sleepTimerCustom = custom;
+		sleepTimerEndAtMs = SystemClock.elapsedRealtime() + durationMs;
+		handler.removeCallbacks(sleepTimerTick);
+		handler.postDelayed(sleepTimerTick, 1_000L);
+		updateSleepTimerView();
+		showHint(activity.getString(R.string.sleep_timer_set, sleepTimerLabel(durationMs)),
+						com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
+		setControlsVisible(true);
+	}
+
+	private void cancelSleepTimer() {
+		sleepTimerEndAtMs = 0L;
+		sleepTimerMinutes = 0;
+		sleepTimerCustom = false;
+		handler.removeCallbacks(sleepTimerTick);
+		updateSleepTimerView();
+		showHint(activity.getString(R.string.sleep_timer_off),
+						com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
+		setControlsVisible(true);
+	}
+
+		/**
+	 * Turns the screen off when the timer expires. This needs the accessibility
+	 * service (Settings > Accessibility > MeTube screen-off) because normal apps
+	 * cannot put the device to sleep directly; if it is not enabled we just pause
+	 * and show a hint so playback never continues unattended.
+	 */
+	private void sleepDevice() {
+		if (ScreenLockAccessibilityService.lockScreenIfAvailable()) {
+			return;
+		}
+		showHint(activity.getString(R.string.sleep_timer_screen_off_hint),
+						com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
+	}
+
+	@NonNull
+	private String sleepTimerLabel(long ms) {
+		if (ms > 60_000L) {
+			return activity.getString(R.string.sleep_timer_minutes, Math.max(1L, ms / 60_000L));
+		}
+		return activity.getString(R.string.sleep_timer_seconds, Math.max(1L, (ms + 999L) / 1000L));
+	}
+
+	private void updateSleepTimerView() {
+		if (sleepTimerView == null && sleepTimerButton == null) return;
+		if (sleepTimerEndAtMs <= 0L) {
+			if (sleepTimerView != null) sleepTimerView.setVisibility(View.GONE);
+			if (sleepTimerButton != null) sleepTimerButton.setContentDescription(activity.getString(R.string.sleep_timer));
+			return;
+		}
+		final String label = sleepTimerLabel(sleepTimerEndAtMs - SystemClock.elapsedRealtime());
+		if (sleepTimerView != null) {
+			sleepTimerView.setVisibility(View.VISIBLE);
+			sleepTimerView.setText(label);
+		}
+		if (sleepTimerButton != null) {
+			sleepTimerButton.setContentDescription(activity.getString(R.string.sleep_timer_set, label));
 		}
 	}
 
@@ -1114,6 +1376,9 @@ public class Controller {
 
 	public void release() {
 		portraitUnlockListener.disable();
+		handler.removeCallbacks(sleepTimerTick);
+		sleepTimerEndAtMs = 0L;
+		sleepTimerMinutes = 0;
 	}
 
 	public boolean isInPictureInPicture() {
@@ -1272,6 +1537,7 @@ public class Controller {
 
 	private void hideControlsAutomatically() {
 		handler.removeCallbacks(hideControls);
+		if (sleepTimerEndAtMs > 0L) return;
 		if (shouldAutoHideControls(engine.isPlaying(), state.isInPictureInPicture())) {
 			handler.postDelayed(hideControls, 3000);
 		}
@@ -1371,6 +1637,7 @@ public class Controller {
 
 	public void hideHint() {
 		if (hintText != null) ViewUtils.animateViewAlpha(hintText, 0.0f, View.GONE);
+		hideLevelIndicators();
 	}
 
 	private void showResizeModeOptions() {

@@ -234,5 +234,19 @@
     <string name="credits">Credits</string>
     <string name="credits_summary">Litube by HydeYYHH (original creator)</string>
     <string name="credits_link">https://github.com/HydeYYHH/litube</string>
+    <string name="sleep_timer">Sleep timer</string>
+    <string name="sleep_timer_off">Off</string>
+    <string name="sleep_timer_minutes">%d min.</string>
+    <string name="sleep_timer_seconds">%d sec.</string>
+    <string name="sleep_timer_custom">Custom</string>
+    <string name="sleep_timer_custom_title">Custom timer</string>
+    <string name="sleep_timer_apply">Set</string>
+    <string name="sleep_timer_unit_minutes">min.</string>
+    <string name="sleep_timer_unit_seconds">sec.</string>
+    <string name="sleep_timer_set">Sleep timer set to %s</string>
+    <string name="sleep_timer_ended">Sleep timer ended</string>
+    <string name="sleep_timer_screen_off_hint">Enable the MeTube accessibility service in system settings so the screen turns off when the timer ends</string>
+    <string name="screen_lock_accessibility_label">MeTube screen-off</string>
+    <string name="screen_lock_accessibility_description">Used by the sleep timer to turn the screen off when the timer ends.</string>
 </resources>
 
