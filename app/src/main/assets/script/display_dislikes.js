@@ -372,6 +372,38 @@
 
   function syncPreferences() {
     const next = readEnabled();
+    
+    let styleEl = document.getElementById("lite-hide-dislikes-style");
+    if (!styleEl) {
+       styleEl = document.createElement("style");
+       styleEl.id = "lite-hide-dislikes-style";
+       document.head.appendChild(styleEl);
+    }
+    
+    if (next) {
+       styleEl.textContent = "";
+    } else {
+       styleEl.textContent = `
+          /* Mobile */
+          ytm-segmented-like-dislike-button-renderer .ytm-segmented-like-dislike-button-renderer-dislike-button,
+          dislike-button-view-model,
+          .slim-video-action-bar-actions .segmented-buttons button:nth-child(2),
+          .slim-video-action-bar-actions yt-button-renderer:nth-child(2),
+          /* Desktop */
+          #segmented-dislike-button,
+          ytd-menu-renderer ytd-toggle-button-renderer:nth-of-type(2) {
+              display: none !important;
+          }
+          /* Fix Like button border radius */
+          #segmented-like-button > ytd-toggle-button-renderer > yt-button-shape > button,
+          ytm-segmented-like-dislike-button-renderer .ytm-segmented-like-dislike-button-renderer-like-button button,
+          .slim-video-action-bar-actions .segmented-buttons button:first-child {
+              border-top-right-radius: 18px !important;
+              border-bottom-right-radius: 18px !important;
+          }
+       `;
+    }
+
     if (enabled === next) {
       if (enabled) scheduleInitialize();
       return;

@@ -118,7 +118,24 @@ public class AboutActivity extends AppCompatActivity {
 		clearLayout.setOnClickListener(v -> showClearCacheDialog());
 		exportLayout.setOnClickListener(v -> exportLogs());
 
+		cacheSizeText = findViewById(R.id.clear_cache_size);
+		updateCacheSize();
+
 		checkForUpdates(false);
+	}
+
+	private TextView cacheSizeText;
+
+	private void updateCacheSize() {
+		new Thread(() -> {
+			long size = appCacheCleaner.getCacheSize();
+			String formattedSize = android.text.format.Formatter.formatFileSize(this, size);
+			runOnUiThread(() -> {
+				if (cacheSizeText != null) {
+					cacheSizeText.setText(formattedSize);
+				}
+			});
+		}).start();
 	}
 
 	private void showClearCacheDialog() {
@@ -233,6 +250,7 @@ public class AboutActivity extends AppCompatActivity {
 		new Thread(() -> {
 			try {
 				appCacheCleaner.clear(AboutActivity.this);
+				runOnUiThread(this::updateCacheSize);
 				ToastUtils.show(AboutActivity.this, R.string.cache_cleared);
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();

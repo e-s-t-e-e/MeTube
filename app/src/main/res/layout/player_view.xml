@@ -71,100 +71,70 @@
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
-                <ImageButton
-                    android:id="@+id/btn_queue"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:alpha="0.92"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/queue"
-                    android:maxWidth="32dp"
-                    android:maxHeight="32dp"
-                    android:minWidth="32dp"
-                    android:minHeight="32dp"
-                    android:padding="4dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_queue" />
+
 
                 <ImageButton
-                    android:id="@+id/btn_segments"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginStart="-2dp"
+                    android:id="@+id/btn_audio_track"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
                     android:alpha="0.92"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/segments"
-                    android:maxWidth="32dp"
-                    android:maxHeight="32dp"
-                    android:minWidth="32dp"
-                    android:minHeight="32dp"
-                    android:padding="4dp"
+                    android:contentDescription="@string/audio_track"
+                    android:maxWidth="40dp"
+                    android:maxHeight="40dp"
+                    android:minWidth="40dp"
+                    android:minHeight="40dp"
+                    android:padding="8dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_segment" />
+                    android:src="@drawable/ic_track" />
 
                 <ImageButton
                     android:id="@+id/btn_subtitles"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginStart="-2dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
                     android:alpha="0.92"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/subtitles"
-                    android:maxWidth="32dp"
-                    android:maxHeight="32dp"
-                    android:minWidth="32dp"
-                    android:minHeight="32dp"
-                    android:padding="4dp"
+                    android:maxWidth="40dp"
+                    android:maxHeight="40dp"
+                    android:minWidth="40dp"
+                    android:minHeight="40dp"
+                    android:padding="8dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_subtitles_off" />
 
                 <ImageButton
                     android:id="@+id/btn_loop"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginStart="-2dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
                     android:alpha="0.92"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/playback_end_next"
-                    android:maxWidth="32dp"
-                    android:maxHeight="32dp"
-                    android:minWidth="32dp"
-                    android:minHeight="32dp"
-                    android:padding="4dp"
+                    android:maxWidth="40dp"
+                    android:maxHeight="40dp"
+                    android:minWidth="40dp"
+                    android:minHeight="40dp"
+                    android:padding="8dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_playback_end_next" />
 
                 <ImageButton
                     android:id="@+id/btn_refresh"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginStart="-2dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:alpha="0.92"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/refresh_video"
-                    android:maxWidth="32dp"
-                    android:maxHeight="32dp"
-                    android:minWidth="32dp"
-                    android:minHeight="32dp"
-                    android:padding="4dp"
+                    android:maxWidth="40dp"
+                    android:maxHeight="40dp"
+                    android:minWidth="40dp"
+                    android:minHeight="40dp"
+                    android:padding="8dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_replay" />
-
-                <ImageButton
-                    android:id="@+id/btn_more"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginStart="-2dp"
-                    android:alpha="0.92"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/more_options"
-                    android:maxWidth="32dp"
-                    android:maxHeight="32dp"
-                    android:minWidth="32dp"
-                    android:minHeight="32dp"
-                    android:padding="4dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_more" />
             </LinearLayout>
 
             <Space
@@ -458,16 +428,7 @@
         app:strokeColor="#12FFFFFF"
         app:strokeWidth="1dp" />
 
-    <ImageButton
-        android:id="@+id/btn_mini_queue"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="top|start"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/queue"
-        android:padding="12dp"
-        android:src="@drawable/ic_queue"
-        android:visibility="gone" />
+
 
     <ImageButton
         android:id="@+id/btn_mini_close"

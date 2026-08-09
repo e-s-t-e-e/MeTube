@@ -60,6 +60,7 @@ public class TabManager {
 		this.activity = activity;
 		this.player = player;
 		this.extensionManager = extensionManager;
+		new Thread(() -> loadAssetsIfNeeded(activity.getAssets())).start();
 	}
 
 	static boolean shouldSuspend(@Nullable String tag, @Nullable String targetTag, boolean miniPlayerOn, boolean canSuspend) {
@@ -171,30 +172,54 @@ public class TabManager {
 		});
 	}
 
-	public void injectScripts(@NonNull YoutubeWebview webView) {
-		var assetMgr = activity.getAssets();
-		try {
-			for (var dir : List.of("style", "script")) {
-				var list = assetMgr.list(dir);
-				if (list == null) continue;
-				var resources = new ArrayList<>(List.of(list));
-				var initScript = resources.contains("init.js") ? "init.js" : resources.contains("init.min.js") ? "init.min.js" : null;
-				if (initScript != null) {
-					try (var is = assetMgr.open(dir + "/" + initScript)) {
-						webView.injectJavaScript(is);
+	private volatile boolean assetsLoaded = false;
+	private final List<String> cachedScripts = new ArrayList<>();
+
+	private void loadAssetsIfNeeded(android.content.res.AssetManager assetMgr) {
+		if (assetsLoaded) return;
+		synchronized (this) {
+			if (assetsLoaded) return;
+			try {
+				for (var dir : List.of("style", "script")) {
+					var list = assetMgr.list(dir);
+					if (list == null) continue;
+					var resources = new ArrayList<>(List.of(list));
+					if ("script".equals(dir)) {
+						var initScript = resources.contains("init.js") ? "init.js" : resources.contains("init.min.js") ? "init.min.js" : null;
+						if (initScript != null) {
+							try (var is = assetMgr.open(dir + "/" + initScript)) {
+								cachedScripts.add(com.hhst.youtubelite.util.StreamIOUtils.readInputStream(is));
+							}
+							resources.remove(initScript);
+						}
 					}
-					resources.remove(initScript);
-				}
-				for (var resName : resources) {
-					try (var stream = assetMgr.open(dir + "/" + resName)) {
-						var ext = FilenameUtils.getExtension(resName);
-						if ("js".equals(ext)) webView.injectJavaScript(stream);
-						else if ("css".equals(ext)) webView.injectCss(stream);
+					for (var resName : resources) {
+						try (var stream = assetMgr.open(dir + "/" + resName)) {
+							var ext = org.apache.commons.io.FilenameUtils.getExtension(resName);
+							if ("js".equals(ext)) {
+								cachedScripts.add(com.hhst.youtubelite.util.StreamIOUtils.readInputStream(stream));
+							} else if ("css".equals(ext)) {
+								String css = com.hhst.youtubelite.util.StreamIOUtils.readInputStream(stream);
+								if (css != null) {
+									String encodedCss = java.util.Base64.getEncoder().encodeToString(css.getBytes());
+									String js = "(function(){ let style = document.createElement('style'); style.type = 'text/css'; style.textContent = window.atob('" + encodedCss + "'); let target = document.head || document.documentElement; if (target) target.appendChild(style); })();";
+									cachedScripts.add(js);
+								}
+							}
+						}
 					}
 				}
+				assetsLoaded = true;
+			} catch (IOException e) {
+				Log.e(TAG, "Failed to load assets", e);
 			}
-		} catch (IOException e) {
-			Log.e(TAG, "Failed to load assets", e);
+		}
+	}
+
+	public void injectScripts(@NonNull YoutubeWebview webView) {
+		loadAssetsIfNeeded(activity.getAssets());
+		for (String js : cachedScripts) {
+			webView.injectScriptString(js);
 		}
 	}
 

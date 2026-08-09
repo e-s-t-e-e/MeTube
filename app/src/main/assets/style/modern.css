@@ -328,29 +328,53 @@ ytm-watch-actions-item-renderer button:active {
 .segmented-buttons-item svg,
 ytm-watch-actions-item-renderer svg,
 c3-icon,
-c3-icon svg {
-    width: 18px !important;
-    height: 18px !important;
-    margin-right: 4px !important;
+c3-icon svg,
+yt-icon,
+yt-icon svg {
+    width: 22px !important;
+    height: 22px !important;
+    margin-right: 6px !important;
     fill: #ffffff !important;
     flex-shrink: 0 !important;
     transition: transform 0.2s ease !important;
 }
 
 /* Adjust scales to compensate for native icon viewport padding mismatches */
+yt-icon[icon*="like"] svg,
+yt-icon[icon*="dislike"] svg,
 c3-icon[type*="like"] svg,
 c3-icon[type*="dislike"] svg {
-    transform: scale(0.85) !important;
+    transform: scale(0.9) !important;
 }
+yt-icon[icon*="share"] svg,
 c3-icon[type*="share"] svg {
-    transform: scale(1.05) !important;
+    transform: scale(1.15) !important;
 }
+yt-icon[icon*="download"] svg,
 c3-icon[type*="download"] svg {
-    transform: scale(0.95) !important;
+    transform: scale(1.1) !important;
+}
+yt-icon[icon*="playlist"] svg,
+yt-icon[icon*="add"] svg,
+c3-icon[type*="playlist"] svg,
+c3-icon[type*="add"] svg {
+    transform: scale(1.15) !important;
+}
+yt-icon[icon*="offline"] svg,
+c3-icon[type*="offline"] svg {
+    transform: scale(1.1) !important;
 }
 
 /* Netflix Red Subscribe Button */
-ytm-subscribe-button-renderer,
+ytm-subscribe-button-renderer {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    display: inline-block !important;
+}
+
 ytm-subscribe-button-renderer button,
 .subscribe-button,
 .cbox button[aria-label*="Subscribe"],
@@ -362,7 +386,6 @@ ytm-subscribe-button-renderer button,
     border: none !important;
     height: 38px !important;
     padding: 0 16px !important;
-    font-size: 12px !important;
     white-space: nowrap !important;
     min-width: 90px !important;
     width: auto !important;
@@ -371,8 +394,6 @@ ytm-subscribe-button-renderer button,
     justify-content: center !important;
     text-transform: none !important;
     flex-shrink: 0 !important;
-    visibility: visible !important;
-    opacity: 1 !important;
 }
 
 ytm-subscribe-button-renderer[aria-selected="true"] button,
@@ -576,4 +597,38 @@ html[loading="true"]::after {
 @keyframes loadingSpinner {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   AMOLED DARK PLAYLIST & SERIES DRAWER PANEL
+   ========================================================================== */
+
+ytm-playlist-panel-renderer,
+.playlist-panel-header,
+.ytm-playlist-panel-renderer-header {
+    background-color: #000000 !important;
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid #111111 !important;
+}
+
+ytm-playlist-panel-video-renderer {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid #050505 !important;
+    transition: background-color 0.15s ease !important;
+}
+
+ytm-playlist-panel-video-renderer[selected="true"] {
+    background-color: #121212 !important;
+}
+
+ytm-playlist-panel-video-renderer[selected="true"] .playlist-panel-video-title {
+    color: #e50914 !important;
+    font-weight: 700 !important;
+}
+
+/* Hide Webview Captions since we use ExoPlayer native SubtitleView */
+.ytp-caption-window-container {
+    display: none !important;
 }

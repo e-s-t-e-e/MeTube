@@ -105,4 +105,30 @@ public final class AppCacheCleaner {
 		deleteContents(context.getCacheDir());
 		deleteContents(context.getExternalCacheDir());
 	}
+
+	public long getCacheSize() {
+		long size = 0;
+		try {
+			size += getDirSize(context.getCacheDir());
+			size += getDirSize(context.getExternalCacheDir());
+		} catch (Exception ignored) {}
+		return size;
+	}
+
+	private long getDirSize(File dir) {
+		long size = 0;
+		if (dir != null && dir.exists() && dir.isDirectory()) {
+			File[] children = dir.listFiles();
+			if (children != null) {
+				for (File file : children) {
+					if (file != null && file.isDirectory()) {
+						size += getDirSize(file);
+					} else if (file != null && file.isFile()) {
+						size += file.length();
+					}
+				}
+			}
+		}
+		return size;
+	}
 }

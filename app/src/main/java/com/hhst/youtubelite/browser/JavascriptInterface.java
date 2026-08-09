@@ -153,6 +153,11 @@ public final class JavascriptInterface {
 	}
 
 	@android.webkit.JavascriptInterface
+	public void showToast(@Nullable String message) {
+		if (message != null) handler.post(() -> android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show());
+	}
+
+	@android.webkit.JavascriptInterface
 	public void downloadPlaylist(@Nullable String payloadJson) {
 		if (payloadJson == null || payloadJson.isBlank()) return;
 		JsonObject payload;

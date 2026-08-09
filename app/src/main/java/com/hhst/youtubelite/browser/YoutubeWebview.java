@@ -187,35 +187,7 @@ public class YoutubeWebview extends WebView {
 
 	@NonNull
 	static String sanitizeLoadUrl(@NonNull String url, boolean queueEnabled) {
-		if (!queueEnabled || !Constant.PAGE_WATCH.equals(UrlUtils.getPageClass(url))) {
-			return url;
-		}
-		try {
-			URI uri = URI.create(url);
-			String rawQuery = uri.getRawQuery();
-			if (rawQuery == null || rawQuery.isEmpty()) {
-				return url;
-			}
-			boolean removed = false;
-			StringBuilder filteredQuery = new StringBuilder();
-			for (String part : rawQuery.split("&")) {
-				if (part.isEmpty()) continue;
-				int separatorIndex = part.indexOf('=');
-				String key = separatorIndex >= 0 ? part.substring(0, separatorIndex) : part;
-				if ("list".equalsIgnoreCase(key)) {
-					removed = true;
-					continue;
-				}
-				if (filteredQuery.length() > 0) filteredQuery.append('&');
-				filteredQuery.append(part);
-			}
-			if (!removed) {
-				return url;
-			}
-			return new URI(uri.getScheme(), uri.getRawAuthority(), uri.getRawPath(), filteredQuery.length() > 0 ? filteredQuery.toString() : null, uri.getRawFragment()).toString();
-		} catch (Exception ignored) {
-			return url;
-		}
+		return url;
 	}
 
 	public void setOkHttpClient(@NonNull OkHttpClient okHttpClient, @NonNull WebViewCachePolicy webViewCachePolicy) {
@@ -603,6 +575,9 @@ public class YoutubeWebview extends WebView {
 							""", encodedCss);
 			addScript(js);
 		}
+	}
+	public void injectScriptString(@NonNull String js) {
+		addScript(js);
 	}
 
 	public void setScriptActive(boolean active) {

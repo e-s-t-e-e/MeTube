@@ -170,8 +170,7 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 
 		View playerRoot = findViewById(R.id.playerView);
 		playerRoot.post(() -> {
-			findViewById(R.id.btn_queue).setOnClickListener(v -> showQueueBottomSheet());
-			findViewById(R.id.btn_mini_queue).setOnClickListener(v -> showQueueBottomSheet());
+
 		});
 		setupIncognitoButton(playerRoot);
 		setupMiniPlayerDismiss(playerRoot);

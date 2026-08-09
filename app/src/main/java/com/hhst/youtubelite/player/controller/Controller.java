@@ -23,7 +23,10 @@ import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListPopupWindow;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
+import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.checkbox.MaterialCheckBox;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -435,7 +438,7 @@ public class Controller {
 		setupPlaybackButtons();
 		setupQualityAndSpeedButtons();
 		setupSubtitleAndSegmentButtons();
-		setupOverlayAndMoreButtons();
+		setupAudioTrackButton();
 	}
 
 	private void setupPlaybackButtons() {
@@ -659,7 +662,6 @@ public class Controller {
 	}
 
 	private void setupSubtitleAndSegmentButtons() {
-		// Build compact pickers for subtitle, segment, and audio choices.
 		ImageButton subBtn = playerView.findViewById(R.id.btn_subtitles);
 		updateSubtitleButtonState();
 		if (subBtn != null) {
@@ -670,57 +672,73 @@ public class Controller {
 					hideControlsAutomatically();
 					return;
 				}
-				String[] options = available.toArray(new String[0]);
+				MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity);
+				View dialogView = activity.getLayoutInflater().inflate(R.layout.bottom_sheet_subtitles, new FrameLayout(activity), false);
+				builder.setView(dialogView);
+				
+				SwitchMaterial switchSubtitles = dialogView.findViewById(R.id.switch_subtitles);
+				Spinner spinnerLanguage = dialogView.findViewById(R.id.spinner_language);
+				Spinner spinnerSize = dialogView.findViewById(R.id.spinner_size);
+				Spinner spinnerColor = dialogView.findViewById(R.id.spinner_color);
+				MaterialCheckBox checkTransparent = dialogView.findViewById(R.id.checkbox_transparent_bg);
+				
+				switchSubtitles.setChecked(engine.areSubtitlesEnabled());
+				
+				ArrayAdapter<String> langAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_dropdown_item, available);
+				spinnerLanguage.setAdapter(langAdapter);
 				String sel = engine.getSelectedSubtitle();
-				int checked = (engine.areSubtitlesEnabled() && sel != null) ? available.indexOf(sel) : -1;
-				showSelectionPopup(subBtn, options, checked, (index, label) -> {
-					if (index == checked) {
-						engine.setSubtitlesEnabled(false);
-						showHint(activity.getString(R.string.subtitles_off), com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
-					} else {
-						engine.setSubtitlesEnabled(true);
-						engine.setSubtitleLanguage(label);
-						showHint(activity.getString(R.string.subtitles_on) + ": " + label, com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
+				if (sel != null) {
+					int idx = available.indexOf(sel);
+					if (idx >= 0) spinnerLanguage.setSelection(idx);
+				}
+				
+				String[] sizes = {"Small", "Normal", "Large"};
+				float[] sizeValues = {0.8f, 1.0f, 1.25f};
+				ArrayAdapter<String> sizeAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_dropdown_item, sizes);
+				spinnerSize.setAdapter(sizeAdapter);
+				float currentSize = prefs.getSubtitleTextSize();
+				if (currentSize <= 0.8f) spinnerSize.setSelection(0);
+				else if (currentSize >= 1.25f) spinnerSize.setSelection(2);
+				else spinnerSize.setSelection(1);
+				
+				String[] colors = {"White", "Yellow", "Cyan", "Red", "Green", "Blue", "Magenta", "Black", "Dark Gray", "Light Gray"};
+				int[] colorValues = {
+					android.graphics.Color.WHITE, android.graphics.Color.YELLOW, android.graphics.Color.CYAN,
+					android.graphics.Color.RED, android.graphics.Color.GREEN, android.graphics.Color.BLUE,
+					android.graphics.Color.MAGENTA, android.graphics.Color.BLACK, android.graphics.Color.DKGRAY,
+					android.graphics.Color.LTGRAY
+				};
+				ArrayAdapter<String> colorAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_dropdown_item, colors);
+				spinnerColor.setAdapter(colorAdapter);
+				int currentColor = prefs.getSubtitleTextColor();
+				int selectedColorIdx = 0;
+				for (int i = 0; i < colorValues.length; i++) {
+					if (currentColor == colorValues[i]) {
+						selectedColorIdx = i;
+						break;
 					}
+				}
+				spinnerColor.setSelection(selectedColorIdx);
+				
+				checkTransparent.setChecked(prefs.isSubtitleBackgroundTransparent());
+				
+				builder.setOnDismissListener(d -> {
+					boolean enable = switchSubtitles.isChecked();
+					engine.setSubtitlesEnabled(enable);
+					if (enable && spinnerLanguage.getSelectedItemPosition() >= 0) {
+						engine.setSubtitleLanguage(available.get(spinnerLanguage.getSelectedItemPosition()));
+					}
+					prefs.setSubtitleTextSize(sizeValues[spinnerSize.getSelectedItemPosition()]);
+					prefs.setSubtitleTextColor(colorValues[spinnerColor.getSelectedItemPosition()]);
+					prefs.setSubtitleBackgroundTransparent(checkTransparent.isChecked());
 					updateSubtitleButtonState();
+					if (playerView != null) playerView.updateSubtitleStyle();
+					hideControlsAutomatically();
 				});
+				
+				builder.show();
 			});
 		}
-		setClick(R.id.btn_segments, anchor -> {
-			List<StreamSegment> segments = engine.getSegments();
-			String[] titles = new String[segments.size()];
-			int idx = -1;
-			long posSec = engine.position() / 1000;
-			for (int i = 0; i < segments.size(); i++) {
-				StreamSegment seg = segments.get(i);
-				titles[i] = DateUtils.formatElapsedTime(Math.max(seg.getStartTimeSeconds(), 0)) + " - " + seg.getTitle();
-				if (posSec >= seg.getStartTimeSeconds()) idx = i;
-			}
-			showSelectionPopup(anchor, titles, idx, new SelectionCallback() {
-				@Override
-				public void onSelected(int index, String label) {
-					StreamSegment segment = segments.get(index);
-					engine.seekTo(segment.getStartTimeSeconds() * 1000L);
-					showHint(activity.getString(R.string.jumped_to_segment, segment.getTitle()), com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
-				}
-
-				@Override
-				public void onLongClick(int index, String label) {
-					StreamSegment segment = segments.get(index);
-					MaterialAlertDialogBuilder b = new MaterialAlertDialogBuilder(activity);
-					View v = activity.getLayoutInflater().inflate(R.layout.dialog_segment, null, false);
-					((TextView) v.findViewById(R.id.segment_title)).setText(segment.getTitle());
-					((TextView) v.findViewById(R.id.segment_time)).setText(DateUtils.formatElapsedTime(Math.max(segment.getStartTimeSeconds(), 0)));
-					ImageUtils.loadThumb(v.findViewById(R.id.segment_thumbnail),
-									segment.getPreviewUrl() != null ? segment.getPreviewUrl() : engine.getThumbnailUrl());
-					b.setView(v).setPositiveButton(R.string.jump, (d, w) -> {
-						engine.seekTo(segment.getStartTimeSeconds() * 1000L);
-						showHint(activity.getString(R.string.jumped_to_segment, segment.getTitle()), com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
-						hideControlsAutomatically();
-					}).setNegativeButton(R.string.close, null).show();
-				}
-			});
-		});
 	}
 
 	private void updateSubtitleButtonState() {
@@ -732,62 +750,8 @@ public class Controller {
 		subBtn.setAlpha(hasSubtitles ? 1.0f : 0.7f);
 	}
 
-	private void setupOverlayAndMoreButtons() {
-		setClick(R.id.btn_more, v -> {
-			setControlsVisible(true);
-			if (activity.isInPictureInPictureMode()) return;
-			BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(activity);
-			View bottomSheetView = activity.getLayoutInflater().inflate(
-							R.layout.bottom_sheet_more_options,
-							new FrameLayout(activity),
-							false);
-			bottomSheetDialog.setContentView(bottomSheetView);
-
-			FrameLayout bottomSheet = bottomSheetDialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
-			if (bottomSheet != null) {
-				BottomSheetBehavior<FrameLayout> behavior = BottomSheetBehavior.from(bottomSheet);
-				bottomSheetView.measure(View.MeasureSpec.makeMeasureSpec(ViewUtils.getScreenWidth(activity), View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-				behavior.setPeekHeight(bottomSheetView.getMeasuredHeight());
-			}
-
-			if (activity instanceof LifecycleOwner lifecycleOwner) {
-				LifecycleEventObserver observer = (source, event) -> {
-					if (event == Lifecycle.Event.ON_PAUSE && activity.isInPictureInPictureMode())
-						bottomSheetDialog.dismiss();
-				};
-				lifecycleOwner.getLifecycle().addObserver(observer);
-				bottomSheetDialog.setOnDismissListener(dialog -> {
-					lifecycleOwner.getLifecycle().removeObserver(observer);
-					hideControlsAutomatically();
-				});
-			} else {
-				bottomSheetDialog.setOnDismissListener(dialog -> hideControlsAutomatically());
-			}
-
-			View pipOption = bottomSheetView.findViewById(R.id.option_pip);
-			if (pipOption != null) {
-				pipOption.setVisibility(extensionManager.isEnabled(Constant.ENABLE_PIP) ? View.VISIBLE : View.GONE);
-			}
-			setupBottomSheetOption(bottomSheetView, R.id.option_audio_track, b -> {
-				showAudioTrackOptions();
-				bottomSheetDialog.dismiss();
-			});
-			setupBottomSheetOption(bottomSheetView, R.id.option_pip, b -> {
-				playerView.enterPiP();
-				bottomSheetDialog.dismiss();
-			});
-			setupBottomSheetOption(bottomSheetView, R.id.option_refresh_video, b -> {
-				if (onRetryPlayback != null) {
-					onRetryPlayback.run();
-				}
-				bottomSheetDialog.dismiss();
-			});
-			setupBottomSheetOption(bottomSheetView, R.id.option_stream_details, b -> {
-				showVideoDetails();
-				bottomSheetDialog.dismiss();
-			});
-			bottomSheetDialog.show();
-		});
+	private void setupAudioTrackButton() {
+		setClick(R.id.btn_audio_track, v -> showAudioTrackOptions());
 	}
 
 	private void showAudioTrackOptions() {
@@ -1559,7 +1523,7 @@ public class Controller {
 		if (scrim != null) {
 			ViewUtils.animateViewAlpha(scrim, showScrim ? 1.0f : 0.0f, View.GONE);
 		}
-		updateVisibility(R.id.btn_mini_queue, showControls);
+
 		updateVisibility(R.id.btn_mini_close, showControls);
 		updateVisibility(R.id.btn_mini_restore, showControls);
 		updateVisibility(R.id.mini_bottom_controls, showControls);

@@ -34,6 +34,7 @@ import androidx.media3.ui.AspectRatioFrameLayout;
 import androidx.media3.ui.DefaultTimeBar;
 import androidx.media3.ui.PlayerView;
 import androidx.media3.ui.SubtitleView;
+import androidx.media3.ui.CaptionStyleCompat;
 
 import com.hhst.youtubelite.R;
 import com.hhst.youtubelite.player.common.Constant;
@@ -68,7 +69,7 @@ public class LitePlayerView extends PlayerView {
 	private static final int MINI_CENTER_CONTROL_SIZE_DP = 34;
 	private static final long MINI_TRANSITION_MS = 260L;
 	private static final int[] MINI_PLAYER_TAP_TARGET_IDS = {
-					R.id.btn_mini_queue,
+
 					R.id.btn_mini_close,
 					R.id.btn_mini_prev,
 					R.id.btn_mini_play,
@@ -243,6 +244,10 @@ public class LitePlayerView extends PlayerView {
 		});
 		setClipToOutline(false);
 		setResizeMode(prefs.getResizeMode());
+		if (getSubtitleView() != null) {
+			getSubtitleView().setAlpha(0f);
+		}
+		updateSubtitleStyle();
 		ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) getLayoutParams();
 		params.topMargin = ViewUtils.dpToPx(activity, Constant.TOP_MARGIN_DP);
 		params.width = ConstraintLayout.LayoutParams.MATCH_PARENT;
@@ -982,6 +987,28 @@ public class LitePlayerView extends PlayerView {
 							.setPositionAnchor(Cue.ANCHOR_TYPE_MIDDLE)
 							.build());
 		subtitleView.setCues(cues);
+		updateSubtitleStyle();
+	}
+
+	public void updateSubtitleStyle() {
+		if (subtitleView == null) {
+			subtitleView = findViewById(R.id.custom_subtitle_view);
+		}
+		if (subtitleView == null) return;
+		float size = prefs.getSubtitleTextSize();
+		int color = prefs.getSubtitleTextColor();
+		boolean transparent = prefs.isSubtitleBackgroundTransparent();
+
+		int bgColor = transparent ? android.graphics.Color.TRANSPARENT : android.graphics.Color.BLACK;
+		int windowColor = transparent ? android.graphics.Color.TRANSPARENT : android.graphics.Color.TRANSPARENT;
+		int edgeType = transparent ? CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW : CaptionStyleCompat.EDGE_TYPE_NONE;
+		int edgeColor = android.graphics.Color.BLACK;
+
+		CaptionStyleCompat style = new CaptionStyleCompat(color, bgColor, windowColor, edgeType, edgeColor, null);
+		subtitleView.setStyle(style);
+		subtitleView.setApplyEmbeddedStyles(false);
+		subtitleView.setApplyEmbeddedFontSizes(false);
+		subtitleView.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * size);
 	}
 
 	@Override

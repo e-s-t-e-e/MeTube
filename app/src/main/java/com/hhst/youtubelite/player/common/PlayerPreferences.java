@@ -136,6 +136,30 @@ public final class PlayerPreferences {
 		mmkv.encode(KEY_SUBTITLE_LANGUAGE, language);
 	}
 
+	public float getSubtitleTextSize() {
+		return mmkv.decodeFloat("subtitle_text_size", 1.0f); // Default scale 1.0
+	}
+
+	public void setSubtitleTextSize(float size) {
+		mmkv.encode("subtitle_text_size", size);
+	}
+
+	public int getSubtitleTextColor() {
+		return mmkv.decodeInt("subtitle_text_color", android.graphics.Color.WHITE);
+	}
+
+	public void setSubtitleTextColor(int color) {
+		mmkv.encode("subtitle_text_color", color);
+	}
+
+	public boolean isSubtitleBackgroundTransparent() {
+		return mmkv.decodeBool("subtitle_bg_transparent", false);
+	}
+
+	public void setSubtitleBackgroundTransparent(boolean transparent) {
+		mmkv.encode("subtitle_bg_transparent", transparent);
+	}
+
 	public int getResizeMode() {
 		boolean enabled = extensionManager.isEnabled(Constant.REMEMBER_RESIZE_MODE);
 		if (!enabled) return 0;
