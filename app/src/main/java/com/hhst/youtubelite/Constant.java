@@ -25,6 +25,7 @@ public final class Constant {
 	public static final String ENABLE_IN_APP_MINI_PLAYER = "enable_in_app_mini_player";
 	public static final String ENABLE_INCOGNITO_BUTTON = "enable_incognito_button";
 	public static final String ENABLE_NOTIFICATIONS_BUTTON = "enable_notifications_button";
+	public static final String ENABLE_NOTIFICATIONS_BADGE = "enable_notifications_badge";
 	public static final String ENABLE_VIDEO_HOLD_POPUP = "enable_video_hold_popup";
 	public static final String REMEMBER_RESIZE_MODE = "remember_resize_mode";
 	public static final String PLAYER_SIDE_BUTTONS = "player_side_buttons";

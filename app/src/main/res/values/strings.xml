@@ -220,6 +220,7 @@
     <string name="incognito_off">Incognito off \u2014 signed back in</string>
     <string name="enable_incognito_button">Incognito button</string>
     <string name="enable_notifications_button">Notifications button</string>
+    <string name="enable_notifications_badge">Notification badge numbers</string>
     <string name="enable_video_hold_popup">Video hold popup</string>
     <string name="bt_volume_warning_title">Volume Warning</string>
     <string name="bt_volume_warning_message">You\'re connected to Bluetooth headphones. Listening at high volumes can damage your hearing. Continue above 50%?</string>

@@ -632,3 +632,17 @@ ytm-playlist-panel-video-renderer[selected="true"] .playlist-panel-video-title {
 .ytp-caption-window-container {
     display: none !important;
 }
+
+/* Hide top bar on watch page to make room for video player */
+html[data-watch="true"] ytm-header-bar,
+html[data-watch="true"] .mobile-topbar-header {
+    display: none !important;
+}
+
+html[data-watch="true"] ytm-app,
+html[data-watch="true"] #app,
+html[data-watch="true"] ytm-watch {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+

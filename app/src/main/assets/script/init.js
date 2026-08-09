@@ -1,9 +1,63 @@
 (() => {
     'use strict';
 
+    // Fixed left-to-right order for bottom navigation bar items.
+    // Home, Shorts, Incognito, Subscriptions, Notifications, Profile, then any extras.
+    function pivotKeyOf(child) {
+        const id = child.getAttribute('id') || '';
+        if (id === 'metube-incognito-pivot-item') return 2;
+        if (id === 'metube-notifications-pivot-item') return 4;
+
+        const tab = child.querySelector('.pivot-bar-item-tab');
+        const tabClass = tab ? tab.className || '' : '';
+        if (tabClass.includes('pivot-w2w')) return 0;
+        if (tabClass.includes('pivot-shorts')) return 1;
+        if (tabClass.includes('pivot-subs')) return 3;
+        if (tabClass.includes('pivot-you')) return 5;
+
+        const anchor = child.querySelector('a[href]');
+        if (anchor) {
+            const href = (anchor.getAttribute('href') || '').split('?')[0].replace(/\/+$/, '');
+            if (href === '' || href === 'https://m.youtube.com') return 0;
+            if (href.startsWith('/shorts')) return 1;
+            if (href.startsWith('/feed/subscriptions')) return 3;
+            if (href.startsWith('/feed/library') || href.startsWith('/you') || href.startsWith('/user') || href.startsWith('/channel')) return 5;
+        }
+
+        const title = child.querySelector('.pivot-bar-item-title');
+        const text = title ? (title.textContent || '').trim().toLowerCase() : '';
+        if (text === 'home') return 0;
+        if (text === 'shorts') return 1;
+        if (text === 'subscriptions') return 3;
+        if (text === 'you' || text === 'profile' || text === 'library' || text === 'account') return 5;
+        return 10;
+    }
+
+    function enforcePivotOrder() {
+        const pivotBar = document.querySelector('ytm-pivot-bar-renderer');
+        if (!pivotBar) return;
+        const children = Array.from(pivotBar.children);
+        if (children.length < 2) return;
+        const sorted = children
+            .map((child, index) => ({ child, key: pivotKeyOf(child), index }))
+            .sort((a, b) => a.key - b.key || a.index - b.index);
+        let moved = false;
+        for (let i = 0; i < sorted.length; i++) {
+            if (pivotBar.children[i] !== sorted[i].child) {
+                moved = true;
+                break;
+            }
+        }
+        if (moved) {
+            sorted.forEach(({ child }) => pivotBar.appendChild(child));
+        }
+    }
 
     try {
-        if (window.injected) return;
+        if (window.injected) {
+            try { enforcePivotOrder(); } catch (e) {}
+            return;
+        }
 
         // Runtime options, element IDs, and icon paths.
         const Config = Object.freeze({
@@ -455,7 +509,8 @@
                     Settings.run(ctx),
                     IncognitoPivot.run(ctx),
                     NotificationsPivot.run(ctx),
-                    NotificationsFeed.run(ctx)
+                    NotificationsFeed.run(ctx),
+                    PivotBarOrder.run(ctx)
                 ];
                 return !results.some(result => result === false);
             }
@@ -1868,12 +1923,7 @@
                 }
 
                 if (item.parentNode !== pivotBar) {
-                    const children = Array.from(pivotBar.children).filter(c => c !== item);
-                    if (children.length > 0) {
-                        pivotBar.insertBefore(item, children[children.length - 1]);
-                    } else {
-                        pivotBar.appendChild(item);
-                    }
+                    pivotBar.appendChild(item);
                 }
                 return true;
             }
@@ -1881,6 +1931,11 @@
 
         // Notifications item injection into bottom navigation bar.
         const NotificationsPivot = {
+            unreadCount: null,
+            unreadFetching: false,
+            unreadRetries: 0,
+            readKeys: null,
+            readStorageKey: 'metube.notifications.read.v2',
             run(ctx) {
                 const pivotBar = document.querySelector('ytm-pivot-bar-renderer');
                 if (!pivotBar) return true;
@@ -1914,6 +1969,7 @@
 
                     const iconDiv = document.createElement('div');
                     iconDiv.className = 'pivot-bar-icon';
+                    iconDiv.style.position = 'relative';
 
                     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                     svg.setAttribute('viewBox', '0 0 24 24');
@@ -1947,27 +2003,229 @@
                 }
 
                 if (item.parentNode !== pivotBar) {
-                    const children = Array.from(pivotBar.children).filter(c => c !== item);
-                    if (children.length > 0) {
-                        pivotBar.insertBefore(item, children[children.length - 1]);
-                    } else {
-                        pivotBar.appendChild(item);
+                    pivotBar.appendChild(item);
+                }
+
+                NotificationsPivot.fetchUnreadOnce();
+                if (NotificationsPivot.unreadCount !== null) {
+                    NotificationsPivot.setBadge(NotificationsPivot.unreadCount);
+                }
+                return true;
+            },
+
+            setBadge(count) {
+                const item = document.getElementById('metube-notifications-pivot-item');
+                if (!item) return;
+                const iconDiv = item.querySelector('.pivot-bar-icon');
+                if (!iconDiv) return;
+                let badge = document.getElementById('metube-notifications-badge');
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.id = 'metube-notifications-badge';
+                    badge.style.cssText = 'position: absolute; top: -6px; right: -10px; min-width: 16px; height: 16px; border-radius: 8px; background: #f00; color: #fff; font-size: 10px; font-weight: 600; line-height: 16px; text-align: center; padding: 0 4px; box-sizing: border-box; pointer-events: none;';
+                    iconDiv.appendChild(badge);
+                }
+                badge.textContent = count > 99 ? '99+' : String(count);
+                badge.style.display = count > 0 && NotificationsPivot.badgeAllowed() ? 'block' : 'none';
+            },
+
+            badgeAllowed() {
+                try {
+                    const prefs = JSON.parse(lite.getPreferences() || '{}');
+                    return prefs.enable_notifications_badge !== false;
+                } catch (e) {
+                    return true;
+                }
+            },
+
+            getReadKeys() {
+                if (NotificationsPivot.readKeys) return NotificationsPivot.readKeys;
+                NotificationsPivot.readKeys = new Set();
+                try {
+                    const raw = localStorage.getItem(NotificationsPivot.readStorageKey);
+                    if (raw) {
+                        JSON.parse(raw).forEach(k => NotificationsPivot.readKeys.add(k));
+                    }
+                } catch (e) {}
+                return NotificationsPivot.readKeys;
+            },
+
+            saveReadKeys() {
+                try {
+                    localStorage.setItem(NotificationsPivot.readStorageKey, JSON.stringify(Array.from(NotificationsPivot.getReadKeys())));
+                } catch (e) {}
+            },
+
+            urlOf(nr) {
+                try {
+                    if (nr.navigationEndpoint && nr.navigationEndpoint.commandMetadata && nr.navigationEndpoint.commandMetadata.webCommandMetadata) {
+                        return nr.navigationEndpoint.commandMetadata.webCommandMetadata.url || '';
+                    }
+                } catch (e) {}
+                return '';
+            },
+
+            urlKey(url) {
+                if (!url) return '';
+                let m = url.match(/\/shorts\/([A-Za-z0-9_-]{11})/);
+                if (m) return 'v:' + m[1];
+                m = url.match(/[?&]v=([A-Za-z0-9_-]{11})/);
+                if (m) return 'v:' + m[1];
+                return url.split('?')[0];
+            },
+
+            isEffectivelyUnread(nr) {
+                if (!nr || nr.read !== false) return false;
+                const url = NotificationsPivot.urlOf(nr);
+                return !(url && NotificationsPivot.getReadKeys().has(NotificationsPivot.urlKey(url)));
+            },
+
+            markRead(nr) {
+                const url = NotificationsPivot.urlOf(nr);
+                if (!url) return;
+                NotificationsPivot.getReadKeys().add(NotificationsPivot.urlKey(url));
+                NotificationsPivot.saveReadKeys();
+            },
+
+            markAllRead(items) {
+                let changed = false;
+                for (const item of items || []) {
+                    if (!item.notificationRenderer) continue;
+                    const url = NotificationsPivot.urlOf(item.notificationRenderer);
+                    if (!url) continue;
+                    const key = NotificationsPivot.urlKey(url);
+                    if (!NotificationsPivot.getReadKeys().has(key)) {
+                        NotificationsPivot.getReadKeys().add(key);
+                        changed = true;
                     }
                 }
+                if (changed) {
+                    NotificationsPivot.saveReadKeys();
+                }
+            },
+
+            fetchUnreadOnce() {
+                if (NotificationsPivot.unreadCount !== null || NotificationsPivot.unreadFetching) return;
+                if (typeof lite === 'undefined' || !lite.fetchNotificationsInbox) {
+                    NotificationsPivot.unreadCount = 0;
+                    return;
+                }
+                NotificationsPivot.unreadFetching = true;
+                let valid = false;
+                try {
+                    const payload = lite.fetchNotificationsInbox();
+                    if (payload) {
+                        try {
+                            const data = JSON.parse(payload);
+                            const items = NotificationsPivot.collectItems(data);
+                            if (items) {
+                                NotificationsPivot.unreadCount = NotificationsPivot.countUnread(data);
+                                valid = true;
+                            }
+                        } catch (e) {}
+                    }
+                } catch (e) {}
+                NotificationsPivot.unreadFetching = false;
+                if (!valid) {
+                    NotificationsPivot.unreadRetries += 1;
+                    if (NotificationsPivot.unreadRetries <= 4) {
+                        setTimeout(NotificationsPivot.fetchUnreadOnce, 4000);
+                    } else {
+                        NotificationsPivot.unreadCount = 0;
+                    }
+                    return;
+                }
+                NotificationsPivot.unreadRetries = 0;
+                NotificationsPivot.setBadge(NotificationsPivot.unreadCount || 0);
+            },
+
+            collectItems(data) {
+                const found = [];
+                const walk = (obj) => {
+                    if (!obj || typeof obj !== 'object') return;
+                    if (obj.multiPageMenuNotificationSectionRenderer && Array.isArray(obj.multiPageMenuNotificationSectionRenderer.items)) {
+                        found.push(obj.multiPageMenuNotificationSectionRenderer.items);
+                        return;
+                    }
+                    if (Array.isArray(obj)) {
+                        for (const entry of obj) walk(entry);
+                    } else {
+                        for (const key of Object.keys(obj)) walk(obj[key]);
+                    }
+                };
+                walk(data);
+                return found.length > 0 ? found[0] : null;
+            },
+
+            countUnread(data) {
+                let count = 0;
+                const walk = (obj) => {
+                    if (!obj || typeof obj !== 'object') return;
+                    if (obj.multiPageMenuNotificationSectionRenderer && Array.isArray(obj.multiPageMenuNotificationSectionRenderer.items)) {
+                        for (const it of obj.multiPageMenuNotificationSectionRenderer.items) {
+                            if (it.notificationRenderer && NotificationsPivot.isEffectivelyUnread(it.notificationRenderer)) count++;
+                        }
+                        return;
+                    }
+                    if (Array.isArray(obj)) {
+                        for (const entry of obj) walk(entry);
+                    } else {
+                        for (const key of Object.keys(obj)) walk(obj[key]);
+                    }
+                };
+                walk(data);
+                return count;
+            }
+        };
+
+        // Fixed left-to-right order for bottom navigation bar items.
+        // Home, Shorts, Incognito, Subscriptions, Notifications, Profile, then any extras.
+        const PivotBarOrder = {
+            bodyObserver: null,
+
+            needsFix(pivotBar) {
+                if (!pivotBar) return false;
+                const children = Array.from(pivotBar.children);
+                if (children.length < 2) return false;
+                const sorted = children
+                    .map((child, index) => ({ child, key: pivotKeyOf(child), index }))
+                    .sort((a, b) => a.key - b.key || a.index - b.index);
+                for (let i = 0; i < sorted.length; i++) {
+                    if (pivotBar.children[i] !== sorted[i].child) return true;
+                }
+                return false;
+            },
+
+            run(ctx) {
+                if (!PivotBarOrder.bodyObserver && typeof MutationObserver === 'function' && document.body) {
+                    PivotBarOrder.bodyObserver = new MutationObserver(() => {
+                        if (PivotBarOrder.needsFix(document.querySelector('ytm-pivot-bar-renderer')) && App.isActive()) {
+                            Loop.runSoon();
+                        }
+                    });
+                    PivotBarOrder.bodyObserver.observe(document.body, { childList: true, subtree: true });
+                }
+
+                enforcePivotOrder();
                 return true;
             }
         };
 
-        // Empty-state rendering for the notifications tab.
+        // Empty-state and actual feed rendering for the notifications tab.
         const NotificationsFeed = {
             rendered: null,
+            observer: null,
             run(ctx) {
                 if (ctx.pageClass !== 'notifications') {
                     NotificationsFeed.rendered = null;
-                    NotificationsFeed.removeEmptyState();
+                    NotificationsFeed.removeFeed();
+                    NotificationsFeed.disarmGuard();
                     return true;
                 }
-                if (NotificationsFeed.rendered === location.href) return true;
+                if (NotificationsFeed.rendered === location.href) {
+                    if (document.getElementById('metube-notifications-feed')) return true;
+                    NotificationsFeed.rendered = null;
+                }
                 NotificationsFeed.rendered = location.href;
 
                 if (document.querySelector('ytm-section-list-renderer, ytm-rich-grid-renderer')) {
@@ -1975,32 +2233,162 @@
                 }
 
                 const container = document.querySelector('ytm-app');
-                if (!container) return false;
+                if (!container) {
+                    return false;
+                }
 
                 let payload = null;
                 if (typeof lite !== 'undefined' && lite.fetchNotificationsInbox) {
                     try {
                         payload = lite.fetchNotificationsInbox();
-                    } catch (e) {}
+                    } catch (e) {
+                        console.log("Exception fetching notifications payload: " + e);
+                    }
                 }
                 if (payload) {
-                    NotificationsFeed.renderEmptyState(container, payload);
+                    NotificationsFeed.renderFeed(container, payload);
+                    NotificationsFeed.armGuard(container);
                 }
                 return true;
             },
 
-            renderEmptyState(container, payload) {
+            armGuard(container) {
+                if (NotificationsFeed.observer) return;
+                NotificationsFeed.observer = new MutationObserver(() => {
+                    if (Page.type(location.href) !== 'notifications') return;
+                    if (!document.getElementById('metube-notifications-feed')) {
+                        NotificationsFeed.rendered = null;
+                        Loop.runSoon();
+                    }
+                });
+                NotificationsFeed.observer.observe(container, { childList: true, subtree: true });
+            },
+
+            disarmGuard() {
+                if (!NotificationsFeed.observer) return;
+                NotificationsFeed.observer.disconnect();
+                NotificationsFeed.observer = null;
+            },
+
+            renderFeed(container, payload) {
+                NotificationsFeed.removeFeed();
+                const box = document.createElement('div');
+                box.id = 'metube-notifications-feed';
+                box.style.padding = '20px';
+                box.style.color = '#fff';
+
                 let data = null;
                 try {
                     data = JSON.parse(payload);
                 } catch (e) {
+                    box.textContent = "Error parsing JSON: " + e.message + "\n\nPayload: " + (payload ? payload.substring(0, 200) : 'null');
+                    container.appendChild(box);
                     return;
                 }
-                if (!data || (!data.title && !data.body)) return;
+                
+                if (!data) {
+                    box.textContent = "Payload is null or empty.";
+                    container.appendChild(box);
+                    return;
+                }
+                
+                if (data.error_debug) {
+                    box.textContent = "Backend Error: " + data.error_debug;
+                    container.appendChild(box);
+                    return;
+                }
 
-                NotificationsFeed.removeEmptyState();
+                // Deep search for notifications or empty state
+                let promo = null;
+                let notificationItems = null;
+                
+                const searchTree = (obj) => {
+                    if (!obj || typeof obj !== 'object') return;
+                    
+                    if (obj.backgroundPromoRenderer) {
+                        promo = obj.backgroundPromoRenderer;
+                    }
+                    if (obj.multiPageMenuNotificationSectionRenderer && obj.multiPageMenuNotificationSectionRenderer.items) {
+                        notificationItems = obj.multiPageMenuNotificationSectionRenderer.items;
+                    }
+                    
+                    if (promo || notificationItems) return;
+                    
+                    if (Array.isArray(obj)) {
+                        for (const item of obj) searchTree(item);
+                    } else {
+                        for (const key of Object.keys(obj)) searchTree(obj[key]);
+                    }
+                };
+                
+                searchTree(data);
+                
+                if (!promo && (!notificationItems || notificationItems.length === 0)) {
+                    // Debug output if nothing was found
+                    let rootKeys = Object.keys(data).join(', ');
+                    let endpoints = data.onResponseReceivedEndpoints ? 'has endpoints' : 'no endpoints';
+                    let contents = data.contents ? 'has contents' : 'no contents';
+                    box.innerHTML = `<h3>Debug: No notifications found in JSON</h3>
+                                     <p>Root keys: ${rootKeys}</p>
+                                     <p>Endpoints: ${endpoints}</p>
+                                     <p>Contents: ${contents}</p>
+                                     <p>Payload preview: ${payload.substring(0, 300)}</p>`;
+                    container.appendChild(box);
+                    return;
+                }
+                
+                // Clear debug styles
+                box.style.padding = '';
+                box.style.color = '';
+                
+                if (promo) {
+                    box.appendChild(NotificationsFeed.createEmptyState(promo));
+                } else if (notificationItems) {
+                    const list = NotificationsFeed.createNotificationsList(notificationItems);
+                    const unread = notificationItems.filter(it => it.notificationRenderer && NotificationsPivot.isEffectivelyUnread(it.notificationRenderer)).length;
+                    if (unread > 0) {
+                        const markAllBtn = document.createElement('button');
+                        markAllBtn.id = 'metube-notifications-mark-all';
+                        markAllBtn.textContent = 'Mark all as read';
+                        markAllBtn.style.cssText = `
+                            align-self: flex-start;
+                            margin: 8px 16px;
+                            padding: 10px 16px;
+                            border: none;
+                            border-radius: 18px;
+                            background: rgba(255, 255, 255, 0.1);
+                            color: var(--yt-spec-text-primary, #ffffff);
+                            font-size: 1.4rem;
+                            font-weight: 500;
+                            cursor: pointer;
+                        `;
+                        DOM.bind(markAllBtn, 'click', () => {
+                            NotificationsPivot.markAllRead(notificationItems);
+                            document.querySelectorAll('#metube-notifications-feed .metube-notifications-list > div').forEach(d => {
+                                d.style.backgroundColor = '';
+                            });
+                            markAllBtn.remove();
+                            NotificationsPivot.unreadCount = 0;
+                            NotificationsPivot.setBadge(0);
+                        });
+                        box.appendChild(markAllBtn);
+                    }
+                    box.appendChild(list);
+                    NotificationsPivot.unreadCount = unread;
+                    NotificationsPivot.setBadge(unread);
+                }
+
+                const spinner = container.querySelector('.spinner');
+                const refNode = spinner instanceof Element ? spinner : container.firstElementChild;
+                if (refNode instanceof Element) {
+                    container.insertBefore(box, refNode);
+                } else {
+                    container.appendChild(box);
+                }
+            },
+            
+            createEmptyState(data) {
                 const box = document.createElement('div');
-                box.id = 'metube-notifications-empty-state';
                 box.style.cssText = `
                     display: flex;
                     flex-direction: column;
@@ -2020,10 +2408,15 @@
                 path.setAttribute('d', 'M12,22c1.1,0 2,-0.9 2,-2h-4c0,1.1 0.89,2 2,2zM18,16v-5c0,-3.07 -1.63,-5.64 -4.5,-6.32L13.5,4c0,-0.83 -0.67,-1.5 -1.5,-1.5s-1.5,0.67 -1.5,1.5l0,0.68C7.63,5.36 6,7.92 6,11v5l-2,2v1h16v-1l-2,-2z');
                 svg.appendChild(path);
                 iconDiv.appendChild(svg);
+                box.appendChild(iconDiv);
 
-                if (data.title) {
+                let titleText = data.title;
+                if (titleText && typeof titleText === 'object') {
+                    titleText = titleText.runs ? titleText.runs.map(r => r.text).join('') : titleText.simpleText;
+                }
+                if (titleText) {
                     const title = document.createElement('h2');
-                    title.textContent = data.title;
+                    title.textContent = titleText;
                     title.style.cssText = `
                         font-family: "YouTube Sans", "Roboto", sans-serif;
                         font-size: 1.8rem;
@@ -2033,9 +2426,14 @@
                     `;
                     box.appendChild(title);
                 }
-                if (data.body) {
+                
+                let bodyText = data.bodyText || data.body;
+                if (bodyText && typeof bodyText === 'object') {
+                    bodyText = bodyText.runs ? bodyText.runs.map(r => r.text).join('') : bodyText.simpleText;
+                }
+                if (bodyText) {
                     const body = document.createElement('p');
-                    body.textContent = data.body;
+                    body.textContent = bodyText;
                     body.style.cssText = `
                         font-size: 1.4rem;
                         line-height: 1.5;
@@ -2045,19 +2443,140 @@
                     `;
                     box.appendChild(body);
                 }
-
-                const spinner = container.querySelector('.spinner');
-                const refNode = spinner instanceof Element ? spinner : container.firstElementChild;
-                if (refNode instanceof Element) {
-                    container.insertBefore(box, refNode);
-                } else {
-                    container.appendChild(box);
+                
+                return box;
+            },
+            
+            createNotificationsList(items) {
+                const list = document.createElement('div');
+                list.className = 'metube-notifications-list';
+                list.style.cssText = `
+                    display: flex;
+                    flex-direction: column;
+                    width: 100%;
+                `;
+                
+                for (const item of items) {
+                    if (!item.notificationRenderer) continue;
+                    const nr = item.notificationRenderer;
+                    
+                    const el = document.createElement('div');
+                    el.style.cssText = `
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        padding: 16px;
+                        border-bottom: 1px solid var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.1));
+                        cursor: pointer;
+                    `;
+                    
+                    if (NotificationsPivot.isEffectivelyUnread(nr)) {
+                        el.style.backgroundColor = 'var(--yt-spec-badge-chip-background, rgba(255, 255, 255, 0.1))';
+                    }
+                    
+                    // Thumbnail
+                    const thumbDiv = document.createElement('div');
+                    thumbDiv.style.cssText = `
+                        width: 56px;
+                        height: 56px;
+                        flex-shrink: 0;
+                        border-radius: 50%;
+                        overflow: hidden;
+                        margin-right: 16px;
+                        background: var(--yt-spec-10-percent-layer, rgba(255,255,255,0.1));
+                    `;
+                    if (nr.thumbnail && nr.thumbnail.thumbnails && nr.thumbnail.thumbnails.length > 0) {
+                        const img = document.createElement('img');
+                        img.src = nr.thumbnail.thumbnails[0].url;
+                        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+                        thumbDiv.appendChild(img);
+                    }
+                    el.appendChild(thumbDiv);
+                    
+                    // Text Content
+                    const textDiv = document.createElement('div');
+                    textDiv.style.cssText = `
+                        display: flex;
+                        flex-direction: column;
+                        flex-grow: 1;
+                        justify-content: center;
+                    `;
+                    
+                    const message = document.createElement('div');
+                    message.style.cssText = `
+                        font-size: 1.4rem;
+                        color: var(--yt-spec-text-primary, #ffffff);
+                        margin-bottom: 4px;
+                        line-height: 1.4;
+                        display: -webkit-box;
+                        -webkit-line-clamp: 3;
+                        -webkit-box-orient: vertical;
+                        overflow: hidden;
+                    `;
+                    
+                    if (nr.shortMessage) {
+                        if (nr.shortMessage.runs) {
+                            nr.shortMessage.runs.forEach(r => {
+                                const span = document.createElement('span');
+                                span.textContent = r.text;
+                                if (r.bold) span.style.fontWeight = '500';
+                                message.appendChild(span);
+                            });
+                        } else if (nr.shortMessage.simpleText) {
+                            message.textContent = nr.shortMessage.simpleText;
+                        }
+                    }
+                    textDiv.appendChild(message);
+                    
+                    const time = document.createElement('div');
+                    time.style.cssText = `
+                        font-size: 1.2rem;
+                        color: var(--yt-spec-text-secondary, #aaaaaa);
+                    `;
+                    if (nr.sentTimeText) {
+                        time.textContent = nr.sentTimeText.runs ? nr.sentTimeText.runs.map(r => r.text).join('') : nr.sentTimeText.simpleText;
+                    }
+                    textDiv.appendChild(time);
+                    el.appendChild(textDiv);
+                    
+                    // Click handler
+                    if (nr.navigationEndpoint && nr.navigationEndpoint.commandMetadata && nr.navigationEndpoint.commandMetadata.webCommandMetadata) {
+                        const url = nr.navigationEndpoint.commandMetadata.webCommandMetadata.url;
+                        if (url) {
+                            DOM.bind(el, 'click', () => {
+                                if (NotificationsPivot.isEffectivelyUnread(nr)) {
+                                    nr.read = true;
+                                    el.style.backgroundColor = '';
+                                    NotificationsPivot.markRead(nr);
+                                    NotificationsFeed.markRead();
+                                }
+                                if (typeof lite !== 'undefined' && lite.openTab) {
+                                    lite.openTab('https://m.youtube.com' + url, 'watch');
+                                } else {
+                                    window.location.href = url;
+                                }
+                            });
+                        }
+                    }
+                    
+                    list.appendChild(el);
                 }
+                
+                return list;
             },
 
-            removeEmptyState() {
-                const existing = document.getElementById('metube-notifications-empty-state');
+            markRead() {
+                if (NotificationsPivot.unreadCount !== null && NotificationsPivot.unreadCount > 0) {
+                    NotificationsPivot.unreadCount -= 1;
+                }
+                NotificationsPivot.setBadge(NotificationsPivot.unreadCount || 0);
+            },
+
+            removeFeed() {
+                const existing = document.getElementById('metube-notifications-feed');
                 if (existing) existing.remove();
+                const oldEmpty = document.getElementById('metube-notifications-empty-state');
+                if (oldEmpty) oldEmpty.remove();
             }
         };
 

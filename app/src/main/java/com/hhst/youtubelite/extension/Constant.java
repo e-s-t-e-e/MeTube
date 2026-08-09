@@ -19,6 +19,7 @@ import java.util.Map;
 public final class Constant {
 	public static final String ENABLE_INCOGNITO_BUTTON = com.hhst.youtubelite.Constant.ENABLE_INCOGNITO_BUTTON;
 	public static final String ENABLE_NOTIFICATIONS_BUTTON = com.hhst.youtubelite.Constant.ENABLE_NOTIFICATIONS_BUTTON;
+	public static final String ENABLE_NOTIFICATIONS_BADGE = com.hhst.youtubelite.Constant.ENABLE_NOTIFICATIONS_BADGE;
 	public static final String ENABLE_VIDEO_HOLD_POPUP = com.hhst.youtubelite.Constant.ENABLE_VIDEO_HOLD_POPUP;
 	public static final String ENABLE_DISPLAY_DISLIKES = "enable_display_dislikes";
 	public static final String AUTO_SKIP_SPONSORS = com.hhst.youtubelite.Constant.AUTO_SKIP_SPONSORS;
@@ -66,6 +67,7 @@ public final class Constant {
 					Map.entry(ENABLE_HIDE_SHORTS, false),
 					Map.entry(ENABLE_INCOGNITO_BUTTON, true),
 					Map.entry(ENABLE_NOTIFICATIONS_BUTTON, true),
+				Map.entry(ENABLE_NOTIFICATIONS_BADGE, true),
 					Map.entry(ENABLE_VIDEO_HOLD_POPUP, true),
 					Map.entry(SKIP_SPONSORS, true),
 					Map.entry(AUTO_SKIP_SPONSORS, true),

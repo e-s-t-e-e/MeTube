@@ -566,7 +566,7 @@ public final class YoutubeExtractor {
 			return null;
 		}
 		AuthContext context = auth.create("https://m.youtube.com/feed/notifications");
-		String endpoint = "https://m.youtube.com/youtubei/v1/browse?prettyPrint=false";
+		String endpoint = "https://m.youtube.com/youtubei/v1/browse?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
 		String body = "{\"context\":{\"client\":{\"clientName\":\"WEB\",\"clientVersion\":\"2.20260806.07.00\",\"hl\":\"en\",\"gl\":\"IN\"}},\"browseId\":\"FEnotifications_inbox\"}";
 		Request request = Request.newBuilder()
 						.post(endpoint, body.getBytes(StandardCharsets.UTF_8))
@@ -576,61 +576,74 @@ public final class YoutubeExtractor {
 							() -> impl.execute(request),
 							new ExtractionSession(context));
 			if (response.responseCode() != 200) {
-				return null;
+				return "{\"error_debug\": \"HTTP " + response.responseCode() + " - " + response.responseMessage() + "\"}";
 			}
-			return extractInboxPromo(response.responseBody());
-		} catch (IOException | org.schabi.newpipe.extractor.exceptions.ExtractionException e) {
-			return null;
+			return response.responseBody();
+		} catch (Exception e) {
+			return "{\"error_debug\": \"Exception: " + e.toString() + "\"}";
 		}
 	}
 
 	@Nullable
-	private String extractInboxPromo(@NonNull String json) {
+	public String fetchNotificationsPage(@Nullable String continuation) {
+		Downloader downloader = NewPipe.getDownloader();
+		if (!(downloader instanceof DownloaderImpl impl)) {
+			return null;
+		}
+		AuthContext context = auth.create("https://m.youtube.com/feed/notifications");
+		String endpoint = "https://m.youtube.com/youtubei/v1/browse?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
+		String body;
+		if (continuation != null && continuation.isEmpty() || continuation != null && continuation.equals("__debug_")) {
+			body = "{\"context\":{\"client\":{\"clientName\":\"WEB\",\"clientVersion\":\"2.20260806.07.00\",\"hl\":\"en\",\"gl\":\"IN\"}},\"browseId\":\"FEnotifications\"}";
+		} else if (continuation != null && !continuation.isEmpty()) {
+			body = "{\"context\":{\"client\":{\"clientName\":\"WEB\",\"clientVersion\":\"2.20260806.07.00\",\"hl\":\"en\",\"gl\":\"IN\"}},\"continuation\":\"" + continuation + "\"}";
+		} else {
+			body = "{\"context\":{\"client\":{\"clientName\":\"WEB\",\"clientVersion\":\"2.20260806.07.00\",\"hl\":\"en\",\"gl\":\"IN\"}},\"browseId\":\"FEnotifications\"}";
+		}
+		Request request = Request.newBuilder()
+						.post(endpoint, body.getBytes(StandardCharsets.UTF_8))
+						.build();
 		try {
-			JsonObject root = com.google.gson.JsonParser.parseString(json).getAsJsonObject();
-			JsonArray endpoints = root.getAsJsonArray("onResponseReceivedEndpoints");
-			if (endpoints == null || endpoints.size() == 0) {
-				return null;
+			org.schabi.newpipe.extractor.downloader.Response response = impl.withExtractionSession(
+							() -> impl.execute(request),
+							new ExtractionSession(context));
+			if (response.responseCode() != 200) {
+				return "{\"error_debug\": \"HTTP " + response.responseCode() + " - " + response.responseMessage() + "\"}";
 			}
-			JsonObject popup = endpoints.get(0).getAsJsonObject()
-							.getAsJsonObject("openPopupAction");
-			if (popup == null) {
-				return null;
-			}
-			JsonObject menu = popup.getAsJsonObject("popup")
-							.getAsJsonObject("multiPageMenuRenderer");
-			if (menu == null) {
-				return null;
-			}
-			JsonArray sections = menu.getAsJsonArray("sections");
-			if (sections == null) {
-				return null;
-			}
-			for (JsonElement element : sections) {
-				JsonObject promo = element.getAsJsonObject()
-								.getAsJsonObject("backgroundPromoRenderer");
-				if (promo == null) {
-					continue;
-				}
-				JsonObject result = new JsonObject();
-				JsonElement titleEl = promo.get("title");
-				JsonElement bodyEl = promo.get("bodyText");
-				String title = extractText(titleEl);
-				String bodyText = extractText(bodyEl);
-				if (title == null && bodyText == null) {
-					return null;
-				}
-				if (title != null) {
-					result.addProperty("title", title);
-				}
-				if (bodyText != null) {
-					result.addProperty("body", bodyText);
-				}
-				return gson.toJson(result);
-			}
+			return response.responseBody();
+		} catch (Exception e) {
+			return "{\"error_debug\": \"Exception: " + e.toString() + "\"}";
+		}
+	}
+
+	@Nullable
+	public String fetchNotificationsDebug(@Nullable String body) {
+		return fetchNotificationsDebugUrl(null, body);
+	}
+
+	@Nullable
+	public String fetchNotificationsDebugUrl(@Nullable String endpoint, @Nullable String body) {
+		Downloader downloader = NewPipe.getDownloader();
+		if (!(downloader instanceof DownloaderImpl impl)) {
 			return null;
-		} catch (RuntimeException e) {
-			return null;
+		}
+		AuthContext context = auth.create("https://m.youtube.com/feed/notifications");
+		if (endpoint == null || endpoint.isEmpty()) {
+			endpoint = "https://m.youtube.com/youtubei/v1/browse?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
+		}
+		Request request = Request.newBuilder()
+						.post(endpoint, body.getBytes(StandardCharsets.UTF_8))
+						.build();
+		try {
+			org.schabi.newpipe.extractor.downloader.Response response = impl.withExtractionSession(
+							() -> impl.execute(request),
+							new ExtractionSession(context));
+			if (response.responseCode() != 200) {
+				return "{\"error_debug\": \"HTTP " + response.responseCode() + " - " + response.responseMessage() + "\"}";
+			}
+			return response.responseBody();
+		} catch (Exception e) {
+			return "{\"error_debug\": \"Exception: " + e.toString() + "\"}";
 		}
 	}
 

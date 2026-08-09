@@ -433,6 +433,24 @@ public final class JavascriptInterface {
 		return youtubeExtractor.fetchNotificationsInbox();
 	}
 
+	@Nullable
+	@android.webkit.JavascriptInterface
+	public String fetchNotificationsPage(@Nullable String continuation) {
+		return youtubeExtractor.fetchNotificationsPage(continuation);
+	}
+
+	@Nullable
+	@android.webkit.JavascriptInterface
+	public String fetchNotificationsDebug(@Nullable String body) {
+		return youtubeExtractor.fetchNotificationsDebug(body);
+	}
+
+	@Nullable
+	@android.webkit.JavascriptInterface
+	public String fetchNotificationsDebugUrl(@Nullable String endpoint, @Nullable String body) {
+		return youtubeExtractor.fetchNotificationsDebugUrl(endpoint, body);
+	}
+
 	@android.webkit.JavascriptInterface
 	public void openTab(@Nullable String url, @Nullable String tag) {
 		if (url == null || tag == null) return;

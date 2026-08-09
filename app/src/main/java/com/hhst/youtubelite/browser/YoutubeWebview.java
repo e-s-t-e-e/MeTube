@@ -296,6 +296,7 @@ public class YoutubeWebview extends WebView {
 	@SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
 	public void init() {
 		initialized = true;
+		WebView.setWebContentsDebuggingEnabled(true);
 		setFocusable(true);
 		setFocusableInTouchMode(true);
 		setLayerType(LAYER_TYPE_HARDWARE, null);
