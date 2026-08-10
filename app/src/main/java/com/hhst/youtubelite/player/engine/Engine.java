@@ -471,7 +471,7 @@ public class Engine {
 		}
 
 		this.player.setMediaSource(PlaybackSourceFactory.create(sources, details, plan));
-		if (seekPosition > 0) {
+		if (seekPosition > 0 && !isLiveMode(plan)) {
 			this.player.seekTo(seekPosition);
 		}
 		this.player.prepare();

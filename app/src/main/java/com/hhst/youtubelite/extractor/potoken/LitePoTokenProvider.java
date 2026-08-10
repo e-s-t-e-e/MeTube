@@ -35,12 +35,14 @@ public final class LitePoTokenProvider implements PoTokenProvider {
 	@Override
 	@Nullable
 	public PoTokenResult getAndroidClientPoToken(String videoId) {
-		return coordinator.getAndroidClientPoToken(videoId);
+		PoTokenResult result = coordinator.getAndroidClientPoToken(videoId);
+		return result != null ? result : getWebClientPoToken(videoId);
 	}
 
 	@Override
 	@Nullable
 	public PoTokenResult getIosClientPoToken(String videoId) {
-		return coordinator.getIosClientPoToken(videoId);
+		PoTokenResult result = coordinator.getIosClientPoToken(videoId);
+		return result != null ? result : getWebClientPoToken(videoId);
 	}
 }
