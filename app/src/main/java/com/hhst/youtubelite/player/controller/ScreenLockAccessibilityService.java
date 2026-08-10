@@ -20,6 +20,11 @@ public class ScreenLockAccessibilityService extends AccessibilityService {
 	private static final class Unbound extends ScreenLockAccessibilityService {
 	}
 
+	public static boolean isAvailable() {
+		final ScreenLockAccessibilityService service = instance;
+		return service != null && !(service instanceof Unbound);
+	}
+
 	public static boolean lockScreenIfAvailable() {
 		final ScreenLockAccessibilityService service = instance;
 		return service != null && !(service instanceof Unbound)

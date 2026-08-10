@@ -73,9 +73,7 @@ public class ExtensionActivity extends AppCompatActivity {
 		RecyclerView list = findViewById(R.id.recyclerView);
 		list.setLayoutManager(new LinearLayoutManager(this));
 		list.setAdapter(adapter);
-		if (list.getItemAnimator() instanceof SimpleItemAnimator animator) {
-			animator.setSupportsChangeAnimations(false);
-		}
+		list.setItemAnimator(null);
 
 		getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
 			@Override

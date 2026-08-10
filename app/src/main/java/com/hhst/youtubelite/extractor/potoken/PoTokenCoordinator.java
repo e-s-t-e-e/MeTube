@@ -113,6 +113,12 @@ public final class PoTokenCoordinator {
 		}
 	}
 
+	public void invalidate() {
+		synchronized (lock) {
+			session = null;
+		}
+	}
+
 	@Nullable
 	public PoTokenResult getAndroidClientPoToken(@NonNull String videoId) {
 		return load("android", videoId);

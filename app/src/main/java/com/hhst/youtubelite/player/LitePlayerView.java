@@ -191,7 +191,7 @@ public class LitePlayerView extends PlayerView {
 			return;
 		}
 		if (inAppMiniPlayer || !isFs) {
-			applyWindowBrightness(0.25f);
+			applyWindowBrightness(-1f);
 		} else {
 			if (hasAdjustedBrightness) {
 				applyWindowBrightness(customBrightness);

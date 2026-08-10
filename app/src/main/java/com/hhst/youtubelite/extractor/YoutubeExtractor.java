@@ -173,6 +173,13 @@ public final class YoutubeExtractor {
 		return new ExtractedInfo(info, youtube);
 	}
 
+	public void evictPlaybackDetailsCache(@NonNull String videoUrl) {
+		String videoId = getVideoId(videoUrl);
+		if (videoId != null) {
+			cache.evictPlaybackDetails(videoId);
+		}
+	}
+
 	@NonNull
 	public CompletableFuture<PlaybackDetails> getInfo(@NonNull String videoUrl,
 	                                                  @Nullable ExtractionSession session) {

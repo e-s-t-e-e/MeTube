@@ -72,7 +72,7 @@
         android:id="@+id/mini_dismiss"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:layout_marginBottom="128dp"
+        android:layout_marginBottom="72dp"
         android:alpha="0"
         android:background="@drawable/bg_mini_dismiss"
         android:elevation="24dp"

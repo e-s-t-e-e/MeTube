@@ -567,6 +567,20 @@ public class Controller {
 		showHint(activity.getString(R.string.sleep_timer_set, sleepTimerLabel(durationMs)),
 						com.hhst.youtubelite.player.common.Constant.HINT_HIDE_DELAY_MS);
 		setControlsVisible(true);
+
+		if (!ScreenLockAccessibilityService.isAvailable()) {
+			new MaterialAlertDialogBuilder(activity)
+					.setTitle(R.string.sleep_timer)
+					.setMessage(R.string.sleep_timer_screen_off_hint)
+					.setPositiveButton(android.R.string.ok, (d, w) -> {
+						try {
+							activity.startActivity(new android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS));
+						} catch (Exception ignored) {
+						}
+					})
+					.setNegativeButton(android.R.string.cancel, null)
+					.show();
+		}
 	}
 
 	private void cancelSleepTimer() {
@@ -765,11 +779,9 @@ public class Controller {
 			resizeRight.setOnClickListener(v -> cycleResizeMode());
 		}
 
-		ImageButton pipLeft = playerView.findViewById(R.id.btn_pip_left);
-		ImageButton pipRight = playerView.findViewById(R.id.btn_pip_right);
+		ImageButton pipBtn = playerView.findViewById(R.id.btn_pip);
 		View.OnClickListener pipListener = v -> playerView.enterPiP();
-		if (pipLeft != null) pipLeft.setOnClickListener(pipListener);
-		if (pipRight != null) pipRight.setOnClickListener(pipListener);
+		if (pipBtn != null) pipBtn.setOnClickListener(pipListener);
 
 		ImageButton fsBtn = playerView.findViewById(R.id.btn_fullscreen);
 		if (fsBtn != null) {
@@ -1412,8 +1424,7 @@ public class Controller {
 		ImageButton lockRight = playerView.findViewById(R.id.btn_lock_right);
 		ImageButton resizeLeft = playerView.findViewById(R.id.btn_resize_mode_left);
 		ImageButton resizeRight = playerView.findViewById(R.id.btn_resize_mode_right);
-		ImageButton pipLeft = playerView.findViewById(R.id.btn_pip_left);
-		ImageButton pipRight = playerView.findViewById(R.id.btn_pip_right);
+		ImageButton pipBtn = playerView.findViewById(R.id.btn_pip);
 
 		updateLockButtons();
 		updateResizeButtons();
@@ -1431,7 +1442,6 @@ public class Controller {
 
 		boolean lockVisible = renderState.lockVisible();
 		boolean otherSideButtonsVisible = lockVisible && !state.isLocked();
-		boolean pipVisible = otherSideButtonsVisible && extensionManager.isEnabled(Constant.ENABLE_PIP);
 
 		if (lockLeft != null) {
 			ViewUtils.animateViewAlpha(lockLeft, (showLeftButtons && lockVisible) ? 1.0f : 0.0f, View.GONE);
@@ -1445,11 +1455,8 @@ public class Controller {
 		if (resizeRight != null) {
 			ViewUtils.animateViewAlpha(resizeRight, (showRightButtons && otherSideButtonsVisible) ? 1.0f : 0.0f, View.GONE);
 		}
-		if (pipLeft != null) {
-			ViewUtils.animateViewAlpha(pipLeft, (showLeftButtons && pipVisible) ? 1.0f : 0.0f, View.GONE);
-		}
-		if (pipRight != null) {
-			ViewUtils.animateViewAlpha(pipRight, (showRightButtons && pipVisible) ? 1.0f : 0.0f, View.GONE);
+		if (pipBtn != null) {
+			pipBtn.setVisibility(extensionManager.isEnabled(Constant.ENABLE_PIP) ? View.VISIBLE : View.GONE);
 		}
 
 		updateMiniControls(renderState.miniVisible(), renderState.scrimVisible());

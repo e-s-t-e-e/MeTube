@@ -177,7 +177,7 @@
             texts: Object.freeze({
                 zh: { download: '下载', addToQueue: '加入队列', openWith: '打开方式', extension: '扩展', chat: '聊天室', about: '关于' },
                 zt: { download: '下載', addToQueue: '加入佇列', openWith: '開啟方式', extension: '擴充功能', chat: '聊天室', about: '關於' },
-                en: { download: 'Download', addToQueue: 'Add to queue', openWith: 'Open with', extension: 'Extension', chat: 'Chat', about: 'About' },
+                en: { download: 'Download', addToQueue: 'Add to queue', openWith: 'Open with', extension: 'MeTube Addons', chat: 'Chat', about: 'About' },
                 ja: { download: 'ダウンロード', addToQueue: 'キューに追加', openWith: 'アプリで開く', extension: '拡張機能', chat: 'チャット', about: 'このアプリについて' },
                 ko: { download: '다운로드', addToQueue: '대기열에 추가', openWith: '다른 앱으로 열기', extension: '플러그인', chat: '채팅', about: '정보' },
                 fr: { download: 'Télécharger', addToQueue: 'Ajouter à la file', openWith: 'Ouvrir avec', extension: 'Extension', chat: 'Chat', about: 'À propos' },

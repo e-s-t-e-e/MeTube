@@ -73,15 +73,14 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 	}
 
 	private boolean enabled(@NonNull Gesture gesture) {
-		boolean fullscreen = controller.isFullscreen();
 		String key = switch (gesture) {
-			case TAP -> fullscreen ? Constant.GESTURE_TAP_FULLSCREEN : Constant.GESTURE_TAP_WINDOWED;
-			case DOUBLE_TAP -> fullscreen ? Constant.GESTURE_DOUBLE_TAP_FULLSCREEN : Constant.GESTURE_DOUBLE_TAP_WINDOWED;
-			case LONG_PRESS -> fullscreen ? Constant.GESTURE_LONG_PRESS_FULLSCREEN : Constant.GESTURE_LONG_PRESS_WINDOWED;
-			case BRIGHTNESS -> fullscreen ? Constant.GESTURE_BRIGHTNESS_FULLSCREEN : Constant.GESTURE_BRIGHTNESS_WINDOWED;
-			case VOLUME -> fullscreen ? Constant.GESTURE_VOLUME_FULLSCREEN : Constant.GESTURE_VOLUME_WINDOWED;
-			case SEEK -> fullscreen ? Constant.GESTURE_SEEK_FULLSCREEN : Constant.GESTURE_SEEK_WINDOWED;
-			case FULLSCREEN -> fullscreen ? Constant.GESTURE_FULLSCREEN_FULLSCREEN : Constant.GESTURE_FULLSCREEN_WINDOWED;
+			case TAP -> Constant.GESTURE_TAP_FULLSCREEN;
+			case DOUBLE_TAP -> Constant.GESTURE_DOUBLE_TAP_FULLSCREEN;
+			case LONG_PRESS -> Constant.GESTURE_LONG_PRESS_FULLSCREEN;
+			case BRIGHTNESS -> Constant.GESTURE_BRIGHTNESS_FULLSCREEN;
+			case VOLUME -> Constant.GESTURE_VOLUME_FULLSCREEN;
+			case SEEK -> Constant.GESTURE_SEEK_FULLSCREEN;
+			case FULLSCREEN -> Constant.GESTURE_FULLSCREEN_FULLSCREEN;
 		};
 		return controller.getExtensionManager().isEnabled(key);
 	}

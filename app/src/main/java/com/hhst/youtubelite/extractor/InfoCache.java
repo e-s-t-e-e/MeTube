@@ -41,6 +41,10 @@ public final class InfoCache {
 		write(STREAM_KEY + videoId, details, TimeUnit.MINUTES.toMillis(2));
 	}
 
+	public void evictPlaybackDetails(@NonNull String videoId) {
+		kv.remove(STREAM_KEY + videoId);
+	}
+
 	@Nullable
 	public VideoDetails getVideoDetails(@NonNull String videoId) {
 		return read(INFO_KEY + videoId, VideoDetails.class);

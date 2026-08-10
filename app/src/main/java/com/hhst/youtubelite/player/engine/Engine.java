@@ -497,7 +497,7 @@ public class Engine {
 
 	public boolean recoverFromPlaybackError(@NonNull PlaybackException error) {
 		PlaybackRecoveryReason reason = playbackRecoveryReason(error);
-		if (reason == null) {
+		if (reason == null || reason == PlaybackRecoveryReason.HTTP_403) {
 			return false;
 		}
 		State state = state();

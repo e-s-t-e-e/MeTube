@@ -126,30 +126,30 @@ ytm-home-logo::after,
 }
 
 /* ==========================================================================
-   FORCE PURE AMOLED BLACK THEME EVERYWHERE
+   PREMIUM DEEP GREY THEME (Floating Design)
    ========================================================================== */
 
 :root,
 html,
 body {
-    background-color: #000000 !important;
-    background: #000000 !important;
+    background-color: #121212 !important;
+    background: #121212 !important;
     color: #ffffff !important;
-    --yt-spec-base-background: #000000 !important;
-    --yt-spec-brand-background-solid: #000000 !important;
-    --yt-spec-general-background-a: #000000 !important;
-    --yt-spec-general-background-b: #000000 !important;
-    --yt-spec-general-background-c: #0A0A0A !important;
+    --yt-spec-base-background: #121212 !important;
+    --yt-spec-brand-background-solid: #121212 !important;
+    --yt-spec-general-background-a: #121212 !important;
+    --yt-spec-general-background-b: #121212 !important;
+    --yt-spec-general-background-c: #1e1e1e !important;
     --yt-spec-text-primary: #ffffff !important;
     --yt-spec-text-secondary: #aaaaaa !important;
     --yt-spec-icon-inactive: #ffffff !important;
     --yt-spec-icon-active: #ffffff !important;
-    --yt-spec-call-to-action: #e50914 !important;
-    --yt-spec-brand-link-text: #e50914 !important;
-    --yt-spec-text-primary-inverse: #000000 !important;
+    --yt-spec-call-to-action: #FF3B30 !important;
+    --yt-spec-brand-link-text: #FF3B30 !important;
+    --yt-spec-text-primary-inverse: #121212 !important;
 }
 
-/* Always force AMOLED Black on all header navigation bars, top bars, and app containers */
+/* Force Deep Grey on all header navigation bars, top bars, and app containers */
 ytm-header-bar,
 #header-bar,
 .header-bar,
@@ -170,13 +170,13 @@ ytm-watch,
 ytd-app,
 #content,
 #page-manager {
-    background-color: #000000 !important;
-    background: #000000 !important;
+    background-color: #121212 !important;
+    background: #121212 !important;
     color: #ffffff !important;
     opacity: 1 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    border-bottom: 1px solid #111111 !important;
+    border-bottom: 1px solid transparent !important;
 }
 
 /* ==========================================================================
@@ -644,5 +644,13 @@ html[data-watch="true"] #app,
 html[data-watch="true"] ytm-watch {
     padding-top: 0 !important;
     margin-top: 0 !important;
+}
+
+/* Hide YouTube, a Google Company text and footer */
+ytm-footer-renderer,
+.sub-footer,
+#footer,
+.footer-logo {
+    display: none !important;
 }
 

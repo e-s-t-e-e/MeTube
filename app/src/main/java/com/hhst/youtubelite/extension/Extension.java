@@ -49,34 +49,13 @@ public record Extension(String key, int title, int summary, int icon, List<Dropd
 										))
 						)),
 						page(R.string.gesture, R.string.gesture_summary, R.drawable.ic_gesture, List.of(
-										page(R.string.gesture_single_tap, 0, 0, List.of(
-														toggle(Constant.GESTURE_TAP_WINDOWED, R.string.enable_in_windowed),
-														toggle(Constant.GESTURE_TAP_FULLSCREEN, R.string.enable_in_fullscreen)
-										)),
-										page(R.string.gesture_double_tap, 0, 0, List.of(
-														toggle(Constant.GESTURE_DOUBLE_TAP_WINDOWED, R.string.enable_in_windowed),
-														toggle(Constant.GESTURE_DOUBLE_TAP_FULLSCREEN, R.string.enable_in_fullscreen)
-										)),
-										page(R.string.gesture_long_press_speed, 0, 0, List.of(
-														toggle(Constant.GESTURE_LONG_PRESS_WINDOWED, R.string.enable_in_windowed),
-														toggle(Constant.GESTURE_LONG_PRESS_FULLSCREEN, R.string.enable_in_fullscreen)
-										)),
-										page(R.string.brightness, 0, 0, List.of(
-														toggle(Constant.GESTURE_BRIGHTNESS_WINDOWED, R.string.enable_in_windowed),
-														toggle(Constant.GESTURE_BRIGHTNESS_FULLSCREEN, R.string.enable_in_fullscreen)
-										)),
-										page(R.string.volume, 0, 0, List.of(
-														toggle(Constant.GESTURE_VOLUME_WINDOWED, R.string.enable_in_windowed),
-														toggle(Constant.GESTURE_VOLUME_FULLSCREEN, R.string.enable_in_fullscreen)
-										)),
-										page(R.string.gesture_seek, 0, 0, List.of(
-														toggle(Constant.GESTURE_SEEK_WINDOWED, R.string.enable_in_windowed),
-														toggle(Constant.GESTURE_SEEK_FULLSCREEN, R.string.enable_in_fullscreen)
-										)),
-										page(R.string.gesture_fullscreen_swipe, 0, 0, List.of(
-														toggle(Constant.GESTURE_FULLSCREEN_WINDOWED, R.string.enable_in_windowed),
-														toggle(Constant.GESTURE_FULLSCREEN_FULLSCREEN, R.string.enable_in_fullscreen)
-										))
+										toggle(Constant.GESTURE_TAP_FULLSCREEN, R.string.gesture_single_tap),
+										toggle(Constant.GESTURE_DOUBLE_TAP_FULLSCREEN, R.string.gesture_double_tap),
+										toggle(Constant.GESTURE_LONG_PRESS_FULLSCREEN, R.string.gesture_long_press_speed),
+										toggle(Constant.GESTURE_BRIGHTNESS_FULLSCREEN, R.string.brightness),
+										toggle(Constant.GESTURE_VOLUME_FULLSCREEN, R.string.volume),
+										toggle(Constant.GESTURE_SEEK_FULLSCREEN, R.string.gesture_seek),
+										toggle(Constant.GESTURE_FULLSCREEN_FULLSCREEN, R.string.gesture_fullscreen_swipe)
 						)),
 						page(R.string.background_mini_player, R.string.background_mini_player_summary, R.drawable.ic_pip, List.of(
 										toggle(ENABLE_PIP, R.string.pip),

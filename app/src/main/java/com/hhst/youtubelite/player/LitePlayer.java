@@ -27,6 +27,7 @@ import com.hhst.youtubelite.extractor.PlaybackPlanner;
 import com.hhst.youtubelite.extractor.YoutubeExtractor;
 import com.hhst.youtubelite.extractor.exception.ExtractionException;
 import com.hhst.youtubelite.extractor.exception.LoginRequiredExtractionException;
+import com.hhst.youtubelite.extractor.potoken.PoTokenCoordinator;
 import com.hhst.youtubelite.player.common.PlayerLoopMode;
 import com.hhst.youtubelite.player.common.PlayerPreferences;
 import com.hhst.youtubelite.player.controller.Controller;
@@ -92,6 +93,8 @@ public class LitePlayer {
 	private final PlayerStateStore stateStore;
 	@NonNull
 	private final Executor executor;
+	@NonNull
+	private final PoTokenCoordinator poTokenCoordinator;
 	private final MMKV kv = MMKV.defaultMMKV();
 	@Nullable
 	private PlaybackService playbackSvc;
@@ -129,7 +132,8 @@ public class LitePlayer {
 	                  @NonNull QueueRepository queueRepo,
 	                  @NonNull PlayerPreferences prefs,
 	                  @NonNull PlayerStateStore stateStore,
-	                  @NonNull Executor executor) {
+	                  @NonNull Executor executor,
+	                  @NonNull PoTokenCoordinator poTokenCoordinator) {
 		this.activity = activity;
 		this.extractor = extractor;
 		this.playerView = playerView;
@@ -140,6 +144,7 @@ public class LitePlayer {
 		this.prefs = prefs;
 		this.stateStore = stateStore;
 		this.executor = executor;
+		this.poTokenCoordinator = poTokenCoordinator;
 		playerView.setup();
 		queueRepo.addListener(queueListener);
 		controller.setOnRetryPlayback(this::retryPlayback);
@@ -358,6 +363,7 @@ public class LitePlayer {
 
 	private void autoRefreshOrShowError(@NonNull Throwable error) {
 		if (retryCount < MAX_AUTO_RETRIES && (activeId != null || queuedId != null)) {
+			poTokenCoordinator.invalidate();
 			retryCount++;
 			ToastUtils.show(activity, R.string.refreshing_video);
 			retryWithFreshUrl();
@@ -372,6 +378,7 @@ public class LitePlayer {
 		String url = "https://www.youtube.com/watch?v=" + videoId;
 		long currentPos = engine.position();
 
+		extractor.evictPlaybackDetailsCache(url);
 		cancelExtraction();
 		if (task != null) task.cancel(true);
 		ExtractionSession session = new ExtractionSession();
