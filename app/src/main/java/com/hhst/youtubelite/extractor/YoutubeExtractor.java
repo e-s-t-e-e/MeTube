@@ -214,28 +214,49 @@ public final class YoutubeExtractor {
 		}
 
 		VideoDetails longVideo = cache.getVideoDetails(videoId);
-		if (longVideo != null) {
-			try {
-				ExtractedInfo extracted = play.fetch(videoId, session);
-				StreamInfo streamInfo = extracted.info();
-				ensureNotCancelled(session);
-				StreamCatalog catalog = buildCatalog(streamInfo, extracted.youtube());
-				DeliveryCatalog deliveries = buildDeliveries(catalog);
-				PlaybackPlan plan = PlaybackPlanner.plan(deliveries);
-				PlaybackDetails details = new PlaybackDetails(
-								mergeVideo(longVideo, streamInfo),
-								catalog,
-								deliveries,
-								plan,
-								copyList(orEmpty(streamInfo.getStreamSegments())),
-								copyList(orEmpty(streamInfo.getSubtitles())));
-				ensurePlayableSources(videoId, details.deliveries(), details.plan());
-				cache.putPlaybackDetails(videoId, details);
-				cache.putVideoDetails(videoId, details.video());
-				return copy(details, PlaybackDetails.class);
-			} catch (IOException | org.schabi.newpipe.extractor.exceptions.ExtractionException e) {
-				ensureNotCancelled(session);
+		try {
+			ExtractedInfo extracted = play.fetch(videoId, session);
+			StreamInfo streamInfo = extracted.info();
+			ensureNotCancelled(session);
+			StreamCatalog catalog = buildCatalog(streamInfo, extracted.youtube());
+			DeliveryCatalog deliveries = buildDeliveries(catalog);
+			PlaybackPlan plan = PlaybackPlanner.plan(deliveries);
+			VideoDetails videoDetails;
+			if (longVideo != null) {
+				videoDetails = mergeVideo(longVideo, streamInfo);
+			} else {
+				Description description = streamInfo.getDescription();
+				Date uploadDate = streamInfo.getUploadDate() == null
+						? null
+						: Date.from(streamInfo.getUploadDate().getInstant());
+				String thumbnailUrl = getBestImageUrl(streamInfo.getThumbnails());
+				videoDetails = new VideoDetails(
+						streamInfo.getId(),
+						streamInfo.getName(),
+						streamInfo.getUploaderName(),
+						description == null ? null : description.getContent(),
+						Math.max(0L, streamInfo.getDuration()),
+						thumbnailUrl != null ? thumbnailUrl : buildDefaultThumbnailUrl(streamInfo.getId()),
+						streamInfo.getLikeCount(),
+						streamInfo.getDislikeCount(),
+						uploadDate,
+						streamInfo.getUploaderUrl(),
+						getBestImageUrl(streamInfo.getUploaderAvatars()),
+						streamInfo.getViewCount());
 			}
+			PlaybackDetails details = new PlaybackDetails(
+							videoDetails,
+							catalog,
+							deliveries,
+							plan,
+							copyList(orEmpty(streamInfo.getStreamSegments())),
+							copyList(orEmpty(streamInfo.getSubtitles())));
+			ensurePlayableSources(videoId, details.deliveries(), details.plan());
+			cache.putPlaybackDetails(videoId, details);
+			cache.putVideoDetails(videoId, details.video());
+			return copy(details, PlaybackDetails.class);
+		} catch (IOException | org.schabi.newpipe.extractor.exceptions.ExtractionException e) {
+			ensureNotCancelled(session);
 		}
 
 		ExtractedInfo extracted = info.fetch(videoId, session);
