@@ -81,6 +81,10 @@ public final class PoTokenCoordinator {
 		this.kv = kv;
 	}
 
+	public void prewarm() {
+		poTokenHost.prewarm();
+	}
+
 	@Nullable
 	public PoTokenResult getWebClientPoToken(@NonNull String videoId) {
 		if (Looper.myLooper() == Looper.getMainLooper()) {

@@ -148,6 +148,8 @@ public final class MainActivity extends AppCompatActivity implements LifecycleEv
 		WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView()).setAppearanceLightNavigationBars(false);
 		setContentView(R.layout.activity_main);
 		super.onCreate(savedInstanceState);
+
+		poTokenHost.prewarm();
 		restoredUrl = savedInstanceState != null ? savedInstanceState.getString(STATE_LAST_URL) : null;
 		viewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
 		viewModel.getState().observe(this, this::renderQueueSheet);

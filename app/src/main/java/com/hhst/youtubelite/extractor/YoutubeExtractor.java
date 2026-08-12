@@ -225,24 +225,37 @@ public final class YoutubeExtractor {
 			if (longVideo != null) {
 				videoDetails = mergeVideo(longVideo, streamInfo);
 			} else {
-				Description description = streamInfo.getDescription();
-				Date uploadDate = streamInfo.getUploadDate() == null
-						? null
-						: Date.from(streamInfo.getUploadDate().getInstant());
-				String thumbnailUrl = getBestImageUrl(streamInfo.getThumbnails());
+				String description = "";
+				Date uploadDate = null;
+				String thumbnailUrl = buildDefaultThumbnailUrl(streamInfo.getId());
+				long likeCount = 0;
+				long dislikeCount = 0;
+				long viewCount = 0;
+				String uploaderUrl = "";
+				String uploaderAvatar = "";
+				
+				try { description = streamInfo.getDescription() != null ? streamInfo.getDescription().getContent() : ""; } catch (Exception e) {}
+				try { uploadDate = streamInfo.getUploadDate() != null ? Date.from(streamInfo.getUploadDate().getInstant()) : null; } catch (Exception e) {}
+				try { thumbnailUrl = getBestImageUrl(streamInfo.getThumbnails()); } catch (Exception e) {}
+				try { likeCount = streamInfo.getLikeCount(); } catch (Exception e) {}
+				try { dislikeCount = streamInfo.getDislikeCount(); } catch (Exception e) {}
+				try { viewCount = streamInfo.getViewCount(); } catch (Exception e) {}
+				try { uploaderUrl = streamInfo.getUploaderUrl(); } catch (Exception e) {}
+				try { uploaderAvatar = getBestImageUrl(streamInfo.getUploaderAvatars()); } catch (Exception e) {}
+
 				videoDetails = new VideoDetails(
 						streamInfo.getId(),
 						streamInfo.getName(),
 						streamInfo.getUploaderName(),
-						description == null ? null : description.getContent(),
+						description,
 						Math.max(0L, streamInfo.getDuration()),
 						thumbnailUrl != null ? thumbnailUrl : buildDefaultThumbnailUrl(streamInfo.getId()),
-						streamInfo.getLikeCount(),
-						streamInfo.getDislikeCount(),
+						likeCount,
+						dislikeCount,
 						uploadDate,
-						streamInfo.getUploaderUrl(),
-						getBestImageUrl(streamInfo.getUploaderAvatars()),
-						streamInfo.getViewCount());
+						uploaderUrl,
+						uploaderAvatar,
+						viewCount);
 			}
 			PlaybackDetails details = new PlaybackDetails(
 							videoDetails,
