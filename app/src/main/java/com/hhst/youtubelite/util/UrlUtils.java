@@ -178,7 +178,7 @@ public final class UrlUtils {
 		if (s0.startsWith("@")) return "@";
 
 		return switch (s0) {
-			case "shorts" -> Constant.PAGE_WATCH;
+			case "shorts" -> Constant.PAGE_SHORTS;
 			case "watch" -> Constant.PAGE_WATCH;
 			case "channel" -> "channel";
 			case "gaming" -> "gaming";

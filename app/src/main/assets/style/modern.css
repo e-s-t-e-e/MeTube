@@ -207,6 +207,14 @@ ytm-pivot-bar-renderer {
     height: 100% !important;
 }
 
+/* Ensure Shorts player isn't obscured by the 52px bottom bar */
+ytm-reel-video-renderer,
+ytm-shorts-viewer,
+#shorts-player {
+    padding-bottom: 52px !important;
+    box-sizing: border-box !important;
+}
+
 /* Modernize SVG icon displays inside bottom bar */
 .pivot-bar-icon {
     display: flex !important;

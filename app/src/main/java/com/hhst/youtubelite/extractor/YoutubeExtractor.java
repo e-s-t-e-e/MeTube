@@ -270,9 +270,8 @@ public final class YoutubeExtractor {
 			return copy(details, PlaybackDetails.class);
 		} catch (IOException | org.schabi.newpipe.extractor.exceptions.ExtractionException e) {
 			ensureNotCancelled(session);
-			throw new RuntimeException("play.fetch failed: " + e.getMessage(), e);
 		}
-		/*
+
 		ExtractedInfo extracted = info.fetch(videoId, session);
 		StreamInfo streamInfo = extracted.info();
 		ensureNotCancelled(session);
@@ -307,7 +306,6 @@ public final class YoutubeExtractor {
 		cache.putPlaybackDetails(videoId, details);
 		cache.putVideoDetails(videoId, details.video());
 		return copy(details, PlaybackDetails.class);
-		*/
 	}
 
 	@NonNull
