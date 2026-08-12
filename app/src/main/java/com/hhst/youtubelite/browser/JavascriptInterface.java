@@ -153,6 +153,19 @@ public final class JavascriptInterface {
 	}
 
 	@android.webkit.JavascriptInterface
+	public void prefetchVideo(@Nullable String videoId) {
+		if (videoId != null && !videoId.isBlank()) {
+			new Thread(() -> {
+				try {
+					youtubeExtractor.prefetchPlay(videoId);
+				} catch (Exception e) {
+					Log.e(TAG, "Failed to prefetch video " + videoId, e);
+				}
+			}).start();
+		}
+	}
+
+	@android.webkit.JavascriptInterface
 	public void showToast(@Nullable String message) {
 		if (message != null) handler.post(() -> android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show());
 	}

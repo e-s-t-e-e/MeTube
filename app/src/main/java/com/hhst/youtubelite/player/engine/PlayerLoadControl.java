@@ -17,8 +17,8 @@ class PlayerLoadControl {
 						.setBufferDurationsMs(
 										50_000,
 										60_000,
-										1_500,
-										4_000
+										500,
+										2_000
 						)
 						.setPrioritizeTimeOverSizeThresholds(true)
 						.build();

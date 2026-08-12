@@ -46,6 +46,8 @@ public final class Constant {
 	public static final String GESTURE_SEEK_FULLSCREEN = "gesture_seek_fullscreen";
 	public static final String GESTURE_FULLSCREEN_WINDOWED = "gesture_fullscreen_windowed";
 	public static final String GESTURE_FULLSCREEN_FULLSCREEN = "gesture_fullscreen_fullscreen";
+	public static final String ALLOW_VOLUME_BOOST = "allow_volume_boost";
+	public static final String SHOW_VOLUME_BOOST_WARNING = "show_volume_boost_warning";
 	public static final List<String> GESTURE_KEYS = List.of(
 					GESTURE_TAP_WINDOWED,
 					GESTURE_TAP_FULLSCREEN,
@@ -93,7 +95,9 @@ public final class Constant {
 					Map.entry(GESTURE_SEEK_WINDOWED, true),
 					Map.entry(GESTURE_SEEK_FULLSCREEN, true),
 					Map.entry(GESTURE_FULLSCREEN_WINDOWED, true),
-					Map.entry(GESTURE_FULLSCREEN_FULLSCREEN, true)
+					Map.entry(GESTURE_FULLSCREEN_FULLSCREEN, true),
+					Map.entry(ALLOW_VOLUME_BOOST, true),
+					Map.entry(SHOW_VOLUME_BOOST_WARNING, true)
 	);
 
 	public static final Map<String, String> DEFAULT_STRING_PREFERENCES = Map.of(

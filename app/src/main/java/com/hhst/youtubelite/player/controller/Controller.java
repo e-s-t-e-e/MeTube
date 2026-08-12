@@ -416,21 +416,7 @@ public class Controller {
 	 * so they stay inside short portrait players.
 	 */
 	private void updateLevelIndicatorMargins() {
-		final int top = ViewUtils.dpToPx(activity, state.isFullscreen() ? 220f : 56f);
-		if (levelVolumeContainer != null) {
-			final FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) levelVolumeContainer.getLayoutParams();
-			if (lp.topMargin != top) {
-				lp.topMargin = top;
-				levelVolumeContainer.setLayoutParams(lp);
-			}
-		}
-		if (levelBrightnessContainer != null) {
-			final FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) levelBrightnessContainer.getLayoutParams();
-			if (lp.topMargin != top) {
-				lp.topMargin = top;
-				levelBrightnessContainer.setLayoutParams(lp);
-			}
-		}
+		// Rely on XML margins (e.g. 32dp) to keep them at the top in both orientations.
 	}
 
 	/** Shows the gesture volume indicator; pct may exceed 100 when the boost is active. */

@@ -17,6 +17,8 @@ import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
+import android.webkit.ServiceWorkerClient;
+import android.webkit.ServiceWorkerController;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -321,6 +323,23 @@ public class YoutubeWebview extends WebView {
 		JavascriptInterface jsInterface = new JavascriptInterface(this, youtubeExtractor, player, extensionManager, tabManager, queueRepository);
 		addJavascriptInterface(jsInterface, "lite");
 		setTag(jsInterface);
+
+		try {
+			ServiceWorkerController swController = ServiceWorkerController.getInstance();
+			swController.getServiceWorkerWebSettings().setAllowContentAccess(true);
+			swController.setServiceWorkerClient(new ServiceWorkerClient() {
+				@Nullable
+				@Override
+				public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
+					if (okHttpWebViewInterceptor != null) {
+						WebResourceResponse response = okHttpWebViewInterceptor.intercept(request);
+						if (response != null) return response;
+					}
+					return super.shouldInterceptRequest(request);
+				}
+			});
+		} catch (Throwable ignored) {
+		}
 
 		setWebViewClient(new WebViewClient() {
 

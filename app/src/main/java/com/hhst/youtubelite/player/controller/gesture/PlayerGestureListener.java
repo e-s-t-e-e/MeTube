@@ -283,7 +283,10 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 		}
 
 		float delta = (dy / playerView.getHeight()) * 200f * 0.4f * 1.5f;
-		float targetVolume = Math.max(0f, Math.min(200f, customVolume + delta));
+		boolean allowVolumeBoost = controller.getExtensionManager().isEnabled(com.hhst.youtubelite.extension.Constant.ALLOW_VOLUME_BOOST);
+		boolean showVolumeBoostWarning = controller.getExtensionManager().isEnabled(com.hhst.youtubelite.extension.Constant.SHOW_VOLUME_BOOST_WARNING);
+		float maxTarget = allowVolumeBoost ? 200f : 100f;
+		float targetVolume = Math.max(0f, Math.min(maxTarget, customVolume + delta));
 		int pct = Math.round(targetVolume);
 
 		if (isBluetoothHeadphoneConnected(am) && !btVolumeWarningConfirmed && pct > 50) {
@@ -307,7 +310,7 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 			am.setStreamVolume(AudioManager.STREAM_MUSIC, sysVol, 0);
 			engine.setVolumeBoostProgress(0f);
 			controller.showVolumeLevel(pct);
-		} else if (!boostWarningConfirmed) {
+		} else if (!boostWarningConfirmed && showVolumeBoostWarning) {
 			// Clamp at 100% until the boost warning is accepted.
 			customVolume = 100f;
 			am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);

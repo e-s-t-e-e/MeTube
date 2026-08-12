@@ -53,8 +53,12 @@
     <string name="gesture_single_tap">Single tap</string>
     <string name="gesture_double_tap">Double tap</string>
     <string name="gesture_long_press_speed">Long press 2x</string>
-    <string name="gesture_seek">Swipe seek</string>
-    <string name="gesture_fullscreen_swipe">Enter/exit fullscreen</string>
+    <string name="gesture_seek">Seek forward/backward</string>
+    <string name="gesture_fullscreen_swipe">Swipe for fullscreen</string>
+    
+    <string name="allow_volume_boost">Allow volume boost 200%</string>
+    <string name="show_volume_boost_warning">Show volume boost warning</string>
+
     <string name="enable_in_windowed">Enable in windowed</string>
     <string name="enable_in_fullscreen">Enable in fullscreen</string>
     <string name="background_mini_player">Background &amp; Mini Player</string>

@@ -488,6 +488,7 @@
                 Sheet.init();
                 Gesture.init();
                 Post.init();
+                Prefetch.init();
                 window.__liteActive = State.active;
                 window.__liteSetActive = App.setActive;
 
@@ -513,6 +514,27 @@
                     PivotBarOrder.run(ctx)
                 ];
                 return !results.some(result => result === false);
+            }
+        };
+
+        // Touch-down prefetching for instant video load.
+        const Prefetch = {
+            init() {
+                DOM.bind(document, 'touchstart', (event) => {
+                    const target = event.target;
+                    if (!(target instanceof Element)) return;
+                    
+                    const link = target.closest('a[href]');
+                    if (!link) return;
+                    
+                    const href = link.getAttribute('href');
+                    if (!href) return;
+                    
+                    const videoId = Page.videoId('https://m.youtube.com' + href);
+                    if (videoId && typeof lite !== 'undefined' && lite.prefetchVideo) {
+                        lite.prefetchVideo(videoId);
+                    }
+                }, { passive: true, capture: true });
             }
         };
 
@@ -1796,6 +1818,9 @@
                 Settings.ensureAbout(settings, templateButton);
                 Settings.ensureDownload(settings, templateButton);
                 Settings.ensureExtension(settings, templateButton);
+                if (!settings.classList.contains('lite-settings-injected')) {
+                    settings.classList.add('lite-settings-injected');
+                }
                 return true;
             },
 

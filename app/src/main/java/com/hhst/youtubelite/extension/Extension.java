@@ -54,6 +54,8 @@ public record Extension(String key, int title, int summary, int icon, List<Dropd
 										toggle(Constant.GESTURE_LONG_PRESS_FULLSCREEN, R.string.gesture_long_press_speed),
 										toggle(Constant.GESTURE_BRIGHTNESS_FULLSCREEN, R.string.brightness),
 										toggle(Constant.GESTURE_VOLUME_FULLSCREEN, R.string.volume),
+										toggle(Constant.ALLOW_VOLUME_BOOST, R.string.allow_volume_boost),
+										toggle(Constant.SHOW_VOLUME_BOOST_WARNING, R.string.show_volume_boost_warning),
 										toggle(Constant.GESTURE_SEEK_FULLSCREEN, R.string.gesture_seek),
 										toggle(Constant.GESTURE_FULLSCREEN_FULLSCREEN, R.string.gesture_fullscreen_swipe)
 						)),

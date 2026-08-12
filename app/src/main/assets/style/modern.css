@@ -73,6 +73,7 @@ ytm-home-logo,
     text-decoration: none !important;
     font-size: 0 !important;
     margin-left: 16px !important;
+    margin-right: 16px !important;
     flex-shrink: 0 !important;
 }
 
@@ -398,7 +399,11 @@ ytm-subscribe-button-renderer button,
 
 ytm-subscribe-button-renderer[aria-selected="true"] button,
 ytm-subscribe-button-renderer button[aria-selected="true"],
-.cbox button[aria-label*="subscribed"] {
+ytm-subscribe-button-renderer button[aria-label*="nsubscribe" i],
+ytm-subscribe-button-renderer button[aria-label*="ubscribed" i],
+ytm-subscribe-button-renderer[is-subscribed="true"] button,
+.cbox button[aria-label*="ubscribed" i],
+.cbox button[aria-label*="nsubscribe" i] {
     background: #222222 !important;
     color: #aaaaaa !important;
     border: 1px solid #333333 !important;
@@ -652,5 +657,10 @@ ytm-footer-renderer,
 #footer,
 .footer-logo {
     display: none !important;
+}
+
+/* Prevent jump effect when injecting custom buttons into settings */
+ytm-settings:not(.lite-settings-injected) {
+    visibility: hidden !important;
 }
 

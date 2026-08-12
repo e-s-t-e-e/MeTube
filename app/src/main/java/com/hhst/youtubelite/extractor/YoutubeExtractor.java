@@ -77,6 +77,8 @@ public final class YoutubeExtractor {
 	private final AuthContextFactory auth;
 	@NonNull
 	private final ConcurrentMap<String, Task> tasks = new ConcurrentHashMap<>();
+	@NonNull
+	private final ConcurrentMap<String, PlaybackDetails> prefetchCache = new ConcurrentHashMap<>();
 
 	@Inject
 	public YoutubeExtractor(@NonNull DownloaderImpl downloader,
@@ -177,7 +179,46 @@ public final class YoutubeExtractor {
 		String videoId = getVideoId(videoUrl);
 		if (videoId != null) {
 			cache.evictPlaybackDetails(videoId);
+			prefetchCache.remove(videoId);
 		}
+	}
+
+	public void prefetchPlay(@NonNull String videoId) throws Exception {
+		if (cache.getPlaybackDetails(videoId) != null) return;
+		if (prefetchCache.containsKey(videoId)) return;
+
+		ExtractedInfo extracted = play.fetch(videoId, null);
+		StreamInfo streamInfo = extracted.info();
+		StreamCatalog catalog = buildCatalog(streamInfo, extracted.youtube());
+		DeliveryCatalog deliveries = buildDeliveries(catalog);
+		PlaybackPlan plan = PlaybackPlanner.plan(deliveries);
+
+		Description description = streamInfo.getDescription();
+		Date uploadDate = streamInfo.getUploadDate() == null ? null : Date.from(streamInfo.getUploadDate().getInstant());
+		String thumbnailUrl = getBestImageUrl(streamInfo.getThumbnails());
+
+		PlaybackDetails details = new PlaybackDetails(
+				new VideoDetails(
+						streamInfo.getId(),
+						streamInfo.getName(),
+						streamInfo.getUploaderName(),
+						description == null ? null : description.getContent(),
+						Math.max(0L, streamInfo.getDuration()),
+						thumbnailUrl != null ? thumbnailUrl : buildDefaultThumbnailUrl(streamInfo.getId()),
+						streamInfo.getLikeCount(),
+						streamInfo.getDislikeCount(),
+						uploadDate,
+						streamInfo.getUploaderUrl(),
+						getBestImageUrl(streamInfo.getUploaderAvatars()),
+						streamInfo.getViewCount()),
+				catalog,
+				deliveries,
+				plan,
+				copyList(orEmpty(streamInfo.getStreamSegments())),
+				copyList(orEmpty(streamInfo.getSubtitles())));
+
+		ensurePlayableSources(videoId, details.deliveries(), details.plan());
+		prefetchCache.put(videoId, details);
 	}
 
 	@NonNull
@@ -213,6 +254,13 @@ public final class YoutubeExtractor {
 			return copy(cached, PlaybackDetails.class);
 		}
 
+		PlaybackDetails prefetched = prefetchCache.remove(videoId);
+		if (prefetched != null) {
+			cache.putPlaybackDetails(videoId, prefetched);
+			cache.putVideoDetails(videoId, prefetched.video());
+			return copy(prefetched, PlaybackDetails.class);
+		}
+
 		VideoDetails longVideo = cache.getVideoDetails(videoId);
 		if (longVideo != null) {
 			try {
@@ -238,7 +286,7 @@ public final class YoutubeExtractor {
 			}
 		}
 
-		ExtractedInfo extracted = info.fetch(videoId, session);
+		ExtractedInfo extracted = play.fetch(videoId, session);
 		StreamInfo streamInfo = extracted.info();
 		ensureNotCancelled(session);
 		Description description = streamInfo.getDescription();
