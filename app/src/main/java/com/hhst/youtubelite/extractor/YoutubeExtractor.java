@@ -214,62 +214,28 @@ public final class YoutubeExtractor {
 		}
 
 		VideoDetails longVideo = cache.getVideoDetails(videoId);
-		try {
-			ExtractedInfo extracted = play.fetch(videoId, session);
-			StreamInfo streamInfo = extracted.info();
-			ensureNotCancelled(session);
-			StreamCatalog catalog = buildCatalog(streamInfo, extracted.youtube());
-			DeliveryCatalog deliveries = buildDeliveries(catalog);
-			PlaybackPlan plan = PlaybackPlanner.plan(deliveries);
-			VideoDetails videoDetails;
-			if (longVideo != null) {
-				videoDetails = mergeVideo(longVideo, streamInfo);
-			} else {
-				String description = "";
-				Date uploadDate = null;
-				String thumbnailUrl = buildDefaultThumbnailUrl(streamInfo.getId());
-				long likeCount = 0;
-				long dislikeCount = 0;
-				long viewCount = 0;
-				String uploaderUrl = "";
-				String uploaderAvatar = "";
-				
-				try { description = streamInfo.getDescription() != null ? streamInfo.getDescription().getContent() : ""; } catch (Exception e) {}
-				try { uploadDate = streamInfo.getUploadDate() != null ? Date.from(streamInfo.getUploadDate().getInstant()) : null; } catch (Exception e) {}
-				try { thumbnailUrl = getBestImageUrl(streamInfo.getThumbnails()); } catch (Exception e) {}
-				try { likeCount = streamInfo.getLikeCount(); } catch (Exception e) {}
-				try { dislikeCount = streamInfo.getDislikeCount(); } catch (Exception e) {}
-				try { viewCount = streamInfo.getViewCount(); } catch (Exception e) {}
-				try { uploaderUrl = streamInfo.getUploaderUrl(); } catch (Exception e) {}
-				try { uploaderAvatar = getBestImageUrl(streamInfo.getUploaderAvatars()); } catch (Exception e) {}
-
-				videoDetails = new VideoDetails(
-						streamInfo.getId(),
-						streamInfo.getName(),
-						streamInfo.getUploaderName(),
-						description,
-						Math.max(0L, streamInfo.getDuration()),
-						thumbnailUrl != null ? thumbnailUrl : buildDefaultThumbnailUrl(streamInfo.getId()),
-						likeCount,
-						dislikeCount,
-						uploadDate,
-						uploaderUrl,
-						uploaderAvatar,
-						viewCount);
+		if (longVideo != null) {
+			try {
+				ExtractedInfo extracted = play.fetch(videoId, session);
+				StreamInfo streamInfo = extracted.info();
+				ensureNotCancelled(session);
+				StreamCatalog catalog = buildCatalog(streamInfo, extracted.youtube());
+				DeliveryCatalog deliveries = buildDeliveries(catalog);
+				PlaybackPlan plan = PlaybackPlanner.plan(deliveries);
+				PlaybackDetails details = new PlaybackDetails(
+								mergeVideo(longVideo, streamInfo),
+								catalog,
+								deliveries,
+								plan,
+								copyList(orEmpty(streamInfo.getStreamSegments())),
+								copyList(orEmpty(streamInfo.getSubtitles())));
+				ensurePlayableSources(videoId, details.deliveries(), details.plan());
+				cache.putPlaybackDetails(videoId, details);
+				cache.putVideoDetails(videoId, details.video());
+				return copy(details, PlaybackDetails.class);
+			} catch (IOException | org.schabi.newpipe.extractor.exceptions.ExtractionException e) {
+				ensureNotCancelled(session);
 			}
-			PlaybackDetails details = new PlaybackDetails(
-							videoDetails,
-							catalog,
-							deliveries,
-							plan,
-							copyList(orEmpty(streamInfo.getStreamSegments())),
-							copyList(orEmpty(streamInfo.getSubtitles())));
-			ensurePlayableSources(videoId, details.deliveries(), details.plan());
-			cache.putPlaybackDetails(videoId, details);
-			cache.putVideoDetails(videoId, details.video());
-			return copy(details, PlaybackDetails.class);
-		} catch (IOException | org.schabi.newpipe.extractor.exceptions.ExtractionException e) {
-			ensureNotCancelled(session);
 		}
 
 		ExtractedInfo extracted = info.fetch(videoId, session);

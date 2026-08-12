@@ -81,10 +81,6 @@ public final class PoTokenCoordinator {
 		this.kv = kv;
 	}
 
-	public void prewarm() {
-		poTokenHost.prewarm();
-	}
-
 	@Nullable
 	public PoTokenResult getWebClientPoToken(@NonNull String videoId) {
 		if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -210,16 +206,6 @@ public final class PoTokenCoordinator {
 			return null;
 		}
 
-		long nowMs = System.currentTimeMillis();
-		long cachedExpiresAt = kv.decodeLong("potoken.cached_expires_at", 0L);
-		String cachedToken = kv.decodeString("potoken.cached_integrity_token", null);
-
-		if (cachedToken != null && nowMs < cachedExpiresAt) {
-			if (setIntegrityToken(hostGeneration, cachedToken)) {
-				return new PoTokenSession(hostGeneration, cachedExpiresAt);
-			}
-		}
-
 		JsonArray createBody = new JsonArray();
 		createBody.add(REQUEST_KEY);
 		String createResponse = makeBotguardServiceRequest("https://www.youtube.com/api/jnn/v1/Create",
@@ -256,10 +242,6 @@ public final class PoTokenCoordinator {
 		long expiresAtMs = System.currentTimeMillis()
 				+ Math.max(0L,
 						TimeUnit.SECONDS.toMillis(generateItResult.expirationSeconds) - TimeUnit.MINUTES.toMillis(10L));
-						
-		kv.encode("potoken.cached_integrity_token", generateItResult.integrityTokenBase64);
-		kv.encode("potoken.cached_expires_at", expiresAtMs);
-
 		return new PoTokenSession(hostGeneration, expiresAtMs);
 	}
 

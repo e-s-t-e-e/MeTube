@@ -55,12 +55,21 @@ public class LevelIndicatorView extends View {
 		final float w = getWidth();
 		final float h = getHeight();
 		if (w <= 0f || h <= 0f) return;
-		final float radius = Math.min(w, h) / 2f;
+		
+		final boolean isHorizontal = w > h;
+		final float radius = isHorizontal ? (h / 2f) : (w / 2f);
+		
 		trackRect.set(0f, 0f, w, h);
 		canvas.drawRoundRect(trackRect, radius, radius, trackPaint);
-		final float fillW = level * w;
-		if (fillW > 0f) {
-			fillRect.set(0f, 0f, fillW, h);
+		
+		if (level > 0f) {
+			if (isHorizontal) {
+				final float fillW = level * w;
+				fillRect.set(0f, 0f, fillW, h);
+			} else {
+				final float fillH = level * h;
+				fillRect.set(0f, h - fillH, w, h);
+			}
 			canvas.drawRoundRect(fillRect, radius, radius, fillPaint);
 		}
 	}

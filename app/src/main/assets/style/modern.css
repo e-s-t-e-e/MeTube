@@ -207,22 +207,6 @@ ytm-pivot-bar-renderer {
     height: 100% !important;
 }
 
-/* Ensure Shorts player isn't obscured by the 52px bottom bar */
-ytm-reel-video-renderer,
-ytm-shorts-viewer,
-#shorts-player {
-    height: calc(100% - 52px) !important;
-    margin-bottom: 52px !important;
-    box-sizing: border-box !important;
-}
-
-/* Specifically target the mobile web shorts progress bar to lift it */
-.reel-player-progress,
-ytm-reel-player-progress-bar-renderer,
-ytm-shorts-progress-bar {
-    bottom: 52px !important;
-}
-
 /* Modernize SVG icon displays inside bottom bar */
 .pivot-bar-icon {
     display: flex !important;
