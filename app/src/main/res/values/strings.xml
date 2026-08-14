@@ -57,7 +57,17 @@
     <string name="gesture_fullscreen_swipe">Swipe for fullscreen</string>
     
     <string name="allow_volume_boost">Allow volume boost 200%</string>
-    <string name="show_volume_boost_warning">Show volume boost warning</string>
+    <string name="volume_warning_threshold_normal">Volume warning (Speaker)</string>
+    <string name="volume_warning_threshold_headphones">Volume warning (Headphones)</string>
+    <string name="volume_50">50%</string>
+    <string name="volume_60">60%</string>
+    <string name="volume_70">70%</string>
+    <string name="volume_80">80%</string>
+    <string name="volume_90">90%</string>
+    <string name="volume_100">100%</string>
+    <string name="volume_120">120%</string>
+    <string name="volume_150">150%</string>
+    <string name="volume_none">Off</string>
 
     <string name="enable_in_windowed">Enable in windowed</string>
     <string name="enable_in_fullscreen">Enable in fullscreen</string>
@@ -227,11 +237,11 @@
     <string name="enable_notifications_badge">Notification badge numbers</string>
     <string name="enable_video_hold_popup">Video hold popup</string>
     <string name="bt_volume_warning_title">Volume Warning</string>
-    <string name="bt_volume_warning_message">You\'re connected to Bluetooth headphones. Listening at high volumes can damage your hearing. Continue above 50%?</string>
+    <string name="bt_volume_warning_message">You\'re connected to Bluetooth headphones. Listening at high volumes can damage your hearing. Continue above %1$d%%?</string>
     <string name="bt_volume_continue">Continue</string>
     <string name="bt_volume_lower">Lower Volume</string>
     <string name="boost_volume_warning_title">Volume Warning</string>
-    <string name="boost_volume_warning_message">You\'re about to raise the volume above 100%%. This boosts audio beyond the device maximum and may distort sound or damage your hearing. Continue above 100%?</string>
+    <string name="boost_volume_warning_message">You\'re about to raise the volume above %1$d%%. This boosts audio beyond the device maximum and may distort sound or damage your hearing. Continue above %1$d%%?</string>
     <string name="boost_volume_continue">Continue</string>
     <string name="boost_volume_limit">Stay at 100%</string>
     <string name="personalized_by_estee">Personalised by Estee</string>

@@ -47,7 +47,8 @@ public final class Constant {
 	public static final String GESTURE_FULLSCREEN_WINDOWED = "gesture_fullscreen_windowed";
 	public static final String GESTURE_FULLSCREEN_FULLSCREEN = "gesture_fullscreen_fullscreen";
 	public static final String ALLOW_VOLUME_BOOST = "allow_volume_boost";
-	public static final String SHOW_VOLUME_BOOST_WARNING = "show_volume_boost_warning";
+	public static final String VOLUME_WARNING_THRESHOLD_NORMAL = "volume_warning_threshold_normal";
+	public static final String VOLUME_WARNING_THRESHOLD_HEADPHONES = "volume_warning_threshold_headphones";
 	public static final List<String> GESTURE_KEYS = List.of(
 					GESTURE_TAP_WINDOWED,
 					GESTURE_TAP_FULLSCREEN,
@@ -96,12 +97,13 @@ public final class Constant {
 					Map.entry(GESTURE_SEEK_FULLSCREEN, true),
 					Map.entry(GESTURE_FULLSCREEN_WINDOWED, true),
 					Map.entry(GESTURE_FULLSCREEN_FULLSCREEN, true),
-					Map.entry(ALLOW_VOLUME_BOOST, true),
-					Map.entry(SHOW_VOLUME_BOOST_WARNING, true)
+					Map.entry(ALLOW_VOLUME_BOOST, true)
 	);
 
 	public static final Map<String, String> DEFAULT_STRING_PREFERENCES = Map.of(
-					PLAYER_SIDE_BUTTONS, SIDE_BUTTONS_BOTH
+					PLAYER_SIDE_BUTTONS, SIDE_BUTTONS_BOTH,
+					VOLUME_WARNING_THRESHOLD_NORMAL, "100",
+					VOLUME_WARNING_THRESHOLD_HEADPHONES, "50"
 	);
 
 	private Constant() {

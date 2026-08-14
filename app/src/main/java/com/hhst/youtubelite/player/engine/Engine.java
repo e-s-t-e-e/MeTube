@@ -178,6 +178,7 @@ public class Engine {
 	};
 	@Nullable
 	private VideoDetails videoDetails;
+	public @Nullable VideoDetails getVideoDetails() { return videoDetails; }
 	@NonNull
 	private List<StreamSegment> segments = List.of();
 	@NonNull
@@ -188,6 +189,7 @@ public class Engine {
 	private DeliveryCatalog deliveries;
 	@Nullable
 	private PlaybackPlan playbackPlan;
+	public @Nullable PlaybackPlan getPlaybackPlan() { return playbackPlan; }
 	@Nullable
 	private VideoStream videoStream;
 	@NonNull

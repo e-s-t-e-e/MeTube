@@ -3,8 +3,8 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-val appVersionName = (project.findProperty("APP_VERSION_NAME") as? String) ?: "4.0"
-val appVersionCode = (project.findProperty("APP_VERSION_CODE") as? String)?.toIntOrNull() ?: 400
+val appVersionName = (project.findProperty("APP_VERSION_NAME") as? String) ?: "4.5"
+val appVersionCode = (project.findProperty("APP_VERSION_CODE") as? String)?.toIntOrNull() ?: 450
 
 android {
     namespace = "com.hhst.youtubelite"
@@ -107,6 +107,9 @@ dependencies {
     implementation(libs.media3.ui)
     implementation(libs.media3.datasource)
     implementation(libs.media3.datasource.okhttp)
+    implementation(libs.media3.cast)
+    implementation(libs.play.services.cast.framework)
+    implementation(libs.mediarouter)
     implementation(libs.okhttp)
     implementation(libs.okio)
     implementation(libs.constraintlayout)

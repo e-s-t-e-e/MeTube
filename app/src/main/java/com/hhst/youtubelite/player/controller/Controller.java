@@ -249,6 +249,40 @@ public class Controller {
 				handlePhysicalOrientation(degrees);
 			}
 		};
+
+		try {
+			com.google.android.gms.cast.framework.CastContext castContext = com.google.android.gms.cast.framework.CastContext.getSharedInstance(activity);
+			androidx.mediarouter.app.MediaRouteButton mediaRouteButton = playerView.findViewById(R.id.btn_cast);
+			if (mediaRouteButton != null) {
+				com.google.android.gms.cast.framework.CastButtonFactory.setUpMediaRouteButton(activity.getApplicationContext(), mediaRouteButton);
+			}
+			castContext.getSessionManager().addSessionManagerListener(new com.google.android.gms.cast.framework.SessionManagerListener<com.google.android.gms.cast.framework.CastSession>() {
+				@Override
+				public void onSessionStarted(@NonNull com.google.android.gms.cast.framework.CastSession castSession, @NonNull String s) {
+					castCurrentVideo(castSession);
+				}
+				@Override
+				public void onSessionResumed(@NonNull com.google.android.gms.cast.framework.CastSession castSession, boolean b) {
+					castCurrentVideo(castSession);
+				}
+				@Override
+				public void onSessionStarting(@NonNull com.google.android.gms.cast.framework.CastSession castSession) {}
+				@Override
+				public void onSessionStartFailed(@NonNull com.google.android.gms.cast.framework.CastSession castSession, int i) {}
+				@Override
+				public void onSessionEnding(@NonNull com.google.android.gms.cast.framework.CastSession castSession) {}
+				@Override
+				public void onSessionEnded(@NonNull com.google.android.gms.cast.framework.CastSession castSession, int i) {}
+				@Override
+				public void onSessionResuming(@NonNull com.google.android.gms.cast.framework.CastSession castSession, @NonNull String s) {}
+				@Override
+				public void onSessionResumeFailed(@NonNull com.google.android.gms.cast.framework.CastSession castSession, int i) {}
+				@Override
+				public void onSessionSuspended(@NonNull com.google.android.gms.cast.framework.CastSession castSession, int i) {}
+			}, com.google.android.gms.cast.framework.CastSession.class);
+		} catch (Exception e) {
+			android.util.Log.e("YTLPlayback", "Failed to initialize Cast", e);
+		}
 		if (portraitUnlockListener.canDetectOrientation()) {
 			portraitUnlockListener.enable();
 		}
@@ -1370,6 +1404,42 @@ public class Controller {
 		rotationSynced = false;
 		lastSyncedOrientation = Configuration.ORIENTATION_UNDEFINED;
 		lastSyncedAutoRotate = false;
+	}
+
+	private void castCurrentVideo(com.google.android.gms.cast.framework.CastSession castSession) {
+		com.hhst.youtubelite.extractor.PlaybackPlan plan = engine.getPlaybackPlan();
+		com.hhst.youtubelite.extractor.VideoDetails details = engine.getVideoDetails();
+		if (plan == null || details == null || castSession.getRemoteMediaClient() == null) return;
+		String url = plan.getManifestUrl();
+		if (url == null && plan.getMuxedCandidate() != null) url = plan.getMuxedCandidate().getUrl();
+		if (url == null && plan.getVideoCandidate() != null) url = plan.getVideoCandidate().getUrl();
+		if (url == null && plan.getAudioCandidate() != null) url = plan.getAudioCandidate().getUrl();
+		if (url == null) return;
+		com.google.android.gms.cast.MediaMetadata movieMetadata = new com.google.android.gms.cast.MediaMetadata(com.google.android.gms.cast.MediaMetadata.MEDIA_TYPE_MOVIE);
+		movieMetadata.putString(com.google.android.gms.cast.MediaMetadata.KEY_TITLE, details.getTitle());
+		movieMetadata.putString(com.google.android.gms.cast.MediaMetadata.KEY_SUBTITLE, details.getAuthor());
+		if (details.getThumbnailUrl() != null) {
+			movieMetadata.addImage(new com.google.android.gms.common.images.WebImage(android.net.Uri.parse(details.getThumbnailUrl())));
+		}
+		com.google.android.gms.cast.MediaInfo mediaInfo = new com.google.android.gms.cast.MediaInfo.Builder(url)
+				.setStreamType(com.google.android.gms.cast.MediaInfo.STREAM_TYPE_BUFFERED)
+				.setContentType("video/mp4")
+				.setMetadata(movieMetadata)
+				.build();
+		com.google.android.gms.cast.MediaLoadRequestData loadRequestData = new com.google.android.gms.cast.MediaLoadRequestData.Builder()
+				.setMediaInfo(mediaInfo)
+				.setAutoplay(true)
+				.setCurrentTime(engine.position())
+				.build();
+		castSession.getRemoteMediaClient().load(loadRequestData);
+		engine.pause();
+	}
+
+	public void cleanup() {
+		portraitUnlockListener.disable();
+		handler.removeCallbacks(sleepTimerTick);
+		sleepTimerEndAtMs = 0L;
+		sleepTimerMinutes = 0;
 	}
 
 	public void release() {

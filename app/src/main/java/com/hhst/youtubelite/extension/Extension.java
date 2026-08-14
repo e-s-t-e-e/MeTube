@@ -55,7 +55,28 @@ public record Extension(String key, int title, int summary, int icon, List<Dropd
 										toggle(Constant.GESTURE_BRIGHTNESS_FULLSCREEN, R.string.brightness),
 										toggle(Constant.GESTURE_VOLUME_FULLSCREEN, R.string.volume),
 										toggle(Constant.ALLOW_VOLUME_BOOST, R.string.allow_volume_boost),
-										toggle(Constant.SHOW_VOLUME_BOOST_WARNING, R.string.show_volume_boost_warning),
+										dropdown(Constant.VOLUME_WARNING_THRESHOLD_NORMAL, R.string.volume_warning_threshold_normal, List.of(
+														new DropdownOption("50", R.string.volume_50),
+														new DropdownOption("60", R.string.volume_60),
+														new DropdownOption("70", R.string.volume_70),
+														new DropdownOption("80", R.string.volume_80),
+														new DropdownOption("90", R.string.volume_90),
+														new DropdownOption("100", R.string.volume_100),
+														new DropdownOption("120", R.string.volume_120),
+														new DropdownOption("150", R.string.volume_150),
+														new DropdownOption("200", R.string.volume_none)
+										)),
+										dropdown(Constant.VOLUME_WARNING_THRESHOLD_HEADPHONES, R.string.volume_warning_threshold_headphones, List.of(
+														new DropdownOption("50", R.string.volume_50),
+														new DropdownOption("60", R.string.volume_60),
+														new DropdownOption("70", R.string.volume_70),
+														new DropdownOption("80", R.string.volume_80),
+														new DropdownOption("90", R.string.volume_90),
+														new DropdownOption("100", R.string.volume_100),
+														new DropdownOption("120", R.string.volume_120),
+														new DropdownOption("150", R.string.volume_150),
+														new DropdownOption("200", R.string.volume_none)
+										)),
 										toggle(Constant.GESTURE_SEEK_FULLSCREEN, R.string.gesture_seek),
 										toggle(Constant.GESTURE_FULLSCREEN_FULLSCREEN, R.string.gesture_fullscreen_swipe)
 						)),

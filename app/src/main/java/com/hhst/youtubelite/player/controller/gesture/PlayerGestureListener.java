@@ -284,88 +284,92 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 
 		float delta = (dy / playerView.getHeight()) * 200f * 0.4f * 1.5f;
 		boolean allowVolumeBoost = controller.getExtensionManager().isEnabled(com.hhst.youtubelite.extension.Constant.ALLOW_VOLUME_BOOST);
-		boolean showVolumeBoostWarning = controller.getExtensionManager().isEnabled(com.hhst.youtubelite.extension.Constant.SHOW_VOLUME_BOOST_WARNING);
 		float maxTarget = allowVolumeBoost ? 200f : 100f;
 		float targetVolume = Math.max(0f, Math.min(maxTarget, customVolume + delta));
 		int pct = Math.round(targetVolume);
 
-		if (isBluetoothHeadphoneConnected(am) && !btVolumeWarningConfirmed && pct > 50) {
-			int halfVolume = Math.round(maxVolume * 0.5f);
-			am.setStreamVolume(AudioManager.STREAM_MUSIC, halfVolume, 0);
-			engine.setVolumeBoostProgress(0f);
-			customVolume = 50f;
-			controller.showVolumeLevel(50);
-			if (!btVolumeAboveThreshold) {
-				btVolumeAboveThreshold = true;
-				showBluetoothVolumeWarning(am, maxVolume);
-			}
-			return;
-		}
+		int normalThreshold = 100;
+		int headphoneThreshold = 50;
+		try {
+			normalThreshold = Integer.parseInt(controller.getExtensionManager().getString(com.hhst.youtubelite.extension.Constant.VOLUME_WARNING_THRESHOLD_NORMAL));
+		} catch (NumberFormatException ignored) {}
+		try {
+			headphoneThreshold = Integer.parseInt(controller.getExtensionManager().getString(com.hhst.youtubelite.extension.Constant.VOLUME_WARNING_THRESHOLD_HEADPHONES));
+		} catch (NumberFormatException ignored) {}
+
+		boolean isHeadphones = isBluetoothHeadphoneConnected(am);
+		int activeThreshold = isHeadphones ? headphoneThreshold : normalThreshold;
 
 		float prevVolume = customVolume;
+
+		if (!btVolumeWarningConfirmed && pct > activeThreshold && activeThreshold < 200) {
+			targetVolume = activeThreshold;
+			pct = activeThreshold;
+			if (!btVolumeAboveThreshold) {
+				btVolumeAboveThreshold = true;
+				if (isHeadphones) {
+					showBluetoothVolumeWarning(am, maxVolume, activeThreshold);
+				} else {
+					showBoostVolumeWarning(am, maxVolume, activeThreshold);
+				}
+			}
+		}
+
 		customVolume = targetVolume;
 
 		if (customVolume <= 100f) {
 			int sysVol = Math.round((customVolume / 100f) * maxVolume);
 			am.setStreamVolume(AudioManager.STREAM_MUSIC, sysVol, 0);
 			engine.setVolumeBoostProgress(0f);
-			controller.showVolumeLevel(pct);
-		} else if (!boostWarningConfirmed && showVolumeBoostWarning) {
-			// Clamp at 100% until the boost warning is accepted.
-			customVolume = 100f;
-			am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
-			engine.setVolumeBoostProgress(0f);
-			controller.showVolumeLevel(100);
-			if (!boostAboveThreshold) {
-				boostAboveThreshold = true;
-				showBoostVolumeWarning(am, maxVolume);
-			}
-			return;
 		} else {
 			am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
 			float boost = (customVolume - 100f) / 100f;
 			engine.setVolumeBoostProgress(boost);
-			controller.showVolumeLevel(pct);
 		}
+		controller.showVolumeLevel(pct);
 
-		// Auto-reset threshold flag when volume comes back down to ≤50%.
-		if (pct <= 50) {
+		// Auto-reset threshold flag when volume comes back down to <= activeThreshold
+		if (pct <= activeThreshold) {
 			btVolumeAboveThreshold = false;
 			btVolumeWarningConfirmed = false;
-			return;
-		}
-
-		// Auto-reset boost flag when volume comes back down to ≤100%.
-		if (pct <= 100) {
-			boostAboveThreshold = false;
-			boostWarningConfirmed = false;
-		}
-
-		// Warn every time volume crosses upward past 50% while BT headphones are connected.
-		int prevPct = Math.round(prevVolume);
-		if (prevPct <= 50 && !btVolumeAboveThreshold && isBluetoothHeadphoneConnected(am)) {
-			btVolumeAboveThreshold = true;
-			showBluetoothVolumeWarning(am, maxVolume);
 		}
 	}
 
 	/**
-	 * Call this when a new video starts so the 50% warning fires again if volume is high.
+	 * Call this when a new video starts so the warning fires again if volume is high.
 	 */
 	public void resetBtVolumeWarning() {
 		btVolumeAboveThreshold = false;
 		btVolumeWarningConfirmed = false;
 		boostAboveThreshold = false;
 		boostWarningConfirmed = false;
-		// Check immediately if current volume already exceeds 50%; warn if so.
+		
 		AudioManager am = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
 		if (am == null) return;
-		if (!isBluetoothHeadphoneConnected(am)) return;
+		
+		int normalThreshold = 100;
+		int headphoneThreshold = 50;
+		try {
+			normalThreshold = Integer.parseInt(controller.getExtensionManager().getString(com.hhst.youtubelite.extension.Constant.VOLUME_WARNING_THRESHOLD_NORMAL));
+		} catch (NumberFormatException ignored) {}
+		try {
+			headphoneThreshold = Integer.parseInt(controller.getExtensionManager().getString(com.hhst.youtubelite.extension.Constant.VOLUME_WARNING_THRESHOLD_HEADPHONES));
+		} catch (NumberFormatException ignored) {}
+
+		boolean isHeadphones = isBluetoothHeadphoneConnected(am);
+		int activeThreshold = isHeadphones ? headphoneThreshold : normalThreshold;
+
 		int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-		int currentPct = Math.round(((float) am.getStreamVolume(AudioManager.STREAM_MUSIC) / maxVolume) * 100);
-		if (currentPct > 50) {
+		float boost = engine.getVolumeBoostProgress();
+		float currentPct = boost > 0 ? 100f + boost * 100f : ((float) am.getStreamVolume(AudioManager.STREAM_MUSIC) / maxVolume) * 100f;
+		
+		if (Math.round(currentPct) > activeThreshold && activeThreshold < 200) {
 			btVolumeAboveThreshold = true;
-			showBluetoothVolumeWarning(am, maxVolume);
+			if (isHeadphones) {
+				showBluetoothVolumeWarning(am, maxVolume, activeThreshold);
+			} else {
+				showBoostVolumeWarning(am, maxVolume, activeThreshold);
+			}
 		}
 	}
 
@@ -396,22 +400,26 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 	/**
 	 * Shows a warning dialog; does NOT set btVolumeAboveThreshold — caller must do that.
 	 */
-	private void showBluetoothVolumeWarning(@NonNull AudioManager am, int maxVolume) {
+	private void showBluetoothVolumeWarning(@NonNull AudioManager am, int maxVolume, int threshold) {
 		activity.runOnUiThread(() -> {
 			if (activity.isFinishing() || activity.isDestroyed()) return;
 			new MaterialAlertDialogBuilder(activity)
 					.setTitle(R.string.bt_volume_warning_title)
-					.setMessage(R.string.bt_volume_warning_message)
+					.setMessage(activity.getString(R.string.bt_volume_warning_message, threshold))
 					.setPositiveButton(R.string.bt_volume_continue, (d, w) -> {
 						btVolumeWarningConfirmed = true;
 					})
 					.setNegativeButton(R.string.bt_volume_lower, (d, w) -> {
-						// Set volume to exactly 50%
-						int halfVolume = Math.round(maxVolume * 0.5f);
-						am.setStreamVolume(AudioManager.STREAM_MUSIC, halfVolume, 0);
-						customVolume = 50f;
-						int halfPct = Math.round((halfVolume / (float) maxVolume) * 100);
-						controller.showHint(halfPct + "%", 1500);
+						if (threshold <= 100) {
+							int vol = Math.round(maxVolume * (threshold / 100f));
+							am.setStreamVolume(AudioManager.STREAM_MUSIC, vol, 0);
+							engine.setVolumeBoostProgress(0f);
+						} else {
+							am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
+							engine.setVolumeBoostProgress((threshold - 100) / 100f);
+						}
+						customVolume = threshold;
+						controller.showHint(threshold + "%", 1500);
 						btVolumeWarningConfirmed = false;
 					})
 					.setCancelable(false)
@@ -420,25 +428,30 @@ public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListen
 	}
 
 	/**
-	 * Shows a warning dialog before allowing volume above 100%;
+	 * Shows a warning dialog before allowing volume above threshold;
 	 * does NOT set boostAboveThreshold — caller must do that.
 	 */
-	private void showBoostVolumeWarning(@NonNull AudioManager am, int maxVolume) {
+	private void showBoostVolumeWarning(@NonNull AudioManager am, int maxVolume, int threshold) {
 		activity.runOnUiThread(() -> {
 			if (activity.isFinishing() || activity.isDestroyed()) return;
 			new MaterialAlertDialogBuilder(activity)
 					.setTitle(R.string.boost_volume_warning_title)
-					.setMessage(R.string.boost_volume_warning_message)
+					.setMessage(activity.getString(R.string.boost_volume_warning_message, threshold, threshold))
 					.setPositiveButton(R.string.boost_volume_continue, (d, w) -> {
-						boostWarningConfirmed = true;
+						btVolumeWarningConfirmed = true; // Use unified confirmation
 					})
 					.setNegativeButton(R.string.boost_volume_limit, (d, w) -> {
-						// Keep volume at exactly 100%.
-						am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
-						engine.setVolumeBoostProgress(0f);
-						customVolume = 100f;
-						controller.showHint("100%", 1500);
-						boostWarningConfirmed = false;
+						if (threshold <= 100) {
+							int vol = Math.round(maxVolume * (threshold / 100f));
+							am.setStreamVolume(AudioManager.STREAM_MUSIC, vol, 0);
+							engine.setVolumeBoostProgress(0f);
+						} else {
+							am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
+							engine.setVolumeBoostProgress((threshold - 100) / 100f);
+						}
+						customVolume = threshold;
+						controller.showHint(threshold + "%", 1500);
+						btVolumeWarningConfirmed = false;
 					})
 					.setCancelable(false)
 					.show();
