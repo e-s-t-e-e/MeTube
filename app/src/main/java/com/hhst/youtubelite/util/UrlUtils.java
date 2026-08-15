@@ -99,8 +99,20 @@ public final class UrlUtils {
 			String listId = getQueryParameter(url, "list");
 			if (listId == null || listId.isBlank()) return false;
 			String index = getQueryParameter(url, "index");
-			return index == null || index.isBlank() || "1".equals(index);
-		} catch (Exception ignored) {
+			return index == null || index.isBlank() || "1".equals(index.trim());
+		} catch (IllegalArgumentException ignored) {
+			return false;
+		}
+	}
+
+	public static boolean isThumbnailOrAvatarUrl(@Nullable String url) {
+		if (url == null || url.isEmpty()) return false;
+		try {
+			String host = URI.create(url).getHost();
+			if (host == null) return false;
+			host = host.toLowerCase(NORMAL_LOCALE);
+			return host.contains("ytimg.com") || host.contains("ggpht.com");
+		} catch (IllegalArgumentException ignored) {
 			return false;
 		}
 	}

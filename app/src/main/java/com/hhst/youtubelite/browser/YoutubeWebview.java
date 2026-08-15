@@ -31,6 +31,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.media3.common.util.Consumer;
 import androidx.media3.common.util.UnstableApi;
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.hhst.youtubelite.Constant;
 import com.hhst.youtubelite.R;
@@ -320,6 +322,10 @@ public class YoutubeWebview extends WebView {
 		settings.setMediaPlaybackRequiresUserGesture(false);
 		settings.setUserAgentString("Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36");
 
+		if (WebViewFeature.isFeatureSupported(WebViewFeature.REQUESTED_WITH_HEADER_ALLOW_LIST)) {
+			WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, java.util.Collections.emptySet());
+		}
+
 		JavascriptInterface jsInterface = new JavascriptInterface(this, youtubeExtractor, player, extensionManager, tabManager, queueRepository);
 		addJavascriptInterface(jsInterface, "lite");
 		setTag(jsInterface);
@@ -384,7 +390,9 @@ public class YoutubeWebview extends WebView {
 				frame.url = url;
 				onNavStarted();
 				if (progressBar != null) progressBar.beginLoading();
-				evaluateJavascript("document.documentElement.setAttribute('loading', 'true'); document.documentElement.setAttribute('dark', 'true'); window.dispatchEvent(new Event('onPageStarted'));", null);
+				String js = "document.documentElement.setAttribute('loading', 'true'); document.documentElement.setAttribute('dark', 'true'); window.dispatchEvent(new Event('onPageStarted')); " +
+						"(function(){if(window._tv)return;window._tv=true;const f=window.fetch;window.fetch=async function(){if(arguments[0]&&typeof arguments[0]==='string'&&arguments[0].includes('/youtubei/v1/player')){try{if(arguments[1]&&arguments[1].body){let b=JSON.parse(arguments[1].body);if(b.context&&b.context.client){b.context.client.clientName='TVHTML5';b.context.client.clientVersion='7.20240905.00.00';arguments[1].body=JSON.stringify(b);}}}catch(e){}}return f.apply(this,arguments);};const o=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){this._isP=typeof u==='string'&&u.includes('/youtubei/v1/player');return o.apply(this,arguments);};const s=XMLHttpRequest.prototype.send;XMLHttpRequest.prototype.send=function(b){if(this._isP&&b&&typeof b==='string'){try{let j=JSON.parse(b);if(j.context&&j.context.client){j.context.client.clientName='TVHTML5';j.context.client.clientVersion='7.20240905.00.00';b=JSON.stringify(j);}}catch(e){}}return s.call(this,b);};})();";
+				evaluateJavascript(js, null);
 				injectJavaScript(url);
 			}
 

@@ -20,29 +20,43 @@ public final class LitePoTokenProvider implements PoTokenProvider {
 		this.coordinator = coordinator;
 	}
 
+	private void cacheVisitorData(@Nullable PoTokenResult result) {
+		if (result != null && result.visitorData != null) {
+			com.tencent.mmkv.MMKV.defaultMMKV().encode("potoken.last_visitor", result.visitorData);
+		}
+	}
+
 	@Override
 	@Nullable
 	public PoTokenResult getWebClientPoToken(String videoId) {
-		return coordinator.getWebClientPoToken(videoId);
+		PoTokenResult result = coordinator.getWebClientPoToken(videoId);
+		cacheVisitorData(result);
+		return result;
 	}
 
 	@Override
 	@Nullable
 	public PoTokenResult getWebEmbedClientPoToken(String videoId) {
-		return coordinator.getWebClientPoToken(videoId);
+		PoTokenResult result = coordinator.getWebClientPoToken(videoId);
+		cacheVisitorData(result);
+		return result;
 	}
 
 	@Override
 	@Nullable
 	public PoTokenResult getAndroidClientPoToken(String videoId) {
 		PoTokenResult result = coordinator.getAndroidClientPoToken(videoId);
-		return result != null ? result : getWebClientPoToken(videoId);
+		if (result == null) result = getWebClientPoToken(videoId);
+		cacheVisitorData(result);
+		return result;
 	}
 
 	@Override
 	@Nullable
 	public PoTokenResult getIosClientPoToken(String videoId) {
 		PoTokenResult result = coordinator.getIosClientPoToken(videoId);
-		return result != null ? result : getWebClientPoToken(videoId);
+		if (result == null) result = getWebClientPoToken(videoId);
+		cacheVisitorData(result);
+		return result;
 	}
 }

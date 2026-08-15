@@ -60,7 +60,6 @@ public final class YoutubeHttpDataSource extends BaseDataSource implements HttpD
 	private static final int MAX_REDIRECTS = 20;
 	private static final int HTTP_STATUS_TEMPORARY_REDIRECT = 307;
 	private static final int HTTP_STATUS_PERMANENT_REDIRECT = 308;
-	private static final byte[] POST_BODY = new byte[]{0x78, 0};
 	private final boolean allowCrossProtocolRedirects;
 	private final boolean rangeParameterEnabled;
 	private final boolean rnParameterEnabled;
@@ -291,8 +290,13 @@ public final class YoutubeHttpDataSource extends BaseDataSource implements HttpD
 	private HttpURLConnection makeConnection(@NonNull URL url, long position, long length, boolean allowGzip, boolean followRedirects, final Map<String, String> requestParameters) throws IOException {
 		String requestUrl = url.toString();
 
+		boolean isAndroidStreamingUrl = isAndroidStreamingUrl(requestUrl);
+		boolean isIosStreamingUrl = isIosStreamingUrl(requestUrl);
+		boolean isWebStreamingUrl = isWebStreamingUrl(requestUrl);
+		boolean isWebEmbeddedPlayerStreamingUrl = isWebEmbeddedPlayerStreamingUrl(requestUrl);
+
 		boolean isVideoPlaybackUrl = url.getPath().startsWith("/videoplayback");
-		if (isVideoPlaybackUrl && rnParameterEnabled && !requestUrl.contains("&rn=")) {
+		if (isVideoPlaybackUrl && rnParameterEnabled && !requestUrl.contains("&rn=") && (isAndroidStreamingUrl || isIosStreamingUrl)) {
 			requestUrl += "&rn=" + requestNumber;
 			++requestNumber;
 		}
@@ -314,6 +318,11 @@ public final class YoutubeHttpDataSource extends BaseDataSource implements HttpD
 		if (cookies != null && !cookies.isEmpty())
 			requestHeaders.put(HttpHeaders.COOKIE, cookies);
 
+		String visitorData = com.tencent.mmkv.MMKV.defaultMMKV().decodeString("potoken.last_visitor", null);
+		if (visitorData != null) {
+			requestHeaders.put("X-Goog-Visitor-Id", visitorData);
+		}
+
 		for (final Map.Entry<String, String> property : requestHeaders.entrySet())
 			conn.setRequestProperty(property.getKey(), property.getValue());
 
@@ -333,10 +342,6 @@ public final class YoutubeHttpDataSource extends BaseDataSource implements HttpD
 		conn.setRequestProperty(HttpHeaders.TE, "trailers");
 		conn.setRequestProperty(HttpHeaders.ACCEPT, "*/*");
 
-		boolean isAndroidStreamingUrl = isAndroidStreamingUrl(requestUrl);
-		boolean isIosStreamingUrl = isIosStreamingUrl(requestUrl);
-		boolean isWebStreamingUrl = isWebStreamingUrl(requestUrl);
-		boolean isWebEmbeddedPlayerStreamingUrl = isWebEmbeddedPlayerStreamingUrl(requestUrl);
 		if (isAndroidStreamingUrl)
 			conn.setRequestProperty(HttpHeaders.USER_AGENT, getAndroidUserAgent(null));
 		else if (isIosStreamingUrl)
@@ -348,17 +353,8 @@ public final class YoutubeHttpDataSource extends BaseDataSource implements HttpD
 
 		conn.setRequestProperty(HttpHeaders.ACCEPT_ENCODING, allowGzip ? "gzip" : "identity");
 		conn.setInstanceFollowRedirects(followRedirects);
-		if (isVideoPlaybackUrl) {
-			conn.setRequestMethod("POST");
-			conn.setDoOutput(true);
-			conn.setFixedLengthStreamingMode(POST_BODY.length);
-			try (OutputStream os = conn.getOutputStream()) {
-				os.write(POST_BODY);
-			}
-		} else {
-			conn.setRequestMethod("GET");
-			conn.connect();
-		}
+		conn.setRequestMethod("GET");
+		conn.connect();
 		return conn;
 	}
 

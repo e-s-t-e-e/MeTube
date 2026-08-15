@@ -1,0 +1,1 @@
+import org.schabi.newpipe.extractor.services.youtube.PoTokenResult; import java.lang.reflect.*; public class Test { public static void main(String[] args) { for (Method m : PoTokenResult.class.getDeclaredMethods()) { System.out.println(m.getName()); } for (Field f : PoTokenResult.class.getDeclaredFields()) { System.out.println(f.getName()); } } }

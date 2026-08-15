@@ -1,5 +1,6 @@
 package com.hhst.youtubelite.browser;
 
+import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -8,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.media3.common.util.UnstableApi;
 
+import com.hhst.youtubelite.Constant;
 import com.hhst.youtubelite.cache.WebViewCachePolicy;
 import com.hhst.youtubelite.util.UrlUtils;
 import com.hhst.youtubelite.util.WebResourceUtils;
@@ -103,10 +105,14 @@ public final class OkHttpWebViewInterceptor {
 	}
 
 	static boolean shouldProxyRequest(@Nullable String method, @Nullable Map<String, String> requestHeaders, @Nullable String url) {
+		if (url != null && (url.contains("/youtubei/v1/") || url.contains(".googlevideo.com/"))) {
+			return false; // Let native WebView handle API and video streaming to preserve required anti-bot headers
+		}
 		return isInterceptableWebRequest(method, requestHeaders, url)
 						&& !UrlUtils.isGoogleAccountsUrl(url)
 						&& UrlUtils.isAllowedUrl(url)
-						&& UrlUtils.externalUri(url) == null;
+						&& UrlUtils.externalUri(url) == null
+						&& !UrlUtils.isThumbnailOrAvatarUrl(url);
 	}
 
 	@Nullable
@@ -160,13 +166,18 @@ public final class OkHttpWebViewInterceptor {
 		if (cacheControl != null) builder.cacheControl(cacheControl);
 		builder.tag(WebViewCachePolicy.CacheRequestInfo.class, cachePolicy.classifyRequest(request.isForMainFrame(), url, request.getUrl().getPath()));
 
+		boolean hasUserAgent = false;
 		for (final Map.Entry<String, String> header : request.getRequestHeaders().entrySet()) {
 			String name = header.getKey();
 			String value = header.getValue();
 			if (name == null || name.isEmpty() || value == null) continue;
+			if (name.equalsIgnoreCase("user-agent")) hasUserAgent = true;
 			if (Set.of("cache-control", "content-length", "cookie", "host", "if-modified-since", "if-none-match", "pragma").contains(name.toLowerCase(Locale.US)))
 				continue;
 			builder.header(name, value);
+		}
+		if (!hasUserAgent) {
+			builder.header("User-Agent", Constant.USER_AGENT);
 		}
 
 		String cookies = cookieAccessCoordinator.getCookie(url);
@@ -178,7 +189,29 @@ public final class OkHttpWebViewInterceptor {
 
 	@NonNull
 	private Response executeRequest(@NonNull Request request) throws IOException {
+		String url = request.url().toString();
+		
+		Log.d("API_CALL", "=== REQUEST ===");
+		Log.d("API_CALL", "URL: " + url);
+		Log.d("API_CALL", "Method: " + request.method());
+		Log.d("API_CALL", "Headers: " + request.headers());
+
 		Response response = client.newCall(request).execute();
+		
+		Log.d("API_CALL", "=== RESPONSE ===");
+		Log.d("API_CALL", "URL: " + url);
+		Log.d("API_CALL", "Code: " + response.code());
+		Log.d("API_CALL", "Headers: " + response.headers());
+		try {
+			if (response.body() != null) {
+				ResponseBody peekBody = response.peekBody(1024 * 1024); // Peek up to 1MB
+				Log.d("API_CALL", "Body: " + peekBody.string());
+			}
+		} catch (Exception e) {
+			Log.e("API_CALL", "Error peeking body", e);
+		}
+		Log.d("API_CALL", "===============");
+
 		cookieAccessCoordinator.syncCookies(response);
 		return response;
 	}

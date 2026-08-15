@@ -142,9 +142,9 @@ public final class PoTokenCoordinator {
 	private PoTokenResult mintClientPoToken(long hostGeneration,
 			@NonNull String videoId,
 			@NonNull String visitorData) {
-		String playerPoToken = mintPoToken(hostGeneration, videoId);
-		String streamingPoToken = playerPoToken != null
-				? mintPoToken(hostGeneration, visitorData)
+		String streamingPoToken = mintPoToken(hostGeneration, visitorData);
+		String playerPoToken = streamingPoToken != null
+				? mintPoToken(hostGeneration, videoId)
 				: null;
 		if (playerPoToken == null || streamingPoToken == null) {
 			PoTokenSession active = initializeSession(hostGeneration);
@@ -152,9 +152,9 @@ public final class PoTokenCoordinator {
 			if (active == null) {
 				return null;
 			}
-			playerPoToken = mintPoToken(hostGeneration, videoId);
-			streamingPoToken = playerPoToken != null
-					? mintPoToken(hostGeneration, visitorData)
+			streamingPoToken = mintPoToken(hostGeneration, visitorData);
+			playerPoToken = streamingPoToken != null
+					? mintPoToken(hostGeneration, videoId)
 					: null;
 		}
 		if (playerPoToken == null) {
@@ -260,14 +260,26 @@ public final class PoTokenCoordinator {
 		if (auth != null && auth.visitorData() != null) {
 			return auth.visitorData();
 		}
+		
+		String cachedVisitor = kv.decodeString("potoken.anonymous_visitor", null);
+		if (cachedVisitor != null) {
+			return cachedVisitor;
+		}
+
+		String newVisitor = null;
 		if (auth != null && auth.clientVersion() != null) {
-			return fetchVisitorDataFromInnertube(auth.clientVersion());
+			newVisitor = fetchVisitorDataFromInnertube(auth.clientVersion());
+		} else {
+			try {
+				newVisitor = fetchVisitorDataFromInnertube(YoutubeParsingHelper.getClientVersion());
+			} catch (Exception ignored) {
+			}
 		}
-		try {
-			return fetchVisitorDataFromInnertube(YoutubeParsingHelper.getClientVersion());
-		} catch (Exception ignored) {
-			return null;
+		
+		if (newVisitor != null) {
+			kv.encode("potoken.anonymous_visitor", newVisitor);
 		}
+		return newVisitor;
 	}
 
 	@Nullable
@@ -290,8 +302,13 @@ public final class PoTokenCoordinator {
 
 	@Nullable
 	private String fetchIosVisitorData() {
+		String cachedVisitor = kv.decodeString("potoken.ios_visitor", null);
+		if (cachedVisitor != null) {
+			return cachedVisitor;
+		}
+
 		try {
-			return YoutubeParsingHelper.getVisitorDataFromInnertube(
+			String newVisitor = YoutubeParsingHelper.getVisitorDataFromInnertube(
 					InnertubeClientRequestInfo.ofIosClient(),
 					Localization.DEFAULT,
 					ContentCountry.DEFAULT,
@@ -299,6 +316,10 @@ public final class PoTokenCoordinator {
 					YoutubeParsingHelper.YOUTUBEI_V1_URL,
 					null,
 					false);
+			if (newVisitor != null) {
+				kv.encode("potoken.ios_visitor", newVisitor);
+			}
+			return newVisitor;
 		} catch (Exception ignored) {
 			return null;
 		}

@@ -84,7 +84,6 @@ public final class YoutubeExtractor {
 	public YoutubeExtractor(@NonNull DownloaderImpl downloader,
 	                        @NonNull LitePoTokenProvider litePoTokenProvider,
 	                        @NonNull AuthContextFactory auth,
-	                        @NonNull SessionClientProfileProvider profiles,
 	                        @NonNull InfoCache cache,
 	                        @NonNull Executor executor,
 	                        @NonNull Gson gson) {
@@ -105,7 +104,6 @@ public final class YoutubeExtractor {
 						auth);
 		NewPipe.init(downloader);
 		YoutubeStreamExtractor.setPoTokenProvider(litePoTokenProvider);
-		YoutubeStreamExtractor.setClientProfileProvider(profiles);
 	}
 
 	YoutubeExtractor(@NonNull Fetch play,
@@ -169,9 +167,7 @@ public final class YoutubeExtractor {
 					throws org.schabi.newpipe.extractor.exceptions.ExtractionException, IOException {
 		var extractor = ServiceList.YouTube.getStreamExtractor(url);
 		YoutubeStreamExtractor youtube = extractor instanceof YoutubeStreamExtractor y ? y : null;
-		StreamInfo info = streams
-						? StreamInfo.getStream(extractor)
-						: StreamInfo.getInfo(extractor);
+		StreamInfo info = StreamInfo.getInfo(extractor);
 		return new ExtractedInfo(info, youtube);
 	}
 
@@ -348,14 +344,6 @@ public final class YoutubeExtractor {
 		catalog.setStreamType(streamInfo.getStreamType());
 		boolean live = isLive(streamInfo.getStreamType());
 
-		if (youtube != null) {
-			addManifestChoices(catalog, youtube.getDashManifestChoices(), true, live);
-			addManifestChoices(catalog, youtube.getHlsManifestChoices(), false, live);
-			addVideoChoices(catalog.getVideoCandidates(), youtube.getVideoOnlyStreamChoices(), false, live);
-			addAudioChoices(catalog.getAudioCandidates(), youtube.getAudioStreamChoices(), live);
-			addVideoChoices(catalog.getMuxedCandidates(), youtube.getMuxedStreamChoices(), true, live);
-		}
-
 		if (catalog.getManifestCandidates().isEmpty()) {
 			addFallbackManifests(catalog, streamInfo, live);
 		}
@@ -471,84 +459,7 @@ public final class YoutubeExtractor {
 		}
 	}
 
-	private void addManifestChoices(@NonNull StreamCatalog catalog,
-	                                @NonNull List<YoutubeStreamExtractor.ManifestChoice> choices,
-	                                boolean dash,
-	                                boolean live) {
-		for (final YoutubeStreamExtractor.ManifestChoice choice : choices) {
-			String url = sanitizePlaybackUrl(choice.getUrl());
-			if (url == null) {
-				continue;
-			}
-			StreamCandidate candidate = dash
-							? StreamCandidate.dashManifest(
-							url,
-							choice.getClient(),
-							choice.hasPlayerPoToken(),
-							choice.hasStreamPoToken(),
-							live)
-							: StreamCandidate.hlsManifest(
-							url,
-							choice.getClient(),
-							choice.hasPlayerPoToken(),
-							choice.hasStreamPoToken(),
-							live);
-			addUnique(catalog.getManifestCandidates(), candidate);
-		}
-	}
 
-	private void addVideoChoices(@NonNull List<StreamCandidate> out,
-	                             @NonNull List<YoutubeStreamExtractor.ItagChoice<VideoStream>> choices,
-	                             boolean muxed,
-	                             boolean live) {
-		for (final YoutubeStreamExtractor.ItagChoice<VideoStream> choice : choices) {
-			for (VideoStream stream : normalizeVideoStreams(choice.getStreams())) {
-				StreamCandidate candidate = muxed
-								? StreamCandidate.muxed(
-								stream,
-								choice.getClient(),
-								choice.hasPlayerPoToken(),
-								choice.hasStreamPoToken(),
-								live)
-								: StreamCandidate.videoOnly(
-								stream,
-								choice.getClient(),
-								choice.hasPlayerPoToken(),
-								choice.hasStreamPoToken(),
-								live);
-				addUnique(out, candidate);
-			}
-		}
-	}
-
-	private void addAudioChoices(@NonNull List<StreamCandidate> out,
-	                             @NonNull List<YoutubeStreamExtractor.ItagChoice<AudioStream>> choices,
-	                             boolean live) {
-		for (final YoutubeStreamExtractor.ItagChoice<AudioStream> choice : choices) {
-			for (AudioStream stream : normalizeAudioStreams(choice.getStreams())) {
-				StreamCandidate candidate = StreamCandidate.audioOnly(
-								stream,
-								choice.getClient(),
-								choice.hasPlayerPoToken(),
-								choice.hasStreamPoToken(),
-								live);
-				addUnique(out, candidate);
-			}
-		}
-	}
-
-	private void addUnique(@NonNull List<StreamCandidate> out,
-	                       @NonNull StreamCandidate candidate) {
-		String url = candidate.getUrl();
-		for (StreamCandidate item : out) {
-			if (same(item.getKind(), candidate.getKind())
-							&& same(item.getSourceClient(), candidate.getSourceClient())
-							&& same(item.getUrl(), url)) {
-				return;
-			}
-		}
-		out.add(candidate);
-	}
 
 	@NonNull
 	private List<VideoStream> normalizeVideoStreams(@Nullable List<VideoStream> streams) {
