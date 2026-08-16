@@ -93,6 +93,19 @@ public final class UrlUtils {
 		}
 	}
 
+	public static boolean isTelemetryUrl(@Nullable String url) {
+		if (url == null || url.isEmpty()) return false;
+		return url.contains("/log_event") ||
+				url.contains("/api/stats/qoe") ||
+				url.contains("/api/stats/watchtime") ||
+				url.contains("/api/stats/playback") ||
+				url.contains("/ptracking") ||
+				url.contains("googleads.g.doubleclick.net") ||
+				url.contains("pagead2.googlesyndication.com") ||
+				url.contains("ad.doubleclick.net") ||
+				url.contains("/pagead/");
+	}
+
 	public static boolean isPlaylistFirstItemUrl(@Nullable String url) {
 		if (url == null || url.isEmpty()) return false;
 		try {

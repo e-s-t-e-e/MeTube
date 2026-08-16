@@ -3,12 +3,43 @@
  * AMOLED black-friendly, minimal, sharp edges, and grid layouts.
  */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+*:not(yt-icon):not(c3-icon):not(.material-icons):not(.ytp-button) {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
 html {
     scroll-behavior: smooth;
     -webkit-user-select: none !important;
     user-select: none !important;
     -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    touch-action: manipulation;
 }
+
+/* Prevent layout flicker during page loads */
+html[loading="true"] body {
+    opacity: 0 !important;
+    transition: opacity 0.1s ease-out;
+}
+html:not([loading="true"]) body {
+    opacity: 1 !important;
+    transition: opacity 0.4s ease-in;
+}
+
+/* Hardware Acceleration & Rendering Optimizations */
+ytm-media-item, img, button {
+    transform: translateZ(0); /* Force GPU acceleration */
+    will-change: transform, opacity;
+}
+
+* {
+    /* Disable heavy blurs to prevent dropped frames while scrolling */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
 ::-webkit-scrollbar {
     width: 0;
     height: 0;

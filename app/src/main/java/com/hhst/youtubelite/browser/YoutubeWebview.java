@@ -306,6 +306,8 @@ public class YoutubeWebview extends WebView {
 		setLayerType(LAYER_TYPE_HARDWARE, null);
 		setBackgroundColor(android.graphics.Color.BLACK);
 		setOverScrollMode(OVER_SCROLL_NEVER);
+		setOnLongClickListener(v -> true);
+		setHapticFeedbackEnabled(true);
 
 		CookieManager.getInstance().setAcceptCookie(true);
 
@@ -391,7 +393,9 @@ public class YoutubeWebview extends WebView {
 				onNavStarted();
 				if (progressBar != null) progressBar.beginLoading();
 				String js = "document.documentElement.setAttribute('loading', 'true'); document.documentElement.setAttribute('dark', 'true'); window.dispatchEvent(new Event('onPageStarted')); " +
-						"(function(){if(window._tv)return;window._tv=true;const f=window.fetch;window.fetch=async function(){if(arguments[0]&&typeof arguments[0]==='string'&&arguments[0].includes('/youtubei/v1/player')){try{if(arguments[1]&&arguments[1].body){let b=JSON.parse(arguments[1].body);if(b.context&&b.context.client){b.context.client.clientName='TVHTML5';b.context.client.clientVersion='7.20240905.00.00';arguments[1].body=JSON.stringify(b);}}}catch(e){}}return f.apply(this,arguments);};const o=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){this._isP=typeof u==='string'&&u.includes('/youtubei/v1/player');return o.apply(this,arguments);};const s=XMLHttpRequest.prototype.send;XMLHttpRequest.prototype.send=function(b){if(this._isP&&b&&typeof b==='string'){try{let j=JSON.parse(b);if(j.context&&j.context.client){j.context.client.clientName='TVHTML5';j.context.client.clientVersion='7.20240905.00.00';b=JSON.stringify(j);}}catch(e){}}return s.call(this,b);};})();";
+						"(function(){if(window._tv)return;window._tv=true;const f=window.fetch;window.fetch=async function(){if(arguments[0]&&typeof arguments[0]==='string'&&arguments[0].includes('/youtubei/v1/player')){try{if(arguments[1]&&arguments[1].body){let b=JSON.parse(arguments[1].body);if(b.context&&b.context.client){b.context.client.clientName='TVHTML5';b.context.client.clientVersion='7.20240905.00.00';arguments[1].body=JSON.stringify(b);}}}catch(e){}}return f.apply(this,arguments);};const o=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){this._isP=typeof u==='string'&&u.includes('/youtubei/v1/player');return o.apply(this,arguments);};const s=XMLHttpRequest.prototype.send;XMLHttpRequest.prototype.send=function(b){if(this._isP&&b&&typeof b==='string'){try{let j=JSON.parse(b);if(j.context&&j.context.client){j.context.client.clientName='TVHTML5';j.context.client.clientVersion='7.20240905.00.00';b=JSON.stringify(j);}}catch(e){}}return s.call(this,b);};})();" +
+						"if(!window._hapticLoaded){window._hapticLoaded=true;document.addEventListener('click', function(e) { let target = e.target.closest('a, button, ytm-media-item, .icon-button, .tab, .ytp-button'); if (target && window.lite && window.lite.hapticFeedback) window.lite.hapticFeedback(); }, {passive: true});}" +
+						"if(!window._prefetchLoaded){window._prefetchLoaded=true;document.addEventListener('touchstart', function(e) { let a = e.target.closest('a'); if (a && a.href && a.href.includes('/watch?v=')) { let ex = document.querySelector(`link[rel=\"prefetch\"][href=\"${a.href}\"]`); if (!ex) { let l = document.createElement('link'); l.rel = 'prefetch'; l.as = 'document'; l.href = a.href; document.head.appendChild(l); } } }, {passive: true});}";
 				evaluateJavascript(js, null);
 				injectJavaScript(url);
 			}

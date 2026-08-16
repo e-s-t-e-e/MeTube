@@ -119,6 +119,11 @@ public final class OkHttpWebViewInterceptor {
 	public WebResourceResponse intercept(@NonNull WebResourceRequest request) {
 		if (!canExecute(request)) return null;
 		String url = request.getUrl().toString();
+		
+		if (com.hhst.youtubelite.util.UrlUtils.isTelemetryUrl(url)) {
+			return new WebResourceResponse("text/plain", "UTF-8", new ByteArrayInputStream(new byte[0]));
+		}
+
 		final WebViewCachePolicy.CacheRequestInfo cacheInfo = cachePolicy.classifyRequest(request.isForMainFrame(), url, request.getUrl().getPath());
 		Response response = null;
 		try {

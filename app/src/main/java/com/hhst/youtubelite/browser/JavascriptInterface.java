@@ -140,6 +140,11 @@ public final class JavascriptInterface {
 	}
 
 	@android.webkit.JavascriptInterface
+	public void hapticFeedback() {
+		handler.post(() -> webView.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY));
+	}
+
+	@android.webkit.JavascriptInterface
 	public void setRefreshLayoutEnabled(boolean enabled) {
 		handler.post(() -> {
 			if (webView.getParent() instanceof SwipeRefreshLayout)

@@ -122,6 +122,7 @@ public class TabManager {
 		}
 		var homeTag = Constant.PAGE_HOME;
 		var ft = fm().beginTransaction();
+		ft.setCustomAnimations(R.anim.scale_in, R.anim.scale_out, R.anim.scale_in, R.anim.scale_out);
 		var suspendWatch = shouldSuspend(pageClass(tab), targetTag, extensionManager.isEnabled(Constant.ENABLE_IN_APP_MINI_PLAYER), litePlayer().canSuspendWatch());
 		if (suspendWatch) suspendTab(ft);
 		else if (tab != null) ft.hide(tab);
@@ -318,6 +319,7 @@ public class TabManager {
 		}
 		var restoring = watch == suspendedTab;
 		var ft = fm().beginTransaction();
+		ft.setCustomAnimations(R.anim.scale_in, R.anim.scale_out, R.anim.scale_in, R.anim.scale_out);
 		YoutubeFragment tab = this.tab;
 		if (tab != null) ft.hide(tab);
 		tabs.remove(watch);
@@ -358,6 +360,7 @@ public class TabManager {
 				return true;
 			}
 			var ft = fm().beginTransaction();
+			ft.setCustomAnimations(R.anim.scale_in, R.anim.scale_out, R.anim.scale_in, R.anim.scale_out);
 			suspendTab(ft);
 			YoutubeFragment next = prevTab != null ? prevTab : home(ft);
 			this.tab = next;
@@ -373,6 +376,7 @@ public class TabManager {
 			return true;
 		} else if (hasBack) {
 			var ft = fm().beginTransaction();
+			ft.setCustomAnimations(R.anim.scale_in, R.anim.scale_out, R.anim.scale_in, R.anim.scale_out);
 			YoutubeFragment removed = tabs.pollLast();
 			if (removed != null) ft.remove(removed);
 			YoutubeFragment next = tabs.peekLast();
@@ -398,6 +402,7 @@ public class TabManager {
 			YoutubeFragment suspended = suspendedTab;
 			if (suspended == null) return;
 			var ft = fm().beginTransaction();
+			ft.setCustomAnimations(R.anim.scale_in, R.anim.scale_out, R.anim.scale_in, R.anim.scale_out);
 			YoutubeFragment tab = this.tab;
 			if (tab != null) ft.hide(tab);
 			tabs.offerLast(suspended);
@@ -415,6 +420,7 @@ public class TabManager {
 			YoutubeFragment suspended = suspendedTab;
 			if (suspended != null) {
 				var ft = fm().beginTransaction();
+				ft.setCustomAnimations(R.anim.scale_in, R.anim.scale_out, R.anim.scale_in, R.anim.scale_out);
 				ft.remove(suspended);
 				ft.commit();
 				suspendedTab = null;
